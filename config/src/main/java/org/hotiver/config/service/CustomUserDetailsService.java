@@ -1,4 +1,4 @@
-package org.hotiver.config;
+package org.hotiver.config.service;
 
 import org.hotiver.domain.Role;
 import org.hotiver.domain.User;
@@ -9,7 +9,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;

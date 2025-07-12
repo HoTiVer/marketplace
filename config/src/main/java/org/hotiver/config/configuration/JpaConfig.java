@@ -1,4 +1,4 @@
-package org.hotiver.config;
+package org.hotiver.config.configuration;
 
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Configuration;
