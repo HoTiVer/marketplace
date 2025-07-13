@@ -1,4 +1,4 @@
-package org.hotiver.domain;
+package org.hotiver.domain.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;

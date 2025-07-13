@@ -17,11 +17,22 @@ CREATE TABLE users_roles(
 );
 
 INSERT INTO roles(role_type)
-VALUES ('USER'), ('ADMIN'), ('SELLER');
+VALUES ('USER'), ('ADMIN'), ('SELLER'), ('MODERATOR');
+
+INSERT INTO users(email, password)
+VALUES
+('admin@gmail.com', '$2a$10$/UEXF5YfBUdODDaYxjx1feHmTdsnjD9GVTnmo.9RvHAxUNUA9No8W');
+
+INSERT INTO users_roles(user_id, role_id)
+VALUES
+(1, 1),
+(1, 2);
 
 CREATE TABLE products(
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100),
     price DOUBLE PRECISION,
-    description VARCHAR(500)
+    description VARCHAR(500),
+    category VARCHAR(20),
+    characteristic VARCHAR(500)
 );

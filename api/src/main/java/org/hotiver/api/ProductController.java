@@ -1,14 +1,45 @@
 package org.hotiver.api;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.hotiver.dto.ProductAddDto;
+import org.hotiver.dto.ProductGetDto;
+import org.hotiver.service.ProductService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class ProductController {
+
+    private final ProductService productService;
+
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
 
     @GetMapping("/")
     public String mainPage(){
         return "main page";
     }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @PostMapping("/product")
+    public String addProduct(@RequestBody ProductAddDto productAddDto){
+        return productService.addProduct(productAddDto);
+    }
+
+    @GetMapping("/product/{id}")
+    public ResponseEntity<ProductGetDto> getProductById(@PathVariable Long id){
+        return productService.getProductById(id);
+    }
+
+    @DeleteMapping("/product/{id}")
+    public void deleteProductById(@PathVariable Long id){
+        productService.deleteProductById(id);
+    }
+
+//    @PostMapping("/product/{id}")
+//    public void updateProductById(){
+//
+//    }
 
 }

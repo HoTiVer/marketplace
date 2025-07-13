@@ -1,10 +1,8 @@
 package org.hotiver.repo;
 
-import org.hotiver.domain.Role;
-import org.springframework.beans.factory.annotation.Value;
+import org.hotiver.domain.Entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

@@ -1,7 +1,7 @@
 package org.hotiver.service;
 
-import org.hotiver.domain.Role;
-import org.hotiver.domain.User;
+import org.hotiver.domain.Entity.Role;
+import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.UserAuthDto;
 import org.hotiver.repo.RoleRepo;
