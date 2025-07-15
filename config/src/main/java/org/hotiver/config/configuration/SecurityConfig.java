@@ -1,5 +1,6 @@
 package org.hotiver.config.configuration;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.config.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -48,10 +49,19 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/cabinet/**").authenticated()
                         .requestMatchers("/error", "/favicon.ico").permitAll()
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+                        })
+                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

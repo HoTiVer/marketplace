@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,37 +33,34 @@ public class AuthService {
 
     @Transactional
     public ResponseEntity<Map<String, Object>> register(UserAuthDto userAuthDto) {
+
         if (userAuthDto == null) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false,
-                            "message", "Request body is missing",
-                            "token", null));
+                            "message", "Request body is missing"));
         }
         String email = userAuthDto.getEmail();
         String password = userAuthDto.getPassword();
 
         if (email == null || email.trim().isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Email is required",
-                            "token", null));
+                    .body(Map.of("success", false, "message", "Email is required"));
         }
 
         if (!isValidEmail(email)) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Invalid email format",
-                            "token", null));
+                    .body(Map.of("success", false, "message", "Invalid email format"));
         }
 
         if (password == null || password.trim().isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Password is required",
-                            "token", null));
+                    .body(Map.of("success", false, "message", "Password is required"));
         }
 
         if (userRepo.existsUserByEmail(email)){
+
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "User already exists",
-                            "token", null));
+                    .body(Map.of("success", false, "message", "User already exists"));
         }
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -73,6 +72,7 @@ public class AuthService {
                 .password(encoder.encode(password))
                 .balance(0.0)
                 .roles(List.of(role.get()))
+                .registerDate(Date.valueOf(LocalDate.now()))
                 .build();
 
         String token = null;
@@ -89,8 +89,7 @@ public class AuthService {
         catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false,
-                            "message", "Unexpected error occurred",
-                            "token", null));
+                            "message", "Unexpected error occurred"));
         }
         return ResponseEntity.ok(Map.of("success", true,
                 "message", "Registered",
@@ -101,48 +100,42 @@ public class AuthService {
         if (userAuthDto == null) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false,
-                            "message", "Request body is missing",
-                            "token", null));
+                            "message", "Request body is missing"));
         }
         String email = userAuthDto.getEmail();
         String password = userAuthDto.getPassword();
 
         if (email == null || email.trim().isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Email is required",
-                            "token", null));
+                    .body(Map.of("success", false, "message", "Email is required"));
         }
 
         if (!isValidEmail(email)) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Invalid email format",
-                            "token", null));
+                    .body(Map.of("success", false, "message", "Invalid email format"));
         }
 
         if (password == null || password.trim().isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Password is required",
-                            "token", null));
+                    .body(Map.of("success", false, "message", "Password is required"));
         }
 
-        User user = userRepo.findByEmail(email);
+        Optional<User> user = userRepo.findByEmail(email);
 
-        if (user == null) {
+        if (user.isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "User not found",
-                            "token", null));
+                    .body(Map.of("success", false, "message", "User not found"));
         }
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.get().getPassword())) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false,
-                            "message", "Invalid password",
-                            "token", null));
+                            "message", "Invalid password"));
         }
 
-        SecurityUser securityUser = new SecurityUser(user);
+        SecurityUser securityUser = new SecurityUser(user.get());
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", securityUser.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

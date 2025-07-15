@@ -2,7 +2,7 @@ CREATE TABLE users(
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(40) UNIQUE NOT NULL,
     password VARCHAR(200) NOT NULL,
-    display_username VARCHAR(20) UNIQUE,
+    --display_username VARCHAR(20) UNIQUE,
     balance DOUBLE PRECISION NOT NULL DEFAULT 0
 );
 

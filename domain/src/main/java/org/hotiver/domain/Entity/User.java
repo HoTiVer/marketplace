@@ -3,6 +3,7 @@ package org.hotiver.domain.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Date;
 import java.util.List;
 
 @Getter
@@ -10,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Inheritance(strategy = InheritanceType.JOINED)
 @Entity
 @Table(name = "users")
 public class User {
@@ -21,8 +23,6 @@ public class User {
 
     private String password;
 
-    private String displayUsername;
-
     private Double balance;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -30,4 +30,6 @@ public class User {
                 joinColumns = @JoinColumn(name = "user_id"),
                 inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<Role> roles;
+
+    private Date registerDate;
 }
