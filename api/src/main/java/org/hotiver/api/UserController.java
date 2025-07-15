@@ -4,11 +4,13 @@ import org.hotiver.dto.SellerRegisterDto;
 import org.hotiver.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.util.Objects;
+
+
+@RequestMapping("/cabinet")
 @RestController
 public class UserController {
 
@@ -18,33 +20,33 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/cabinet/personal-info")
+    @GetMapping("/personal-info")
     public String getPersonalInfo(){
         return null;
     }
 
-    @GetMapping("/cabinet/orders")
+    @GetMapping("/orders")
     public String getOrdersHistory(){
         return null;
     }
 
-    @GetMapping("/cabinet/wishlist")
+    @GetMapping("/wishlist")
     public String getWishList(){
         return null;
     }
 
-    @GetMapping("/cabinet/message")
+    @GetMapping("/message")
     public String getMessages(){
         return null;
     }
 
-    @GetMapping("/cabinet/new-seller")
+    @GetMapping("/new-seller")
     public String getNewSellerPage(){
         return null;
     }
 
-    @PostMapping("/cabinet/new-seller/register")
-    public ResponseEntity sendRegisterRequest(@RequestBody SellerRegisterDto sellerRegisterDto){
+    @PostMapping("/new-seller/register")
+    public ResponseEntity<Map<String, Object>> sendRegisterRequest(@RequestBody SellerRegisterDto sellerRegisterDto){
         return userService.sendRegisterRequest(sellerRegisterDto);
     }
 }
