@@ -20,6 +20,7 @@ public class AdminService {
     }
 
     public void acceptSellerRegisterRequest(String id) {
+
     }
 
     public void declineSellerRegisterRequest(String id) {
