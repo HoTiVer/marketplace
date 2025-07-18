@@ -12,5 +12,6 @@ CREATE TABLE message (
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO users (id, email, password, balance, register_date)
-VALUES (0, 'service@system.local', '', 0.0, CURRENT_DATE);
+INSERT INTO users (id, email, password, balance, register_date, display_name)
+VALUES (0, 'service@system.local', '', 0.0,
+        CURRENT_DATE, 'marketplace');

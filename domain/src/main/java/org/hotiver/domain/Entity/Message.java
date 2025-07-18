@@ -3,8 +3,7 @@ package org.hotiver.domain.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Setter
 @Getter
@@ -26,5 +25,5 @@ public class Message {
 
     private String content;
 
-    private LocalDate sentAt;
+    private LocalDateTime sentAt;
 }

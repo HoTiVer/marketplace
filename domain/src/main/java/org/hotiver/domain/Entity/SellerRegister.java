@@ -20,7 +20,5 @@ public class SellerRegister {
 
     private String requestedNickname;
 
-    private String displayName;
-
     private String profileDescription;
 }

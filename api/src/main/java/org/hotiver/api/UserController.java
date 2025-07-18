@@ -35,11 +35,6 @@ public class UserController {
         return null;
     }
 
-    @GetMapping("/message")
-    public String getMessages(){
-        return null;
-    }
-
     @GetMapping("/new-seller")
     public String getNewSellerPage(){
         return null;

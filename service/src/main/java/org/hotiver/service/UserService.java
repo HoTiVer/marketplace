@@ -49,7 +49,7 @@ public class UserService {
         SellerRegister sellerRegister = SellerRegister.builder()
                 .userId(userId)
                 .requestedNickname(sellerRegisterDto.getRequestedNickname())
-                .displayName(sellerRegisterDto.getDisplayName())
+                .requestedNickname(sellerRegisterDto.getRequestedNickname())
                 .profileDescription(sellerRegisterDto.getDescription())
                 .build();
 

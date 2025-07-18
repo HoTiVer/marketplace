@@ -8,6 +8,5 @@ import lombok.Setter;
 public class SellerRegisterDto {
 
     String requestedNickname;
-    String displayName;
     String description;
 }

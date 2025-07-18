@@ -1,5 +1,6 @@
 package org.hotiver.config.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
@@ -17,6 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -31,7 +33,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         Optional<User> user = userRepo.findByEmail(username);
 
         if (user.isEmpty()) {
-            throw new UsernameNotFoundException(username);
+            log.info("user not found with nickname: " + username);
         }
         return new SecurityUser(user.get());
     }

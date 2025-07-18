@@ -2,7 +2,7 @@ CREATE TABLE users(
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(40) UNIQUE NOT NULL,
     password VARCHAR(200) NOT NULL,
-    --display_username VARCHAR(20) UNIQUE,
+    display_name VARCHAR(40) NOT NULL,
     balance DOUBLE PRECISION NOT NULL DEFAULT 0
 );
 
@@ -19,9 +19,10 @@ CREATE TABLE users_roles(
 INSERT INTO roles(role_type)
 VALUES ('USER'), ('ADMIN'), ('SELLER'), ('MODERATOR');
 
-INSERT INTO users(email, password)
+INSERT INTO users(email, password, display_name)
 VALUES
-('admin@gmail.com', '$2a$10$/UEXF5YfBUdODDaYxjx1feHmTdsnjD9GVTnmo.9RvHAxUNUA9No8W');
+('admin@gmail.com', '$2a$10$/UEXF5YfBUdODDaYxjx1feHmTdsnjD9GVTnmo.9RvHAxUNUA9No8W',
+ 'admin');
 
 INSERT INTO users_roles(user_id, role_id)
 VALUES

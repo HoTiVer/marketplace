@@ -2,6 +2,7 @@ package org.hotiver.api;
 
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.service.AdminService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,13 +23,13 @@ public class AdminController {
     }
 
     @PostMapping("/request/seller-register/{id}")
-    public void acceptSellerRegisterRequest(@PathVariable String id){
-        adminService.acceptSellerRegisterRequest(id);
+    public ResponseEntity<?> acceptSellerRegisterRequest(@PathVariable Long id){
+        return adminService.acceptSellerRegisterRequest(id);
     }
 
     @DeleteMapping("/request/seller-register/{id}")
-    public void declineSellerRegisterRequest(@PathVariable String id){
-        adminService.declineSellerRegisterRequest(id);
+    public ResponseEntity<?> declineSellerRegisterRequest(@PathVariable Long id){
+        return adminService.declineSellerRegisterRequest(id);
     }
 
 }

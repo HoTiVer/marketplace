@@ -1,25 +1,27 @@
 package org.hotiver.domain.Entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Builder
 @Table(name = "sellers")
-public class Seller extends User {
+public class Seller  {
+
+    @Id
+    private Long id; 
+
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "id")
+    private User user;
 
     @Column(unique = true)
     private String nickname;
-
-    private String displayName;
 
     private Double rating;
 

@@ -75,6 +75,10 @@ public class AuthService {
                 .registerDate(Date.valueOf(LocalDate.now()))
                 .build();
 
+        if (user.getDisplayName() == null){
+            user.setDisplayName(user.getEmail());
+        }
+
         String token = null;
         try {
             userRepo.save(user);
