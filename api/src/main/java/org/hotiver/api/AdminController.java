@@ -18,7 +18,7 @@ public class AdminController {
     }
 
     @GetMapping("/request/seller-register")
-    public List<SellerRegister> getSellerRegisterRequests(){
+    public List<SellerRegister> getSellerRegisterRequests() {
         return adminService.getSellerRegisterRequests();
     }
 

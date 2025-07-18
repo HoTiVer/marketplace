@@ -30,4 +30,7 @@ public class Product {
 
     @Column(columnDefinition = "jsonb")
     private String characteristic;
+
+    @ManyToOne
+    private Seller seller;
 }

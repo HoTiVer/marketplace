@@ -23,7 +23,7 @@ public class ProductController {
 
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping("/product")
-    public String addProduct(@RequestBody ProductAddDto productAddDto){
+    public ResponseEntity<?> addProduct(@RequestBody ProductAddDto productAddDto){
         return productService.addProduct(productAddDto);
     }
 
@@ -32,6 +32,7 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     @DeleteMapping("/product/{id}")
     public void deleteProductById(@PathVariable Long id){
         productService.deleteProductById(id);

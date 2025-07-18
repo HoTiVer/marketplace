@@ -20,4 +20,8 @@ public class ProductGetDto {
     private ProductCategory category;
 
     private Map<String, String> characteristic;
+
+    private String sellerDisplayName;
+
+    private String sellerUsername;
 }

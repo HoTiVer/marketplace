@@ -3,6 +3,8 @@ package org.hotiver.domain.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -27,4 +29,6 @@ public class Seller  {
 
     private String profileDescription;
 
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "seller")
+//    private List<Product> products;
 }
