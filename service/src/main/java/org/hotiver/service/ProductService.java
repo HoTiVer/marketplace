@@ -2,7 +2,10 @@ package org.hotiver.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.hotiver.domain.Entity.Product;
+import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.ProductAddDto;
@@ -16,19 +19,25 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class ProductService {
 
+    private final ChatService chatService;
     private final SellerRepo sellerRepo;
     private final ProductRepo productRepo;
     private final ObjectMapper mapper;
+    private final UserRepo userRepo;
 
-    public ProductService(SellerRepo sellerRepo, ProductRepo productRepo) {
+    public ProductService(ChatService chatService, SellerRepo sellerRepo, ProductRepo productRepo, UserRepo userRepo) {
+        this.chatService = chatService;
         this.sellerRepo = sellerRepo;
         this.productRepo = productRepo;
         mapper = new ObjectMapper();
+        this.userRepo = userRepo;
     }
 
     public ResponseEntity<Map<String, Object>> addProduct(ProductAddDto productAddDto) {
@@ -88,8 +97,25 @@ public class ProductService {
         return ResponseEntity.ok().body(returnProduct);
     }
 
+    @Transactional
     public void deleteProductById(Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        var roles = authentication.getAuthorities();
 
-        productRepo.deleteById(id);
+        User user = userRepo.findByEmail(email).get();
+
+        for (var role : roles){
+            if (role.getAuthority().equals("ROLE_MODERATOR")){
+                chatService.sendMessage(0L, user.getId(),
+                        "moderator deleted your product");
+                productRepo.deleteById(id);
+            }
+        }
+
+        Product product = productRepo.findById(id).get();
+        if (Objects.equals(product.getSeller().getId(), user.getId())){
+            productRepo.deleteById(id);
+        }
     }
 }

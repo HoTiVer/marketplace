@@ -21,15 +21,15 @@ public class ProductController {
         return "main page";
     }
 
+    @GetMapping("/product/{id}")
+    public ResponseEntity<ProductGetDto> getProductById(@PathVariable Long id){
+        return productService.getProductById(id);
+    }
+
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping("/product")
     public ResponseEntity<?> addProduct(@RequestBody ProductAddDto productAddDto){
         return productService.addProduct(productAddDto);
-    }
-
-    @GetMapping("/product/{id}")
-    public ResponseEntity<ProductGetDto> getProductById(@PathVariable Long id){
-        return productService.getProductById(id);
     }
 
     @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
@@ -38,9 +38,9 @@ public class ProductController {
         productService.deleteProductById(id);
     }
 
-//    @PostMapping("/product/{id}")
-//    public void updateProductById(){
-//
-//    }
+    @PutMapping("/product/{id}")
+    public void updateProductById(@PathVariable String id){
+
+    }
 
 }

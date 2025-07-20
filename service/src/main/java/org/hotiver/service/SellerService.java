@@ -17,7 +17,7 @@ public class SellerService {
         this.sellerRepo = sellerRepo;
     }
 
-    public ResponseEntity<SellerProfileDto> getSellerById(String username) {
+    public ResponseEntity<SellerProfileDto> getSellerByUsername(String username) {
         Optional<Seller> opSeller = sellerRepo.findByUsername(username);
 
         if (opSeller.isEmpty()){

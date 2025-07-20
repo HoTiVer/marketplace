@@ -19,7 +19,7 @@ public class SellerController {
 
     @GetMapping("/seller/{username}")
     public ResponseEntity<SellerProfileDto> getSellerByUsername(@PathVariable String username){
-        return sellerService.getSellerById(username);
+        return sellerService.getSellerByUsername(username);
     }
 
 }
