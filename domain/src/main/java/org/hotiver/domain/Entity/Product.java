@@ -33,4 +33,6 @@ public class Product {
 
     @ManyToOne
     private Seller seller;
+
+    private Boolean isVisible;
 }

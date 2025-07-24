@@ -55,7 +55,7 @@ public class AdminService {
             return ResponseEntity.badRequest().build();
         }
 
-
+        user.setDisplayName(sellerRegister.get().getDisplayName());
         Seller seller = Seller.builder()
                 .user(user)
                 .rating(0.0)

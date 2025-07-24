@@ -45,11 +45,15 @@ public class UserService {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "you already a seller"));
         }
+        if (sellerRegisterRepo.existsByUserId(userId)){
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "you already send a request"));
+        }
 
         SellerRegister sellerRegister = SellerRegister.builder()
                 .userId(userId)
                 .requestedNickname(sellerRegisterDto.getRequestedNickname())
-                .requestedNickname(sellerRegisterDto.getRequestedNickname())
+                .displayName(sellerRegisterDto.getDisplayName())
                 .profileDescription(sellerRegisterDto.getDescription())
                 .build();
 

@@ -1,2 +1,3 @@
 ALTER TABLE products
-ADD COLUMN seller_id BIGINT;
+ADD COLUMN seller_id BIGINT,
+ADD COLUMN is_visible BOOLEAN;

@@ -32,15 +32,16 @@ public class ProductController {
         return productService.addProduct(productAddDto);
     }
 
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SELLER', 'MODERATOR','ADMIN')")
     @DeleteMapping("/product/{id}")
-    public void deleteProductById(@PathVariable Long id){
-        productService.deleteProductById(id);
+    public ResponseEntity<?> deleteProductById(@PathVariable Long id){
+        return productService.deleteProductById(id);
     }
 
     @PutMapping("/product/{id}")
-    public void updateProductById(@PathVariable String id){
-
+    public ResponseEntity<?> updateProductById(@PathVariable Long id,
+                                               @RequestBody ProductAddDto productAddDto){
+        return productService.updateProductById(id, productAddDto);
     }
 
 }

@@ -53,6 +53,7 @@ public class ProductService {
                 .category(productAddDto.getCategory())
                 .description(productAddDto.getDescription())
                 .seller(seller)
+                .isVisible(false)
                 .build();
 
         String jsonString = null;
@@ -98,24 +99,72 @@ public class ProductService {
     }
 
     @Transactional
-    public void deleteProductById(Long id) {
+    public ResponseEntity<?> deleteProductById(Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         var roles = authentication.getAuthorities();
 
         User user = userRepo.findByEmail(email).get();
 
+        Optional<Product> opProduct = productRepo.findById(id);
+        if (opProduct.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        var product = opProduct.get();
+
         for (var role : roles){
             if (role.getAuthority().equals("ROLE_MODERATOR")){
                 chatService.sendMessage(0L, user.getId(),
                         "moderator deleted your product");
+
                 productRepo.deleteById(id);
+                return ResponseEntity.ok().build();
             }
         }
 
-        Product product = productRepo.findById(id).get();
         if (Objects.equals(product.getSeller().getId(), user.getId())){
             productRepo.deleteById(id);
+            return ResponseEntity.ok().build();
         }
+
+        return ResponseEntity.badRequest().build();
+    }
+
+    public ResponseEntity<?> updateProductById(Long id, ProductAddDto productAddDto) {
+        Optional<Product> opProduct = productRepo.findById(id);
+        if (opProduct.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+
+        var product = opProduct.get();
+
+        if (productAddDto.getName() != null) {
+            product.setName(productAddDto.getName());
+        }
+
+        if (productAddDto.getPrice() != null) {
+            product.setPrice(productAddDto.getPrice());
+        }
+
+        if (productAddDto.getDescription() != null) {
+            product.setDescription(productAddDto.getDescription());
+        }
+
+        if (productAddDto.getCategory() != null) {
+            product.setCategory(productAddDto.getCategory());
+        }
+
+        if (productAddDto.getCharacteristic() != null) {
+            String jsonString = null;
+            try {
+                jsonString = mapper.writeValueAsString(productAddDto.getCharacteristic());
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            product.setCharacteristic(jsonString);
+        }
+
+        productRepo.save(product);
+        return ResponseEntity.ok().build();
     }
 }
