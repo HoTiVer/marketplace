@@ -11,7 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-//@Inheritance(strategy = InheritanceType.JOINED)
 @Entity
 @Table(name = "users")
 public class User {

@@ -1,4 +1,4 @@
-package org.hotiver.dto;
+package org.hotiver.dto.product;
 
 import lombok.Builder;
 import lombok.Getter;

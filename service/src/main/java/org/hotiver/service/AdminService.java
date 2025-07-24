@@ -81,6 +81,9 @@ public class AdminService {
             return ResponseEntity.notFound().build();
         }
 
+        chatService.sendMessage(0L, sellerRegister.get().getId(),
+                "You are not allowed to be a seller.");
+
         sellerRegisterRepo.delete(sellerRegister.get());
         return ResponseEntity.ok().build();
     }

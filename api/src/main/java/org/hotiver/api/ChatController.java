@@ -1,7 +1,7 @@
 package org.hotiver.api;
 
-import org.hotiver.dto.SendMessageDto;
-import org.hotiver.dto.UserChatsDto;
+import org.hotiver.dto.chat.SendMessageDto;
+import org.hotiver.dto.user.UserChatsDto;
 import org.hotiver.service.ChatService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

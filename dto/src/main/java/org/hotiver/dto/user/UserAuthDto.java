@@ -1,4 +1,4 @@
-package org.hotiver.dto;
+package org.hotiver.dto.user;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,5 +7,6 @@ import lombok.Setter;
 @Setter
 public class UserAuthDto {
     String email;
+    String displayName;
     String password;
 }

@@ -1,7 +1,7 @@
 package org.hotiver.api;
 
-import org.hotiver.dto.ProductAddDto;
-import org.hotiver.dto.ProductGetDto;
+import org.hotiver.dto.product.ProductAddDto;
+import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

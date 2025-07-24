@@ -2,7 +2,8 @@ package org.hotiver.service;
 
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
-import org.hotiver.dto.SellerRegisterDto;
+import org.hotiver.dto.seller.SellerRegisterDto;
+import org.hotiver.dto.user.PersonalInfoDto;
 import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
@@ -63,5 +64,40 @@ public class UserService {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(Map.of("message", "successfully send request"));
+    }
+
+    public ResponseEntity<?> getNewSellerInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        User user = userRepo.findByEmail(email).get();
+        Long userId = user.getId();
+
+        if (sellerRepo.existsById(userId)){
+            return ResponseEntity.ok(Map.of("message", "you are already seller"));
+        }
+
+        return ResponseEntity.ok(Map.of("message", "you are not seller yet"));
+    }
+
+    public PersonalInfoDto getPersonalInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        User user = userRepo.findByEmail(email).get();
+
+        PersonalInfoDto personalInfoDto = PersonalInfoDto.builder()
+                .email(user.getEmail())
+                .displayName(user.getDisplayName())
+                .registerDate(user.getRegisterDate())
+                .isSeller(false)
+                .build();
+
+        if (sellerRepo.existsById(user.getId())) {
+            var seller = sellerRepo.findByEmail(email);
+            personalInfoDto.setIsSeller(true);
+            personalInfoDto.setSellerNickname(seller.getNickname());
+        }
+        return personalInfoDto;
     }
 }

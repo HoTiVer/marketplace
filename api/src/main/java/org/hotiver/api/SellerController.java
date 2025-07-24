@@ -1,12 +1,15 @@
 package org.hotiver.api;
 
-import org.hotiver.domain.Entity.Seller;
-import org.hotiver.dto.SellerProfileDto;
+import org.hotiver.dto.product.ProductGetDto;
+import org.hotiver.dto.product.SellerProductDto;
+import org.hotiver.dto.seller.SellerProfileDto;
 import org.hotiver.service.SellerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 public class SellerController {
@@ -22,4 +25,8 @@ public class SellerController {
         return sellerService.getSellerByUsername(username);
     }
 
+    @GetMapping("/seller/{username}/products")
+    public ResponseEntity<List<SellerProductDto>> getSellerProducts(@PathVariable String username){
+        return sellerService.getSellerProducts(username);
+    }
 }

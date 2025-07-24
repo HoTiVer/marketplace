@@ -1,9 +1,7 @@
-package org.hotiver.dto;
+package org.hotiver.dto.user;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 @Setter

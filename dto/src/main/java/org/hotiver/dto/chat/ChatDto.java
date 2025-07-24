@@ -1,4 +1,4 @@
-package org.hotiver.dto;
+package org.hotiver.dto.chat;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

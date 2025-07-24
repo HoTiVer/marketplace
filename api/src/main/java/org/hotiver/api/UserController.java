@@ -1,13 +1,12 @@
 package org.hotiver.api;
 
-import org.hotiver.dto.SellerRegisterDto;
+import org.hotiver.dto.seller.SellerRegisterDto;
+import org.hotiver.dto.user.PersonalInfoDto;
 import org.hotiver.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Objects;
 
 
 @RequestMapping("/cabinet")
@@ -21,8 +20,8 @@ public class UserController {
     }
 
     @GetMapping("/personal-info")
-    public String getPersonalInfo(){
-        return null;
+    public PersonalInfoDto getPersonalInfo(){
+        return userService.getPersonalInfo();
     }
 
     @GetMapping("/orders")
@@ -36,8 +35,8 @@ public class UserController {
     }
 
     @GetMapping("/new-seller")
-    public String getNewSellerPage(){
-        return null;
+    public ResponseEntity<?> getNewSellerPage(){
+        return userService.getNewSellerInfo();
     }
 
     @PostMapping("/new-seller/register")

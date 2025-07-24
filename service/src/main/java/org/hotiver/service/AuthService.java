@@ -3,7 +3,7 @@ package org.hotiver.service;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
-import org.hotiver.dto.UserAuthDto;
+import org.hotiver.dto.user.UserAuthDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
 import org.springframework.http.ResponseEntity;
@@ -41,10 +41,15 @@ public class AuthService {
         }
         String email = userAuthDto.getEmail();
         String password = userAuthDto.getPassword();
+        String displayName = userAuthDto.getDisplayName();
 
         if (email == null || email.trim().isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "Email is required"));
+        }
+
+        if (displayName == null || displayName.trim().isEmpty()) {
+            displayName = email;
         }
 
         if (!isValidEmail(email)) {
@@ -73,11 +78,8 @@ public class AuthService {
                 .balance(0.0)
                 .roles(List.of(role.get()))
                 .registerDate(Date.valueOf(LocalDate.now()))
+                .displayName(displayName)
                 .build();
-
-        if (user.getDisplayName() == null){
-            user.setDisplayName(user.getEmail());
-        }
 
         String token = null;
         try {
