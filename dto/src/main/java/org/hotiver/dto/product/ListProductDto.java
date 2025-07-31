@@ -9,7 +9,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SellerProductDto {
+public class ListProductDto {
+    Long productId;
     String productName;
     Double price;
 }

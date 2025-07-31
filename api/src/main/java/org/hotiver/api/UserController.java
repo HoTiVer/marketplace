@@ -1,11 +1,13 @@
 package org.hotiver.api;
 
+import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.dto.user.PersonalInfoDto;
 import org.hotiver.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -26,11 +28,6 @@ public class UserController {
 
     @GetMapping("/orders")
     public String getOrdersHistory(){
-        return null;
-    }
-
-    @GetMapping("/wishlist")
-    public String getWishList(){
         return null;
     }
 

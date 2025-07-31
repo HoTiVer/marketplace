@@ -1,7 +1,6 @@
 package org.hotiver.api;
 
-import org.hotiver.dto.product.ProductGetDto;
-import org.hotiver.dto.product.SellerProductDto;
+import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
 import org.hotiver.service.SellerService;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,7 @@ public class SellerController {
     }
 
     @GetMapping("/seller/{username}/products")
-    public ResponseEntity<List<SellerProductDto>> getSellerProducts(@PathVariable String username){
+    public ResponseEntity<List<ListProductDto>> getSellerProducts(@PathVariable String username){
         return sellerService.getSellerProducts(username);
     }
 }
