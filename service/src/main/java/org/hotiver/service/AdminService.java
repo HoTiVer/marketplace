@@ -88,6 +88,10 @@ public class AdminService {
         chatService.sendMessage(0L, sellerRegister.get().getId(),
                 "You are not allowed to be a seller.");
 
+        User user = userRepo.findById(sellerRegister.get().getUserId()).get();
+        emailService.send(user.getEmail(), "Seller request",
+                "You are not allowed to be a seller.");
+
         sellerRegisterRepo.delete(sellerRegister.get());
         return ResponseEntity.ok().build();
     }
