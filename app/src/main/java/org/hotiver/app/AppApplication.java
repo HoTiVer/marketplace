@@ -16,6 +16,8 @@ public class AppApplication {
 			System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
 			System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
 			System.setProperty("JWT_EXPIRATION", dotenv.get("JWT_EXPIRATION"));
+			System.setProperty("SERVICE_EMAIL", dotenv.get("SERVICE_EMAIL"));
+			System.setProperty("EMAIL_PASSWORD", dotenv.get("EMAIL_PASSWORD"));
 		}
 		catch (Exception e){
 			System.out.println(e.getMessage());

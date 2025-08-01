@@ -24,14 +24,17 @@ public class AdminService {
     private final UserRepo userRepo;
     private final SellerRepo sellerRepo;
     private final RoleRepo roleRepo;
+    private final EmailService emailService;
 
     public AdminService(ChatService chatService, SellerRegisterRepo sellerRegisterRepo,
-                        UserRepo userRepo, SellerRepo sellerRepo, RoleRepo roleRepo) {
+                        UserRepo userRepo, SellerRepo sellerRepo,
+                        RoleRepo roleRepo, EmailService emailService) {
         this.chatService = chatService;
         this.sellerRegisterRepo = sellerRegisterRepo;
         this.userRepo = userRepo;
         this.sellerRepo = sellerRepo;
         this.roleRepo = roleRepo;
+        this.emailService = emailService;
     }
 
     public List<SellerRegister> getSellerRegisterRequests() {
@@ -66,6 +69,7 @@ public class AdminService {
         sellerRepo.save(seller);
 
         chatService.sendMessage(0L, seller.getId(), "You are a seller now.");
+        emailService.send(user.getEmail(), "Seller request", "You are a seller now.");
 
         sellerRegisterRepo.delete(sellerRegister.get());
 
