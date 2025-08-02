@@ -3,9 +3,12 @@ package org.hotiver.service;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
+import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserAuthDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,10 +25,16 @@ import java.util.stream.Collectors;
 public class AuthService {
 
     private final JwtService jwtService;
+    private final EmailService emailService;
+    private final RedisService redisService;
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
 
-    public AuthService(JwtService jwtService, UserRepo userRepo, RoleRepo roleRepo) {
+    public AuthService(JwtService jwtService, EmailService emailService,
+                       RedisService redisService, UserRepo userRepo,
+                       RoleRepo roleRepo) {
+        this.emailService = emailService;
+        this.redisService = redisService;
         this.jwtService = jwtService;
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
@@ -79,6 +88,7 @@ public class AuthService {
                 .roles(List.of(role.get()))
                 .registerDate(Date.valueOf(LocalDate.now()))
                 .displayName(displayName)
+                .isTwoFactorEnable(false)
                 .build();
 
         String token = null;
@@ -141,6 +151,15 @@ public class AuthService {
                             "message", "Invalid password"));
         }
 
+        String key = "2fa:" + email;
+        String storedCode = redisService.getValue(key);
+        if (user.get().getIsTwoFactorEnable()){
+            sendVerificationCode(email);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header(HttpHeaders.LOCATION, "/login/verify")
+                    .build();
+        }
+
         SecurityUser securityUser = new SecurityUser(user.get());
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", securityUser.getAuthorities().stream()
@@ -154,8 +173,56 @@ public class AuthService {
                 "token", token));
     }
 
+    public ResponseEntity<?> verifyCode(CodeVerifyDto codeVerifyDto) {
+        String key = "2fa:" + codeVerifyDto.getEmail();
+        String storedCode = redisService.getValue(key);
+
+        if (storedCode == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (storedCode.equals(codeVerifyDto.getCode())) {
+            redisService.deleteValue(key);
+
+            var opUser = userRepo.findByEmail(codeVerifyDto.getEmail());
+            if (opUser.isEmpty())
+                return ResponseEntity.badRequest().build();
+
+            SecurityUser securityUser = new SecurityUser(opUser.get());
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("roles", securityUser.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList()));
+
+            String token = jwtService.generateToken(claims, securityUser);
+
+            return ResponseEntity.ok(Map.of("success", true,
+                    "message", "Logged in successfully",
+                    "token", token));
+        }
+
+        return ResponseEntity.badRequest().build();
+    }
+
     private boolean isValidEmail(String email) {
-        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        String regex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
         return email.matches(regex);
     }
+
+    private void sendVerificationCode(String email){
+        String code = generateRandom6DigitCode();
+        redisService.saveValue("2fa:" + email, code, 10);
+        emailService.send(email, "Verify Code", "Your Code: " + code);
+    }
+
+    private String generateRandom6DigitCode() {
+//        String code = "";
+//        Random rand = new Random();
+//        for (int i = 0; i < 6; i++) {
+//            code += rand.nextInt(1, 10);
+//        }
+//        return code;
+        return String.format("%06d", new Random().nextInt(999999));
+    }
+
 }

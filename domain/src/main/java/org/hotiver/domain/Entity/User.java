@@ -43,4 +43,6 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "product_id")
     )
     private Set<Product> wishlist = new HashSet<>();
+
+    private Boolean isTwoFactorEnable;
 }

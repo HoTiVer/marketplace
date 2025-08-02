@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
+import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserAuthDto;
 import org.hotiver.service.AuthService;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +54,12 @@ public class AuthController {
             }
     )
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody UserAuthDto userAuthDto){
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody UserAuthDto userAuthDto){
         return authService.login(userAuthDto);
+    }
+
+    @PostMapping("/login/verify")
+    public ResponseEntity<?> verifyCode(@RequestBody CodeVerifyDto codeVerifyDto){
+        return authService.verifyCode(codeVerifyDto);
     }
 }
