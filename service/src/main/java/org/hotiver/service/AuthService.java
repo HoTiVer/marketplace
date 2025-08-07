@@ -216,12 +216,6 @@ public class AuthService {
     }
 
     private String generateRandom6DigitCode() {
-//        String code = "";
-//        Random rand = new Random();
-//        for (int i = 0; i < 6; i++) {
-//            code += rand.nextInt(1, 10);
-//        }
-//        return code;
         return String.format("%06d", new Random().nextInt(999999));
     }
 
