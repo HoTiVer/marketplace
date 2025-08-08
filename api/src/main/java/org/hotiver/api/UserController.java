@@ -2,9 +2,7 @@ package org.hotiver.api;
 
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerRegisterDto;
-import org.hotiver.dto.user.CodeVerifyDto;
-import org.hotiver.dto.user.PersonalInfoDto;
-import org.hotiver.dto.user.UserContactsDto;
+import org.hotiver.dto.user.*;
 import org.hotiver.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,8 +42,18 @@ public class UserController {
     }
 
     @GetMapping("/personal-info/security")
-    public String getAccountSecurityInfo(){
-        return "security info";
+    public ResponseEntity<SecurityInfoDto> getAccountSecurityInfo() {
+        return userService.getSecurityInfo();
+    }
+
+    @PutMapping("/personal-info/security/2fa")
+    public ResponseEntity<?> changeTwoFactorStatus() {
+        return userService.changeTwoFactorStatus();
+    }
+
+    @PutMapping("/personal-info/security/password")
+    public ResponseEntity<?> changeUserPassword(@RequestBody PasswordDto passwordDto) {
+        return userService.changeUserPassword(passwordDto);
     }
 
     @GetMapping("/orders")

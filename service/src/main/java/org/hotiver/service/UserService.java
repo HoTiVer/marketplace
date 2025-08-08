@@ -5,9 +5,7 @@ import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.seller.SellerRegisterDto;
-import org.hotiver.dto.user.CodeVerifyDto;
-import org.hotiver.dto.user.PersonalInfoDto;
-import org.hotiver.dto.user.UserContactsDto;
+import org.hotiver.dto.user.*;
 import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
@@ -15,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -183,8 +183,54 @@ public class UserService {
         return ResponseEntity.badRequest().build();
     }
 
+    public ResponseEntity<SecurityInfoDto> getSecurityInfo() {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String email = authentication.getName();
+//
+//        User user = userRepo.findByEmail(email).get();
+
+        User user = getCurrentUser();
+
+        SecurityInfoDto securityInfoDto = SecurityInfoDto.builder()
+                .isTwoFactorEnable(user.getIsTwoFactorEnable())
+                .build();
+
+        return ResponseEntity.ok().body(securityInfoDto);
+    }
+
+    public ResponseEntity<?> changeTwoFactorStatus() {
+        User user = getCurrentUser();
+
+        Boolean twoFactorStatus = user.getIsTwoFactorEnable();
+        user.setIsTwoFactorEnable(!twoFactorStatus);
+
+        userRepo.save(user);
+
+        return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<?> changeUserPassword(PasswordDto passwordDto) {
+        User user = getCurrentUser();
+
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        user.setPassword(encoder.encode(passwordDto.getPassword()));
+
+        userRepo.save(user);
+
+        return ResponseEntity.ok().build();
+    }
+
     private boolean isValidEmail(String email) {
         String regex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
         return email.matches(regex);
     }
+
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        return userRepo.findByEmail(email).get();
+    }
+
 }
