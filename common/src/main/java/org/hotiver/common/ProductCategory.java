@@ -1,5 +1,9 @@
 package org.hotiver.common;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public enum ProductCategory {
     ELECTRONICS("electronics"),
     COMPUTERS("computers-and-accessories"),
@@ -36,5 +40,13 @@ public enum ProductCategory {
     @Override
     public String toString() {
         return displayName;
+    }
+
+    public record CategoryDto(String name, String displayName) {}
+
+    public static List<CategoryDto> getAllCategoriesDto() {
+        return Arrays.stream(ProductCategory.values())
+                .map(c -> new CategoryDto(c.name(), c.toString()))
+                .collect(Collectors.toList());
     }
 }

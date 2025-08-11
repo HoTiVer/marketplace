@@ -1,6 +1,7 @@
 package org.hotiver.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -20,8 +21,12 @@ import java.util.function.Function;
 public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
-    @Value("${jwt.expiration}")
-    private Long jwtExpiration;
+
+    @Value("${jwt.refresh.expiration}")
+    private Long jwtRefreshExpiration;
+
+    @Value("${jwt.access.expiration}")
+    private Long jwtAccessExpiration;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -32,16 +37,25 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+    public List extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("roles", List.class);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
+    public String generateAccessToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", userDetails.getAuthorities()
+                .stream()
+                .map(a -> a.getAuthority())
+                .toList());
+        claims.put("type", "access");
+        return buildToken(claims, userDetails, jwtAccessExpiration);
     }
 
-    public long getExpirationTime() {
-        return jwtExpiration;
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "refresh");
+        return buildToken(claims, userDetails, jwtRefreshExpiration);
     }
 
     private String buildToken(
@@ -49,8 +63,7 @@ public class JwtService {
             UserDetails userDetails,
             long expiration
     ) {
-        return Jwts
-                .builder()
+        return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
@@ -61,12 +74,24 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
-    public List extractRoles(String token) {
-        Claims claims = extractAllClaims(token);
-        return claims.get("roles", List.class);
+    public boolean isTokenValid(String token) {
+        try {
+            extractAllClaims(token);
+            return !isTokenExpired(token);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public boolean isAccessToken(String token) {
+        return "access".equals(extractAllClaims(token).get("type", String.class));
+    }
+
+    public boolean isRefreshToken(String token) {
+        return "refresh".equals(extractAllClaims(token).get("type", String.class));
     }
 
     private boolean isTokenExpired(String token) {
@@ -78,8 +103,7 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts
-                .parserBuilder()
+        return Jwts.parserBuilder()
                 .setSigningKey(getSignInKey())
                 .build()
                 .parseClaimsJws(token)
@@ -89,5 +113,13 @@ public class JwtService {
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public Long getJwtRefreshExpiration() {
+        return jwtRefreshExpiration;
+    }
+
+    public Long getJwtAccessExpiration(){
+        return jwtAccessExpiration;
     }
 }

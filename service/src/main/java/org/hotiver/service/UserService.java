@@ -49,6 +49,13 @@ public class UserService {
                     .body(Map.of("message", "seller with this nickname exists"));
         }
 
+        if (sellerRegisterDto.getRequestedNickname() == null ||
+        sellerRegisterDto.getDisplayName() == null){
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "please enter requestedNickname " +
+                            "and displayName"));
+        }
+
         String email = authentication.getName();
 
         Optional<User> optionalUser = userRepo.findByEmail(email);
@@ -125,6 +132,7 @@ public class UserService {
         return contactsDto;
     }
 
+    //TODO
     public ResponseEntity<UserContactsDto> updateUserContacts(UserContactsDto userContactsDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -153,6 +161,7 @@ public class UserService {
         return ResponseEntity.ok().build();
     }
 
+    //TODO
     @Transactional
     public ResponseEntity<?> verifyChangingUserContacts(CodeVerifyDto codeVerifyDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -176,13 +185,14 @@ public class UserService {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList()));
 
-            String token = jwtService.generateToken(claims, securityUser);
+            //String token = jwtService.generateToken(claims, securityUser);
 
-            return ResponseEntity.ok().body(Map.of("token", token));
+            return ResponseEntity.ok().body(Map.of("token", "token"));
         }
         return ResponseEntity.badRequest().build();
     }
 
+    //TODO
     public ResponseEntity<SecurityInfoDto> getSecurityInfo() {
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 //        String email = authentication.getName();
@@ -198,6 +208,7 @@ public class UserService {
         return ResponseEntity.ok().body(securityInfoDto);
     }
 
+    //TODO
     public ResponseEntity<?> changeTwoFactorStatus() {
         User user = getCurrentUser();
 
@@ -209,6 +220,7 @@ public class UserService {
         return ResponseEntity.ok().build();
     }
 
+    //TODO
     public ResponseEntity<?> changeUserPassword(PasswordDto passwordDto) {
         User user = getCurrentUser();
 

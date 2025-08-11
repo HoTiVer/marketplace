@@ -1,11 +1,14 @@
 package org.hotiver.api;
 
+import org.hotiver.common.ProductCategory;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 public class ProductController {
@@ -24,6 +27,11 @@ public class ProductController {
     @GetMapping("/product/{id}")
     public ResponseEntity<ProductGetDto> getProductById(@PathVariable Long id){
         return productService.getProductById(id);
+    }
+
+    @GetMapping("/product/categories")
+    public List<ProductCategory.CategoryDto> getProductCategories(){
+        return productService.getProductCategories();
     }
 
     @PreAuthorize("hasRole('SELLER')")

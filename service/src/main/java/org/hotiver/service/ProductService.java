@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.hotiver.common.ProductCategory;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
@@ -17,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -165,5 +167,9 @@ public class ProductService {
 
         productRepo.save(product);
         return ResponseEntity.ok().build();
+    }
+
+    public List<ProductCategory.CategoryDto> getProductCategories() {
+        return ProductCategory.getAllCategoriesDto();
     }
 }
