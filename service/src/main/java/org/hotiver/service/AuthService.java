@@ -1,5 +1,7 @@
 package org.hotiver.service;
 
+import Utils.EmailUtils;
+import Utils.HashUtils;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
@@ -7,7 +9,6 @@ import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserAuthDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,7 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.MessageDigest;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
@@ -65,7 +65,7 @@ public class AuthService {
             displayName = email;
         }
 
-        if (!isValidEmail(email)) {
+        if (!EmailUtils.isValidEmail(email)) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "Invalid email format"));
         }
@@ -78,13 +78,13 @@ public class AuthService {
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-        Optional<Role> role = roleRepo.findById(1L);
+        Role role = roleRepo.findById(1L).orElseThrow();
 
         User user = User.builder()
                 .email(email)
                 .password(encoder.encode(password))
                 .balance(0.0)
-                .roles(List.of(role.get()))
+                .roles(List.of(role))
                 .registerDate(Date.valueOf(LocalDate.now()))
                 .displayName(displayName)
                 .isTwoFactorEnable(false)
@@ -100,7 +100,7 @@ public class AuthService {
             refreshToken = jwtService.generateRefreshToken(securityUser);
             accessToken = jwtService.generateAccessToken(securityUser);
 
-            String key = "refresh:" + hashKeySha256(user.getId().toString());
+            String key = "refresh:" + HashUtils.hashKeySha256(user.getId().toString());
             Long timeToSave = jwtService.getJwtRefreshExpiration();
             redisService.saveValue(key, refreshToken, TimeUnit.MILLISECONDS.toMinutes(timeToSave));
 
@@ -127,7 +127,7 @@ public class AuthService {
         String email = userAuthDto.getEmail();
         String password = userAuthDto.getPassword();
 
-        if (!isValidEmail(email)) {
+        if (!EmailUtils.isValidEmail(email)) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", "Invalid email format"));
         }
@@ -148,9 +148,9 @@ public class AuthService {
 
         if (user.get().getIsTwoFactorEnable()){
             sendVerificationCode(email);
-            return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                    .header(HttpHeaders.LOCATION, "/login/verify")
-                    .build();
+            return ResponseEntity.ok(Map.of(
+                    "redirect", "/login/verify",
+                    "method", "POST"));
         }
 
         SecurityUser securityUser = new SecurityUser(user.get());
@@ -158,7 +158,7 @@ public class AuthService {
         String refreshToken = jwtService.generateRefreshToken(securityUser);
         String accessToken = jwtService.generateAccessToken(securityUser);
 
-        String refreshTokenKey = "refresh:" + hashKeySha256(user.get().getId().toString());
+        String refreshTokenKey = "refresh:" + HashUtils.hashKeySha256(user.get().getId().toString());
         Long timeToSave = jwtService.getJwtRefreshExpiration();
         redisService.saveValue(refreshTokenKey,
                 refreshToken,
@@ -171,7 +171,7 @@ public class AuthService {
     }
 
     public ResponseEntity<?> verifyCode(CodeVerifyDto codeVerifyDto) {
-        String key = "2fa:" + hashKeySha256(codeVerifyDto.getEmail());
+        String key = "2fa:" + HashUtils.hashKeySha256(codeVerifyDto.getEmail());
         String storedCode = redisService.getValue(key);
 
         if (storedCode == null) {
@@ -189,7 +189,7 @@ public class AuthService {
             String refreshToken = jwtService.generateRefreshToken(securityUser);
             String accessToken = jwtService.generateAccessToken(securityUser);
 
-            String refreshTokenKey = "refresh:" + hashKeySha256(opUser.get().getId().toString());
+            String refreshTokenKey = "refresh:" + HashUtils.hashKeySha256(opUser.get().getId().toString());
             Long timeToSave = jwtService.getJwtRefreshExpiration();
             redisService.saveValue(refreshTokenKey, refreshToken,
                     TimeUnit.MILLISECONDS.toMinutes(timeToSave));
@@ -222,9 +222,10 @@ public class AuthService {
         }
 
         String storedRefresh = redisService
-                .getValue("refresh:" + hashKeySha256(user.get().getId().toString()));
+                .getValue("refresh:" + HashUtils.hashKeySha256(user.get().getId().toString()));
         if (storedRefresh == null || !storedRefresh.equals(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token mismatch");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("Message","Refresh token mismatch"));
         }
 
         SecurityUser securityUser = new SecurityUser(user.get());
@@ -238,22 +239,17 @@ public class AuthService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
-        User user = userRepo.findByEmail(email).get();
+        User user = userRepo.findByEmail(email).orElseThrow();
 
-        String key = "refresh:" + hashKeySha256(user.getId().toString());
+        String key = "refresh:" + HashUtils.hashKeySha256(user.getId().toString());
         redisService.deleteValue(key);
 
         return ResponseEntity.ok().build();
     }
 
-    private boolean isValidEmail(String email) {
-        String regex = "^[\\w.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        return email.matches(regex);
-    }
-
     private void sendVerificationCode(String email){
         String code = generateRandom6DigitCode();
-        String key = "2fa:" + hashKeySha256(email);
+        String key = "2fa:" + HashUtils.hashKeySha256(email);
         redisService.saveValue(key, code, 10);
         emailService.send(email, "Verify Code", "Your Code: " + code);
     }
@@ -262,13 +258,4 @@ public class AuthService {
         return String.format("%06d", new Random().nextInt(999999));
     }
 
-    private String hashKeySha256(String keyToHash){
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(keyToHash.getBytes());
-            return HexFormat.of().formatHex(hash);
-        } catch (Exception e) {
-            throw new RuntimeException("Error hashing", e);
-        }
-    }
 }

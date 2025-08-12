@@ -1,13 +1,11 @@
 package org.hotiver.api;
 
-import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.dto.user.*;
 import org.hotiver.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 
@@ -32,7 +30,7 @@ public class UserController {
     }
 
     @PutMapping("/personal-info/contacts")
-    public ResponseEntity<UserContactsDto> updateUserContacts(@RequestBody UserContactsDto userContactsDto) {
+    public ResponseEntity<?> updateUserContacts(@RequestBody UserContactsDto userContactsDto) {
         return userService.updateUserContacts(userContactsDto);
     }
 
@@ -52,8 +50,13 @@ public class UserController {
     }
 
     @PutMapping("/personal-info/security/password")
-    public ResponseEntity<?> changeUserPassword(@RequestBody PasswordDto passwordDto) {
-        return userService.changeUserPassword(passwordDto);
+    public ResponseEntity<?> changeUserPassword(@RequestBody PasswordChangeDto passwordChangeDto) {
+        return userService.changeUserPassword(passwordChangeDto);
+    }
+
+    @PostMapping("/personal-info/security/password/verify")
+    public ResponseEntity<?> verifyChangeUserPassword(@RequestBody PasswordChangeDto passwordChangeDto) {
+        return userService.verifyChangeUserPassword(passwordChangeDto);
     }
 
     @GetMapping("/orders")

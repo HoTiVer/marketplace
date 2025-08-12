@@ -1,5 +1,7 @@
 package org.hotiver.service;
 
+import Utils.EmailUtils;
+import Utils.HashUtils;
 import jakarta.transaction.Transactional;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
@@ -11,14 +13,13 @@ import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserService {
@@ -42,25 +43,21 @@ public class UserService {
     }
 
     public ResponseEntity<Map<String, Object>> sendRegisterRequest(SellerRegisterDto sellerRegisterDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (sellerRegisterDto.getRequestedNickname() == null ||
+                sellerRegisterDto.getDisplayName() == null){
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "please enter requestedNickname " +
+                            "and displayName"));
+        }
 
         if (sellerRepo.existsByNickname(sellerRegisterDto.getRequestedNickname())){
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "seller with this nickname exists"));
         }
 
-        if (sellerRegisterDto.getRequestedNickname() == null ||
-        sellerRegisterDto.getDisplayName() == null){
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "please enter requestedNickname " +
-                            "and displayName"));
-        }
+        User user = getCurrentUser();
+        Long userId = user.getId();
 
-        String email = authentication.getName();
-
-        Optional<User> optionalUser = userRepo.findByEmail(email);
-
-        Long userId = optionalUser.get().getId();
         if (sellerRepo.existsById(userId)){
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "you already a seller"));
@@ -86,10 +83,7 @@ public class UserService {
     }
 
     public ResponseEntity<?> getNewSellerInfo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        User user = userRepo.findByEmail(email).get();
+        User user = getCurrentUser();
         Long userId = user.getId();
 
         if (sellerRepo.existsById(userId)){
@@ -100,10 +94,7 @@ public class UserService {
     }
 
     public PersonalInfoDto getPersonalInfo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        User user = userRepo.findByEmail(email).get();
+        User user = getCurrentUser();
 
         PersonalInfoDto personalInfoDto = PersonalInfoDto.builder()
                 .email(user.getEmail())
@@ -113,7 +104,7 @@ public class UserService {
                 .build();
 
         if (sellerRepo.existsById(user.getId())) {
-            var seller = sellerRepo.findByEmail(email);
+            var seller = sellerRepo.findByEmail(user.getEmail());
             personalInfoDto.setIsSeller(true);
             personalInfoDto.setSellerNickname(seller.getNickname());
         }
@@ -121,10 +112,7 @@ public class UserService {
     }
 
     public UserContactsDto getUserContacts() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        User user = userRepo.findByEmail(email).get();
+        User user = getCurrentUser();
 
         UserContactsDto contactsDto = new UserContactsDto();
         contactsDto.setEmail(user.getEmail());
@@ -132,12 +120,8 @@ public class UserService {
         return contactsDto;
     }
 
-    //TODO
-    public ResponseEntity<UserContactsDto> updateUserContacts(UserContactsDto userContactsDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        User user = userRepo.findByEmail(email).get();
+    public ResponseEntity<?> updateUserContacts(UserContactsDto userContactsDto) {
+        User user = getCurrentUser();
 
         String newEmail = userContactsDto.getEmail();
 
@@ -146,9 +130,10 @@ public class UserService {
 
         if (newEmail != null && !user.getEmail().equals(newEmail)){
 
-            if (isValidEmail(newEmail)) {
+            if (EmailUtils.isValidEmail(newEmail)) {
                 String code = String.format("%06d", new Random().nextInt(999999));
-                redisService.saveValue("vce:" + email, code, 10);
+                String key = "verification:" + HashUtils.hashKeySha256(newEmail);
+                redisService.saveValue(key, code, 10);
                 emailService.send(newEmail, "Validation code", code);
             }
             else {
@@ -158,20 +143,28 @@ public class UserService {
         else {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of(
+                "redirect", "/cabinet/personal-info/contacts/verify",
+                "method", "POST"
+        ));
     }
 
-    //TODO
     @Transactional
     public ResponseEntity<?> verifyChangingUserContacts(CodeVerifyDto codeVerifyDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        User user = userRepo.findByEmail(email).get();
+        User user = getCurrentUser();
 
         String newEmail = codeVerifyDto.getEmail();
+        if (user.getEmail().equals(newEmail)){
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "enter new email in request"));
+        }
+
         String code = codeVerifyDto.getCode();
-        String key = "vce:" + user.getEmail();
+        String key = "verification:" + HashUtils.hashKeySha256(codeVerifyDto.getEmail());
+
+        if (!redisService.hasKey(key)){
+            return ResponseEntity.badRequest().build();
+        }
 
         if (redisService.getValue(key).equals(code)){
             redisService.deleteValue(key);
@@ -180,25 +173,26 @@ public class UserService {
             userRepo.save(user);
 
             SecurityUser securityUser = new SecurityUser(user);
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("roles", securityUser.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toList()));
 
-            //String token = jwtService.generateToken(claims, securityUser);
+            String refreshToken = jwtService.generateRefreshToken(securityUser);
+            Long timeToSave = jwtService.getJwtRefreshExpiration();
+            String accessToken = jwtService.generateAccessToken(securityUser);
 
-            return ResponseEntity.ok().body(Map.of("token", "token"));
+            String oldEmailKey = "refresh:" + HashUtils.hashKeySha256(user.getId().toString());
+            redisService.deleteValue(oldEmailKey);
+
+            redisService.saveValue("refresh:" + HashUtils.hashKeySha256(user.getId().toString()),
+                    refreshToken, TimeUnit.MILLISECONDS.toMinutes(timeToSave));
+
+            return ResponseEntity.ok().body(Map.of("refreshToken", refreshToken,
+                    "accessToken", accessToken));
         }
-        return ResponseEntity.badRequest().build();
+        else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
-    //TODO
     public ResponseEntity<SecurityInfoDto> getSecurityInfo() {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        String email = authentication.getName();
-//
-//        User user = userRepo.findByEmail(email).get();
-
         User user = getCurrentUser();
 
         SecurityInfoDto securityInfoDto = SecurityInfoDto.builder()
@@ -208,7 +202,6 @@ public class UserService {
         return ResponseEntity.ok().body(securityInfoDto);
     }
 
-    //TODO
     public ResponseEntity<?> changeTwoFactorStatus() {
         User user = getCurrentUser();
 
@@ -220,29 +213,55 @@ public class UserService {
         return ResponseEntity.ok().build();
     }
 
-    //TODO
-    public ResponseEntity<?> changeUserPassword(PasswordDto passwordDto) {
+    public ResponseEntity<?> changeUserPassword(PasswordChangeDto passwordChangeDto) {
         User user = getCurrentUser();
+
+        if (user.getIsTwoFactorEnable()){
+            String key = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());
+            String code = String.format("%06d", new Random().nextInt(999999));
+
+            emailService.send(user.getEmail(), "Password verify", code);
+            redisService.saveValue(key, code, 10);
+
+            return ResponseEntity.ok(Map.of(
+                    "redirect", "/personal-info/security/password/verify",
+                    "method", "POST"));
+        }
 
         PasswordEncoder encoder = new BCryptPasswordEncoder();
 
-        user.setPassword(encoder.encode(passwordDto.getPassword()));
-
+        user.setPassword(encoder.encode(passwordChangeDto.getPassword()));
         userRepo.save(user);
 
         return ResponseEntity.ok().build();
     }
 
-    private boolean isValidEmail(String email) {
-        String regex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
-        return email.matches(regex);
+    public ResponseEntity<?> verifyChangeUserPassword(PasswordChangeDto passwordChangeDto) {
+        User user = getCurrentUser();
+
+        String code = passwordChangeDto.getCode();
+        String keyToFind = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());
+
+        if (redisService.hasKey(keyToFind)) {
+            if (redisService.getValue(keyToFind).equals(code)) {
+
+                redisService.deleteValue(keyToFind);
+
+                PasswordEncoder encoder = new BCryptPasswordEncoder();
+
+                user.setPassword(encoder.encode(passwordChangeDto.getPassword()));
+                userRepo.save(user);
+                return ResponseEntity.ok().build();
+            }
+        }
+        return ResponseEntity.badRequest().build();
     }
 
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
-        return userRepo.findByEmail(email).get();
+        return userRepo.findByEmail(email).orElseThrow();
     }
 
 }
