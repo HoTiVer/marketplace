@@ -10,8 +10,19 @@ public class UserAuthDto {
     @NotBlank(message = "Email is required")
     String email;
 
-    String displayName;
-
     @NotBlank(message = "Password is required")
     String password;
+
+    String displayName;
+
+    public UserAuthDto(String email, String password, String displayName) {
+        this.email = email;
+        this.password = password;
+        this.displayName = displayName;
+    }
+
+    public UserAuthDto(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
 }

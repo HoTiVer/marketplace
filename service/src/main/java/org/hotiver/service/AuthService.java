@@ -5,6 +5,7 @@ import Utils.HashUtils;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
+import org.hotiver.dto.jwt.JwtTokensDto;
 import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserAuthDto;
 import org.hotiver.repo.RoleRepo;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
@@ -27,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class AuthService {
 
+    private final Long timeToSaveJwtRefresh;
     private final JwtService jwtService;
     private final EmailService emailService;
     private final RedisService redisService;
@@ -36,6 +39,8 @@ public class AuthService {
     public AuthService(JwtService jwtService, EmailService emailService,
                        RedisService redisService, UserRepo userRepo,
                        RoleRepo roleRepo) {
+        timeToSaveJwtRefresh = TimeUnit.MILLISECONDS
+                .toMinutes(jwtService.getJwtRefreshExpiration());
         this.emailService = emailService;
         this.redisService = redisService;
         this.jwtService = jwtService;
@@ -76,38 +81,22 @@ public class AuthService {
                     .body(Map.of("success", false, "message", "User already exists"));
         }
 
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        User user = createNewDefaultUser(email, password, displayName);
 
-        Role role = roleRepo.findById(1L).orElseThrow();
-
-        User user = User.builder()
-                .email(email)
-                .password(encoder.encode(password))
-                .balance(0.0)
-                .roles(List.of(role))
-                .registerDate(Date.valueOf(LocalDate.now()))
-                .displayName(displayName)
-                .isTwoFactorEnable(false)
-                .build();
-
-        String refreshToken;
-        String accessToken;
         try {
             userRepo.save(user);
 
             SecurityUser securityUser = new SecurityUser(user);
 
-            refreshToken = jwtService.generateRefreshToken(securityUser);
-            accessToken = jwtService.generateAccessToken(securityUser);
+            JwtTokensDto jwtTokensDto = generateJwtTokens(securityUser);
 
-            String key = "refresh:" + HashUtils.hashKeySha256(user.getId().toString());
-            Long timeToSave = jwtService.getJwtRefreshExpiration();
-            redisService.saveValue(key, refreshToken, TimeUnit.MILLISECONDS.toMinutes(timeToSave));
+            String key = generateRedisRefreshTokenKey(user.getId());
+            redisService.saveValue(key, jwtTokensDto.getRefreshToken(), timeToSaveJwtRefresh);
 
             return ResponseEntity.ok(Map.of("success", true,
                     "message", "Registered",
-                    "refreshToken", refreshToken,
-                    "accessToken", accessToken));
+                    "refreshToken", jwtTokensDto.getRefreshToken(),
+                    "accessToken", jwtTokensDto.getAccessToken()));
         }
         catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -138,7 +127,7 @@ public class AuthService {
                     .body(Map.of("success", false, "message", "User not found"));
         }
 
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         if (!passwordEncoder.matches(password, user.get().getPassword())) {
             return ResponseEntity.badRequest()
@@ -158,11 +147,10 @@ public class AuthService {
         String refreshToken = jwtService.generateRefreshToken(securityUser);
         String accessToken = jwtService.generateAccessToken(securityUser);
 
-        String refreshTokenKey = "refresh:" + HashUtils.hashKeySha256(user.get().getId().toString());
-        Long timeToSave = jwtService.getJwtRefreshExpiration();
+        String refreshTokenKey = generateRedisRefreshTokenKey(user.get().getId());
         redisService.saveValue(refreshTokenKey,
                 refreshToken,
-                TimeUnit.MILLISECONDS.toMinutes(timeToSave));
+                timeToSaveJwtRefresh);
 
         return ResponseEntity.ok(Map.of("success", true,
                 "message", "Logged in successfully",
@@ -170,8 +158,9 @@ public class AuthService {
                 "accessToken", accessToken));
     }
 
+    @Transactional
     public ResponseEntity<?> verifyCode(CodeVerifyDto codeVerifyDto) {
-        String key = "2fa:" + HashUtils.hashKeySha256(codeVerifyDto.getEmail());
+        String key = generateRedisTwoFactorKey(codeVerifyDto.getEmail());
         String storedCode = redisService.getValue(key);
 
         if (storedCode == null) {
@@ -189,10 +178,10 @@ public class AuthService {
             String refreshToken = jwtService.generateRefreshToken(securityUser);
             String accessToken = jwtService.generateAccessToken(securityUser);
 
-            String refreshTokenKey = "refresh:" + HashUtils.hashKeySha256(opUser.get().getId().toString());
-            Long timeToSave = jwtService.getJwtRefreshExpiration();
+            String refreshTokenKey = generateRedisRefreshTokenKey(opUser.get().getId());
+
             redisService.saveValue(refreshTokenKey, refreshToken,
-                    TimeUnit.MILLISECONDS.toMinutes(timeToSave));
+                    TimeUnit.MILLISECONDS.toMinutes(timeToSaveJwtRefresh));
 
             return ResponseEntity.ok(Map.of("success", true,
                     "message", "Logged in successfully",
@@ -222,7 +211,7 @@ public class AuthService {
         }
 
         String storedRefresh = redisService
-                .getValue("refresh:" + HashUtils.hashKeySha256(user.get().getId().toString()));
+                .getValue(generateRedisRefreshTokenKey(user.get().getId()));
         if (storedRefresh == null || !storedRefresh.equals(refreshToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("Message","Refresh token mismatch"));
@@ -241,21 +230,103 @@ public class AuthService {
 
         User user = userRepo.findByEmail(email).orElseThrow();
 
-        String key = "refresh:" + HashUtils.hashKeySha256(user.getId().toString());
+        String key = generateRedisRefreshTokenKey(user.getId());
         redisService.deleteValue(key);
 
         return ResponseEntity.ok().build();
     }
 
-    private void sendVerificationCode(String email){
-        String code = generateRandom6DigitCode();
-        String key = "2fa:" + HashUtils.hashKeySha256(email);
+    @Transactional
+    public JwtTokensDto authAsOAuth2User(String email) {
+        Optional<User> opUser = userRepo.findByEmail(email);
+        User user;
+        if (opUser.isEmpty()){
+            String password = generate13SymbolsPassword();
+            var response = register(new UserAuthDto(email, password));
+
+            return new JwtTokensDto(response.getBody().get("refreshToken").toString(),
+                    response.getBody().get("accessToken").toString());
+        }
+        else {
+            user = opUser.get();
+        }
+
+        SecurityUser securityUser = new SecurityUser(user);
+        var tokens = generateJwtTokens(securityUser);
+
+        String key = generateRedisRefreshTokenKey(user.getId());
+        redisService.saveValue(key, tokens.getRefreshToken(), timeToSaveJwtRefresh);
+
+        return tokens;
+    }
+
+    private User createNewDefaultUser(String email, String password, String displayName) {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        Role role = roleRepo.findById(1L).orElseThrow();
+
+        return User.builder()
+                .email(email)
+                .password(encoder.encode(password))
+                .balance(0.0)
+                .roles(List.of(role))
+                .registerDate(Date.valueOf(LocalDate.now()))
+                .displayName(displayName)
+                .isTwoFactorEnable(false)
+                .build();
+    }
+
+    private JwtTokensDto generateJwtTokens(SecurityUser securityUser) {
+        String refreshToken = jwtService.generateRefreshToken(securityUser);
+        String accessToken = jwtService.generateAccessToken(securityUser);
+        return new JwtTokensDto(refreshToken, accessToken);
+    }
+
+    private void sendVerificationCode(String email) {
+        String code = generate6DigitCode();
+        String key = generateRedisTwoFactorKey(email);
         redisService.saveValue(key, code, 10);
         emailService.send(email, "Verify Code", "Your Code: " + code);
     }
 
-    private String generateRandom6DigitCode() {
+    private String generateRedisRefreshTokenKey(Long userId) {
+        return "refresh:" + HashUtils.hashKeySha256(userId.toString());
+    }
+
+    private String generateRedisTwoFactorKey(String email) {
+        return "2fa:" + HashUtils.hashKeySha256(email);
+    }
+
+    private String generate6DigitCode() {
         return String.format("%06d", new Random().nextInt(999999));
     }
 
+    private String generate13SymbolsPassword() {
+        final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        final String lower = "abcdefghijklmnopqrstuvwxyz";
+        final String digits = "0123456789";
+        final String special = "!@#$%^&*()-_=+[]{}";
+        final String allChars = upper + lower + digits + special;
+
+        SecureRandom random = new SecureRandom();
+        List<Character> passwordChars = new ArrayList<>();
+
+        passwordChars.add(upper.charAt(random.nextInt(upper.length())));
+        passwordChars.add(lower.charAt(random.nextInt(lower.length())));
+        passwordChars.add(digits.charAt(random.nextInt(digits.length())));
+        passwordChars.add(special.charAt(random.nextInt(special.length())));
+
+        for (int i = passwordChars.size(); i < 13; i++) {
+            passwordChars.add(allChars.charAt(random.nextInt(allChars.length())));
+        }
+
+        Collections.shuffle(passwordChars, random);
+
+        StringBuilder password = new StringBuilder();
+        for (char c : passwordChars) {
+            password.append(c);
+        }
+
+        return password.toString();
+    }
 }
