@@ -1,8 +1,6 @@
 package org.hotiver.service;
 
 import jakarta.transaction.Transactional;
-import org.hotiver.common.RoleType;
-import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
@@ -13,6 +11,7 @@ import org.hotiver.repo.UserRepo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,7 +60,7 @@ public class AdminService {
         user.setDisplayName(sellerRegister.get().getDisplayName());
         Seller seller = Seller.builder()
                 .user(user)
-                .rating(0.0)
+                .rating(BigDecimal.valueOf(0.0))
                 .nickname(sellerUsername)
                 .profileDescription(sellerRegister.get().getProfileDescription())
                 .build();

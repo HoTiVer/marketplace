@@ -26,6 +26,7 @@ public class Product {
 
     private String description;
 
+    @Enumerated(value = EnumType.STRING)
     private ProductCategory category;
 
     @Column(columnDefinition = "jsonb")

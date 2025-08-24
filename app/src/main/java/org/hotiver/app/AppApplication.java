@@ -1,9 +1,12 @@
 package org.hotiver.app;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 
 @EnableCaching
 @SpringBootApplication(scanBasePackages = "org.hotiver")
@@ -27,7 +30,6 @@ public class AppApplication {
 		catch (Exception e){
 			System.out.println(e.getMessage());
 		}
-
 
 		SpringApplication.run(AppApplication.class, args);
 	}

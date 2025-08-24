@@ -3,6 +3,7 @@ package org.hotiver.domain.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -25,7 +26,8 @@ public class Seller  {
     @Column(unique = true)
     private String nickname;
 
-    private Double rating;
+    @Column(precision = 2, scale = 1)
+    private BigDecimal rating;
 
     private String profileDescription;
 
