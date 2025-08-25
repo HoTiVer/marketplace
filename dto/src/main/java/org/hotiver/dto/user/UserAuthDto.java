@@ -1,6 +1,7 @@
 package org.hotiver.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,6 +15,10 @@ public class UserAuthDto {
     String password;
 
     String displayName;
+
+    public UserAuthDto() {
+
+    }
 
     public UserAuthDto(String email, String password, String displayName) {
         this.email = email;

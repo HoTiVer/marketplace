@@ -22,6 +22,7 @@ public class AppApplication {
 			System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
 			System.setProperty("JWT_REFRESH_EXPIRATION", dotenv.get("JWT_REFRESH_EXPIRATION"));
 			System.setProperty("JWT_ACCESS_EXPIRATION", dotenv.get("JWT_ACCESS_EXPIRATION"));
+			System.setProperty("REDIS_HOST", dotenv.get("REDIS_HOST"));;
 			System.setProperty("SERVICE_EMAIL", dotenv.get("SERVICE_EMAIL"));
 			System.setProperty("EMAIL_PASSWORD", dotenv.get("EMAIL_PASSWORD"));
 			System.setProperty("GOOGLE_CLIENT_ID", dotenv.get("GOOGLE_CLIENT_ID"));

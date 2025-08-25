@@ -1,0 +1,44 @@
+
+services:
+  app:
+    container_name: marketplace-app
+    image: marketplace-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+        - database
+        - redis
+    environment:
+      DB_URL: jdbc:postgresql://database:5432/${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
+      SERVICE_EMAIL: ${SERVICE_EMAIL}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      REDIS_HOST: ${REDIS_HOST}
+    ports:
+      - "8080:8080"
+
+  database:
+    image: 'postgres:17'
+    container_name: marketplace-db
+    ports:
+      - '5432'
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+  redis:
+    image: redis:7
+    container_name: marketplace-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres-data:
