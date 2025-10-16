@@ -11,12 +11,21 @@ import org.hotiver.common.RoleType;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "roles")
+@Table(name = "role")
 public class Role {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "sequence-role"
+    )
+    @SequenceGenerator(
+            name = "sequence-role",
+            sequenceName = "sequence_role",
+            allocationSize = 5
+    )
     private Long id;
 
     @Enumerated(value = EnumType.STRING)
-    private RoleType roleType;
+    @Column(unique = true)
+    private RoleType name;
 }

@@ -14,12 +14,21 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "users")
+@Table(name = "user", schema = "public")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY,
+            generator = "user-sequence"
+    )
+    @SequenceGenerator(
+            name = "user-sequence",
+            sequenceName = "sequence_user",
+            allocationSize = 5
+    )
     private Long id;
 
+    @Column(unique = true)
     private String email;
 
     private String password;
@@ -27,7 +36,7 @@ public class User {
     private Double balance;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "users_roles",
+    @JoinTable(name = "user_role",
                 joinColumns = @JoinColumn(name = "user_id"),
                 inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<Role> roles;
@@ -38,7 +47,7 @@ public class User {
 
     @ManyToMany
     @JoinTable(
-            name = "users_wishes",
+            name = "user_wishes",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "product_id")
     )

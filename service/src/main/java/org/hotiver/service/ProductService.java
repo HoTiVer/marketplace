@@ -48,25 +48,25 @@ public class ProductService {
         Seller seller = sellerRepo.findByEmail(email);
 
 
-        Product product = Product.builder()
-                .name(productAddDto.getName())
-                .price(productAddDto.getPrice())
-                .category(productAddDto.getCategory())
-                .description(productAddDto.getDescription())
-                .seller(seller)
-                .isVisible(false)
-                .build();
-
-        String jsonString = null;
-        try {
-            jsonString = mapper.writeValueAsString(productAddDto.getCharacteristic());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        product.setCharacteristic(jsonString);
-
-        productRepo.save(product);
+//        Product product = Product.builder()
+//                .name(productAddDto.getName())
+//                .price(productAddDto.getPrice())
+//                .category(productAddDto.getCategory())
+//                .description(productAddDto.getDescription())
+//                .seller(seller)
+//                .isVisible(false)
+//                .build();
+//
+//        String jsonString = null;
+//        try {
+//            jsonString = mapper.writeValueAsString(productAddDto.getCharacteristic());
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        product.setCharacteristic(jsonString);
+//
+//        productRepo.save(product);
 
         return ResponseEntity.ok().body(Map.of("message", "new product added"));
     }
@@ -83,18 +83,18 @@ public class ProductService {
         ProductGetDto returnProduct = ProductGetDto.builder()
                 .name(existingProduct.getName())
                 .price(existingProduct.getPrice())
-                .category(existingProduct.getCategory())
+                //.category(existingProduct.getCategory())
                 .description(existingProduct.getDescription())
                 .sellerUsername(existingProduct.getSeller().getNickname())
                 .sellerDisplayName(existingProduct.getSeller().getUser().getDisplayName())
                 .build();
 
-        try {
-            var map = mapper.readValue(existingProduct.getCharacteristic(), Map.class);
-            returnProduct.setCharacteristic(map);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            var map = mapper.readValue(existingProduct.getCharacteristic(), Map.class);
+//            returnProduct.setCharacteristic(map);
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
 
         return ResponseEntity.ok().body(returnProduct);
     }
@@ -152,7 +152,7 @@ public class ProductService {
         }
 
         if (productAddDto.getCategory() != null) {
-            product.setCategory(productAddDto.getCategory());
+            //product.setCategory(productAddDto.getCategory());
         }
 
         if (productAddDto.getCharacteristic() != null) {
@@ -162,7 +162,7 @@ public class ProductService {
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
-            product.setCharacteristic(jsonString);
+            //product.setCharacteristic(jsonString);
         }
 
         productRepo.save(product);

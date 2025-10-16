@@ -57,3 +57,6 @@ jwt:
   secret: ${JWT_SECRET}
   refresh.expiration: ${JWT_REFRESH_EXPIRATION}
   access.expiration: ${JWT_ACCESS_EXPIRATION}
+
+frontend:
+  host: ${FRONTEND_HOST}

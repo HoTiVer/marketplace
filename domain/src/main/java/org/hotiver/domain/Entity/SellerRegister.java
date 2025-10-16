@@ -13,7 +13,15 @@ import lombok.*;
 public class SellerRegister {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY,
+            generator = "sequence-register_seller_request"
+    )
+    @SequenceGenerator(
+            name = "sequence-register_seller_request",
+            sequenceName = "sequence_register_seller_request",
+            allocationSize = 5
+    )
     private Long id;
 
     private Long userId;

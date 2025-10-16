@@ -11,10 +11,18 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table
+@Table(name = "message")
 public class Message {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "sequence-message"
+    )
+    @SequenceGenerator(
+            name = "sequence-message",
+            sequenceName = "sequence_message",
+            allocationSize = 5
+    )
     private Long id;
 
     @ManyToOne

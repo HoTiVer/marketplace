@@ -12,7 +12,7 @@ CREATE SEQUENCE IF NOT EXISTS sequence_chat START WITH 1 INCREMENT BY 5;
 
 CREATE SEQUENCE IF NOT EXISTS sequence_message START WITH 1 INCREMENT BY 5;
 
-CREATE SEQUENCE IF NOT EXISTS sequence_user_wishes START WITH 1 INCREMENT BY 5;
+--CREATE SEQUENCE IF NOT EXISTS sequence_user_wishes START WITH 1 INCREMENT BY 5;
 
 CREATE TABLE public."user"(
     id BIGINT,
@@ -49,7 +49,7 @@ CREATE TABLE product(
     price DOUBLE PRECISION,
     description VARCHAR(500),
     category_id BIGINT NOT NULL,
-    characteristic VARCHAR(500),
+    characteristic JSONB,
     seller_id BIGINT NOT NULL,
     is_visible BOOLEAN NOT NULL,
     CONSTRAINT pk_product PRIMARY KEY (id)

@@ -5,27 +5,24 @@ import lombok.*;
 
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@Entity
-@Table(name = "chat")
-public class Chat {
+@Entity(name = "category")
+public class Category {
+
     @Id
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
-            generator = "sequence-chat"
-    )
+            generator = "sequence-category")
     @SequenceGenerator(
-            name = "sequence-chat",
-            sequenceName = "sequence_chat",
+            name = "sequence-category",
+            sequenceName = "sequence_category",
             allocationSize = 5
     )
     private Long id;
 
-    @ManyToOne
-    private User user1;
+    @Column(unique = true)
+    private String name;
 
-    @ManyToOne
-    private User user2;
 }

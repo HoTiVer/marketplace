@@ -43,7 +43,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             return Collections.emptyList();
         }
         return roles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleType().name()))
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().name()))
                 .collect(Collectors.toList());
     }
 }
