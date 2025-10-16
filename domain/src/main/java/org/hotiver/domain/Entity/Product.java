@@ -4,12 +4,9 @@ package org.hotiver.domain.Entity;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
-import netscape.javascript.JSObject;
 import org.hibernate.annotations.Type;
-import org.hotiver.common.ProductCategory;
 
 import java.util.Map;
-import java.util.Objects;
 
 @Setter
 @Getter

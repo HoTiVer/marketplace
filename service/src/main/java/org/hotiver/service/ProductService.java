@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.hotiver.common.ProductCategory;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
@@ -151,7 +150,7 @@ public class ProductService {
             product.setDescription(productAddDto.getDescription());
         }
 
-        if (productAddDto.getCategory() != null) {
+        if (productAddDto.getCategoryName() != null) {
             //product.setCategory(productAddDto.getCategory());
         }
 
@@ -169,7 +168,7 @@ public class ProductService {
         return ResponseEntity.ok().build();
     }
 
-    public List<ProductCategory.CategoryDto> getProductCategories() {
-        return ProductCategory.getAllCategoriesDto();
-    }
+//    public List<ProductCategory.CategoryDto> getProductCategories() {
+//        return ProductCategory.getAllCategoriesDto();
+//    }
 }

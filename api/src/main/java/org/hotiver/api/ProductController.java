@@ -1,6 +1,5 @@
 package org.hotiver.api;
 
-import org.hotiver.common.ProductCategory;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.service.ProductService;
@@ -29,10 +28,10 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
-    @GetMapping("/product/categories")
-    public List<ProductCategory.CategoryDto> getProductCategories(){
-        return productService.getProductCategories();
-    }
+//    @GetMapping("/product/categories")
+//    public List<ProductCategory.CategoryDto> getProductCategories(){
+//        return productService.getProductCategories();
+//    }
 
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping("/product")

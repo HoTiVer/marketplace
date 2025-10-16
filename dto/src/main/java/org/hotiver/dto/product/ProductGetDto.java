@@ -3,7 +3,6 @@ package org.hotiver.dto.product;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.hotiver.common.ProductCategory;
 
 import java.util.Map;
 
@@ -17,7 +16,7 @@ public class ProductGetDto {
 
     private String description;
 
-    private ProductCategory category;
+    private String categoryName;
 
     private Map<String, String> characteristic;
 
