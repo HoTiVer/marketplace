@@ -8,6 +8,7 @@ import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.jwt.JwtTokensDto;
 import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserAuthDto;
+import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
 import org.springframework.http.HttpStatus;
@@ -258,6 +259,26 @@ public class AuthService {
         redisService.saveValue(key, tokens.getRefreshToken(), timeToSaveJwtRefresh);
 
         return tokens;
+    }
+
+    public ResponseEntity<UserInfoDto> getUserInfoForFrontend() {
+        var context = SecurityContextHolder.getContext();
+        var email = context.getAuthentication().getName();
+
+        Optional<User> user = userRepo.findByEmail(email);
+        if (user.isPresent()) {
+            UserInfoDto userInfoDto = new UserInfoDto();
+
+            List<Role> roles = user.get().getRoles();
+            List<String> returnRoles = new ArrayList<>();
+            for (var role : roles){
+                returnRoles.add(role.getName().toString());
+            }
+            userInfoDto.setRoles(returnRoles);
+            return ResponseEntity.ok(userInfoDto);
+        }
+
+        return ResponseEntity.badRequest().build();
     }
 
     private User createNewDefaultUser(String email, String password, String displayName) {

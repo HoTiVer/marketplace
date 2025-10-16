@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserAuthDto;
+import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -70,5 +71,10 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(){
         return authService.logout();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserInfoDto> getUserInfoForFrontend() {
+        return authService.getUserInfoForFrontend();
     }
 }
