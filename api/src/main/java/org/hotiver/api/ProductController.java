@@ -18,11 +18,6 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping("/")
-    public String mainPage(){
-        return "main page";
-    }
-
     @GetMapping("/product/{id}")
     public ResponseEntity<ProductGetDto> getProductById(@PathVariable Long id){
         return productService.getProductById(id);

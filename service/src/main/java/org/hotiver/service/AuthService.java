@@ -5,6 +5,7 @@ import Utils.HashUtils;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
+import org.hotiver.dto.auth.AuthDto;
 import org.hotiver.dto.jwt.JwtTokensDto;
 import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserAuthDto;
@@ -50,11 +51,13 @@ public class AuthService {
     }
 
     @Transactional
-    public ResponseEntity<Map<String, Object>> register(UserAuthDto userAuthDto) {
+    public ResponseEntity<AuthDto> register(UserAuthDto userAuthDto) {
         if (userAuthDto == null) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false,
-                            "message", "Request body is missing"));
+                    .body(AuthDto.builder()
+                            .isSuccess(false)
+                            .message("Request body is missing")
+                            .build());
         }
         String email = userAuthDto.getEmail();
         String password = userAuthDto.getPassword();
@@ -63,8 +66,10 @@ public class AuthService {
         if (email == null || email.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false,
-                            "message", "Email or Password are required"));
+                    .body(AuthDto.builder()
+                            .isSuccess(false)
+                            .message("Email or Password are required")
+                            .build());
         }
 
         if (displayName == null || displayName.trim().isEmpty()) {
@@ -73,13 +78,18 @@ public class AuthService {
 
         if (!EmailUtils.isValidEmail(email)) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Invalid email format"));
+                    .body(AuthDto.builder()
+                            .isSuccess(false)
+                            .message("Invalid email format")
+                            .build());
         }
 
         if (userRepo.existsUserByEmail(email)){
-
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "User already exists"));
+                    .body(AuthDto.builder()
+                            .isSuccess(false)
+                            .message("User already exists")
+                            .build());
         }
 
         User user = createNewDefaultUser(email, password, displayName);
@@ -94,24 +104,32 @@ public class AuthService {
             String key = generateRedisRefreshTokenKey(user.getId());
             redisService.saveValue(key, jwtTokensDto.getRefreshToken(), timeToSaveJwtRefresh);
 
-            return ResponseEntity.ok(Map.of("success", true,
-                    "message", "Registered",
-                    "refreshToken", jwtTokensDto.getRefreshToken(),
-                    "accessToken", jwtTokensDto.getAccessToken()));
+            return ResponseEntity.ok()
+                    .body(AuthDto.builder()
+                            .isSuccess(true)
+                            .message("Registered")
+                            .refreshToken(jwtTokensDto.getRefreshToken())
+                            .accessToken(jwtTokensDto.getAccessToken())
+                            .build());
+
         }
         catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false,
-                            "message", "Unexpected error occurred"));
+                    .body(AuthDto.builder()
+                            .isSuccess(false)
+                            .message("Unexpected error occurred")
+                            .build());
         }
     }
 
-    public ResponseEntity<Map<String, Object>> login(UserAuthDto userAuthDto) {
+    public ResponseEntity<AuthDto> login(UserAuthDto userAuthDto) {
         if (userAuthDto.getEmail() == null || userAuthDto.getEmail().trim().isEmpty() ||
                 userAuthDto.getPassword() == null || userAuthDto.getPassword().trim().isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false,
-                            "message", "Email and Password are required"));
+                    .body(AuthDto.builder()
+                            .isSuccess(false)
+                            .message("Email and Password are required")
+                            .build());
         }
 
         String email = userAuthDto.getEmail();
@@ -119,28 +137,39 @@ public class AuthService {
 
         if (!EmailUtils.isValidEmail(email)) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Invalid email format"));
+                    .body(AuthDto.builder()
+                            .isSuccess(false)
+                            .message("Invalid email format")
+                            .build());
         }
 
         Optional<User> user = userRepo.findByEmail(email);
         if (user.isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "User not found"));
+                    .body(AuthDto.builder()
+                            .isSuccess(false)
+                            .message("User not found")
+                            .build());
         }
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         if (!passwordEncoder.matches(password, user.get().getPassword())) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("success", false,
-                            "message", "Invalid password"));
+                    .body(AuthDto.builder()
+                            .isSuccess(false)
+                            .message("Invalid password")
+                            .build());
         }
 
         if (user.get().getIsTwoFactorEnable()){
             sendVerificationCode(email);
-            return ResponseEntity.ok(Map.of(
-                    "redirect", "/login/verify",
-                    "method", "POST"));
+            return ResponseEntity.ok()
+                    .body(AuthDto.builder()
+                            .isSuccess(true)
+                            .message("Redirecting")
+                            .redirectUrl("/auth/login/verify")
+                            .build());
         }
 
         SecurityUser securityUser = new SecurityUser(user.get());
@@ -153,14 +182,17 @@ public class AuthService {
                 refreshToken,
                 timeToSaveJwtRefresh);
 
-        return ResponseEntity.ok(Map.of("success", true,
-                "message", "Logged in successfully",
-                "refreshToken", refreshToken,
-                "accessToken", accessToken));
+        return ResponseEntity.ok()
+                .body(AuthDto.builder()
+                        .isSuccess(true)
+                        .message("Logged in successfully")
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .build());
     }
 
     @Transactional
-    public ResponseEntity<?> verifyCode(CodeVerifyDto codeVerifyDto) {
+    public ResponseEntity<AuthDto> verifyCode(CodeVerifyDto codeVerifyDto) {
         String key = generateRedisTwoFactorKey(codeVerifyDto.getEmail());
         String storedCode = redisService.getValue(key);
 
@@ -184,10 +216,13 @@ public class AuthService {
             redisService.saveValue(refreshTokenKey, refreshToken,
                     TimeUnit.MILLISECONDS.toMinutes(timeToSaveJwtRefresh));
 
-            return ResponseEntity.ok(Map.of("success", true,
-                    "message", "Logged in successfully",
-                    "refreshToken", refreshToken,
-                    "accessToken", accessToken));
+            return ResponseEntity.ok()
+                    .body(AuthDto.builder()
+                            .isSuccess(true)
+                            .message("Logged in successfully")
+                            .refreshToken(refreshToken)
+                            .accessToken(accessToken)
+                            .build());
         }
 
         return ResponseEntity.badRequest().build();
@@ -245,8 +280,8 @@ public class AuthService {
             String password = generate13SymbolsPassword();
             var response = register(new UserAuthDto(email, password));
 
-            return new JwtTokensDto(response.getBody().get("refreshToken").toString(),
-                    response.getBody().get("accessToken").toString());
+            return new JwtTokensDto(response.getBody().getRefreshToken(),
+                    response.getBody().getAccessToken());
         }
         else {
             user = opUser.get();

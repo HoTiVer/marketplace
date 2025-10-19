@@ -38,8 +38,6 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
 
-    @Value("${frontend.host}")
-    private String frontendHost;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService, JwtFilter jwtFilter,
                           OAuth2SuccessHandler oAuth2SuccessHandler,
@@ -100,18 +98,5 @@ public class SecurityConfig {
         provider.setUserDetailsService(userDetailsService);
 
         return provider;
-    }
-
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("http://localhost:5173"); // фронт
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        config.setAllowCredentials(true); // чтобы передавать куки/заголовки авторизации
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
     }
 }

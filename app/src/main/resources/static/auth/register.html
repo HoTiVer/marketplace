@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+<div class="bg-white p-8 rounded-2xl shadow-lg w-96">
+    <h2 class="text-2xl font-bold mb-6 text-center">Sign Up</h2>
+    <form id="registerForm" class="space-y-4">
+        <input type="text" name="email" placeholder="Email"
+               class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring focus:ring-green-300" required>
+
+        <input type="text" name="nickname" placeholder="Nickname"
+               class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring focus:ring-green-300" required>
+
+        <input type="password" name="password" placeholder="Password"
+               class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring focus:ring-green-300" required>
+
+        <button type="submit"
+                class="w-full bg-green-500 text-white py-2 rounded-xl hover:bg-green-600 transition">
+            Create Account
+        </button>
+    </form>
+
+    <p class="text-center text-sm mt-4">
+        Already have an account? <a href="/auth/login.html" class="text-blue-500 hover:underline">Sign in</a>
+    </p>
+
+    <p id="responseMessage" class="text-center text-sm mt-4"></p>
+</div>
+
+<script type="module" src="/js/auth/register.js"></script>
+</body>
+</html>
