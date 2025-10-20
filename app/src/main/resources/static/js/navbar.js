@@ -27,14 +27,21 @@ export async function renderNavbar(authData) {
         const hasAdminRole = authData.roles?.includes("ADMIN") ?? false;
 
         if (hasAdminRole) {
+            const adminBtn = document.createElement("a");
+            adminBtn.href = "/admin/dashboard.html";
+            adminBtn.textContent = "Admin Panel";
+            adminBtn.className =
+                "w-full block px-4 py-2 text-left text-yellow-600 hover:bg-yellow-50 transition";
+            dropdown.insertBefore(adminBtn, logoutBtn);
+
+
             const categoryBtn = document.createElement("a");
             categoryBtn.href = "/category.html";
-            categoryBtn.textContent = "Category";
-            categoryBtn.className = "w-full block px-4 py-2 text-left text-yellow-600 hover:bg-yellow-50 transition";
-
+            categoryBtn.textContent = "Categories";
+            categoryBtn.className =
+                "w-full block px-4 py-2 text-left text-blue-600 hover:bg-blue-50 transition";
             dropdown.insertBefore(categoryBtn, logoutBtn);
         }
-
     } else {
         authButtons.classList.remove("hidden");
         userMenu.classList.add("hidden");
