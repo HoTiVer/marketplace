@@ -46,7 +46,7 @@ public class JwtFilter extends OncePerRequestFilter {
         final String jwt = authHeader.substring(7);
 
         try {
-            boolean isRefreshRequest = request.getRequestURI().equals("/refresh");
+            boolean isRefreshRequest = request.getRequestURI().equals("/auth/refresh");
 
             if (isRefreshRequest && !jwtService.isRefreshToken(jwt)) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Expected refresh token");
