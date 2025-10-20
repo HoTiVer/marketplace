@@ -64,10 +64,11 @@ public class UserController {
         return null;
     }
 
-    @GetMapping("/new-seller")
-    public ResponseEntity<?> getNewSellerPage() {
-        return userService.getNewSellerInfo();
-    }
+    // MAYBE REMOVE
+//    @GetMapping("/new-seller")
+//    public ResponseEntity<?> getNewSellerPage() {
+//        return userService.getNewSellerInfo();
+//    }
 
     @PostMapping("/new-seller/register")
     public ResponseEntity<Map<String, Object>> sendRegisterRequest(

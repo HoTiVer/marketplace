@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 min-h-screen flex flex-col">
+<div id="navbar"></div>
+
+<main id="mainContent" class="flex-1 pt-24 w-full flex flex-col items-center p-6 hidden">
+    <div id="userCard"
+         class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md flex flex-col gap-4 transition-all duration-500 opacity-0 translate-y-4">
+        <h2 id="displayName" class="text-2xl font-bold text-gray-800"></h2>
+        <p class="text-gray-600"><span class="font-semibold">Email:</span> <span id="email"></span></p>
+        <p class="text-gray-600"><span class="font-semibold">Registered:</span> <span id="registerDate"></span></p>
+        <p class="text-gray-600"><span class="font-semibold">Role:</span> <span id="isSeller"></span></p>
+        <p id="sellerNicknameContainer" class="text-gray-600 hidden">
+            <span class="font-semibold">Seller Nickname:</span> <span id="sellerNickname"></span>
+        </p>
+    </div>
+</main>
+
+<script type="module" src="../js/user/user.js"></script>
+</body>
+</html>

@@ -21,7 +21,7 @@ export async function renderNavbar(authData) {
         userMenu.classList.remove("hidden");
 
         profileBtn.addEventListener("click", () => {
-            window.location.href = `/user/profile/${authData.nickname}`;
+            window.location.href = `/user/personal-info.html`;
         });
 
         const hasAdminRole = authData.roles?.includes("ADMIN") ?? false;
