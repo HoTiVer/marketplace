@@ -19,7 +19,7 @@ public class CategoryService {
     }
 
     public List<CategoryDto> getCategories() {
-        List<Category> categories = categoryRepo.findAll();
+        List<Category> categories = categoryRepo.findAllSortedByName();
         List<CategoryDto> returnCategory = new ArrayList<>();
 
         for (var category : categories) {
@@ -34,6 +34,9 @@ public class CategoryService {
 
     public ResponseEntity<?> addCategory(CategoryDto categoryDto) {
         String categoryName = categoryDto.getName();
+        if (categoryName == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
         Category category = new Category();
         category.setName(categoryName);
