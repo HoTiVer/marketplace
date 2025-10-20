@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const mainContent = document.getElementById("mainContent");
     const userCard = document.getElementById("userCard");
+    const becomeSellerBtn = document.getElementById("becomeSellerBtn");
+    const sellerModal = document.getElementById("sellerModal");
+    const cancelSellerBtn = document.getElementById("cancelSellerBtn");
+    const submitSellerBtn = document.getElementById("submitSellerBtn");
 
     async function loadUserInfo() {
         try {
@@ -20,31 +24,74 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("registerDate").textContent = new Date(info.registerDate).toLocaleDateString();
 
             const isSeller = info.isSeller === true;
-            document.getElementById("isSeller").textContent = isSeller ? "seller" : "user";
+            document.getElementById("isSeller").textContent = isSeller ? "seller" : "not seller";
 
             const sellerNicknameContainer = document.getElementById("sellerNicknameContainer");
 
             if (isSeller) {
                 document.getElementById("sellerNickname").textContent = info.sellerNickname || "—";
                 sellerNicknameContainer.classList.remove("hidden");
+                becomeSellerBtn.classList.add("hidden");
             } else {
                 sellerNicknameContainer.classList.add("hidden");
+                becomeSellerBtn.classList.remove("hidden");
             }
 
-            userCard.classList.add("opacity-0", "translate-y-4");
             mainContent.classList.remove("hidden");
-            setTimeout(() => {
-                userCard.classList.remove("opacity-0", "translate-y-4");
-                userCard.classList.add("opacity-100", "translate-y-0", "transition-all", "duration-500");
-            });
 
         } catch (err) {
             console.error(err);
-            userCard.innerHTML = `
-                <p class="text-red-600 text-center">⚠ ${err.message}</p>
-            `;
+            userCard.innerHTML = `<p class="text-red-600 text-center">⚠ ${err.message}</p>`;
         }
     }
+
+    // --- Become Seller Button ---
+    becomeSellerBtn.addEventListener("click", () => {
+        sellerModal.classList.remove("hidden");
+    });
+
+    cancelSellerBtn.addEventListener("click", () => {
+        sellerModal.classList.add("hidden");
+    });
+
+    submitSellerBtn.addEventListener("click", async () => {
+        const nickname = document.getElementById("requestedNickname").value.trim();
+        const displayNameInput = document.getElementById("displayNameInput").value.trim();
+        const description = document.getElementById("description").value.trim();
+
+        if (!nickname || !displayNameInput || !description) {
+            alert("Please fill in all fields");
+            return;
+        }
+
+        const body = {
+            requestedNickname: nickname,
+            displayName: displayNameInput,
+            description: description
+        };
+
+        try {
+            const res = await fetchWithAuth("/cabinet/new-seller/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+
+            const result = await res.json();
+
+            // Show backend message regardless of success or error
+            alert(result.message || "Unknown server response");
+
+            sellerModal.classList.add("hidden");
+
+            if (res.ok) {
+                await loadUserInfo();
+            }
+
+        } catch (err) {
+            alert("Failed to send request: " + err.message);
+        }
+    });
 
     await loadUserInfo();
 });

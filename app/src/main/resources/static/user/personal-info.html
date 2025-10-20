@@ -9,8 +9,7 @@
 <div id="navbar"></div>
 
 <main id="mainContent" class="flex-1 pt-24 w-full flex flex-col items-center p-6 hidden">
-    <div id="userCard"
-         class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md flex flex-col gap-4 transition-all duration-500 opacity-0 translate-y-4">
+    <div id="userCard" class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md flex flex-col gap-4">
         <h2 id="displayName" class="text-2xl font-bold text-gray-800"></h2>
         <p class="text-gray-600"><span class="font-semibold">Email:</span> <span id="email"></span></p>
         <p class="text-gray-600"><span class="font-semibold">Registered:</span> <span id="registerDate"></span></p>
@@ -20,6 +19,34 @@
         </p>
     </div>
 </main>
+
+<!-- Become Seller Button -->
+<button
+        id="becomeSellerBtn"
+        class="hidden fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition">
+    Become a Seller
+</button>
+
+<!-- Seller Registration Modal -->
+<div id="sellerModal" class="hidden fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div class="bg-white rounded-lg shadow-lg w-96 p-6">
+        <h2 class="text-xl font-semibold mb-4 text-center">Seller Registration</h2>
+
+        <label class="block mb-2 text-sm font-medium">Seller Nickname</label>
+        <input id="requestedNickname" type="text" class="w-full border rounded px-3 py-2 mb-3" placeholder="Enter nickname" />
+
+        <label class="block mb-2 text-sm font-medium">Display Name</label>
+        <input id="displayNameInput" type="text" class="w-full border rounded px-3 py-2 mb-3" placeholder="Enter display name" />
+
+        <label class="block mb-2 text-sm font-medium">Description</label>
+        <textarea id="description" class="w-full border rounded px-3 py-2 mb-4" rows="3" placeholder="Describe yourself"></textarea>
+
+        <div class="flex justify-end gap-2">
+            <button id="cancelSellerBtn" class="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
+            <button id="submitSellerBtn" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Submit</button>
+        </div>
+    </div>
+</div>
 
 <script type="module" src="../js/user/user.js"></script>
 </body>
