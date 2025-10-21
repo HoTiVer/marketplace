@@ -1,6 +1,7 @@
 package org.hotiver.service;
 
 import jakarta.transaction.Transactional;
+import org.hotiver.common.SellerRegisterRequestStatus;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
@@ -37,7 +38,7 @@ public class AdminService {
     }
 
     public List<SellerRegister> getSellerRegisterRequests() {
-        return sellerRegisterRepo.findAll();
+        return sellerRegisterRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE);
     }
 
     @Transactional
@@ -70,7 +71,9 @@ public class AdminService {
         chatService.sendMessage(0L, seller.getId(), "You are a seller now.");
         emailService.send(user.getEmail(), "Seller request", "You are a seller now.");
 
-        sellerRegisterRepo.delete(sellerRegister.get());
+        //sellerRegisterRepo.delete(sellerRegister.get());
+        sellerRegister.get().setStatus(SellerRegisterRequestStatus.ACCEPTED);
+        sellerRegisterRepo.save(sellerRegister.get());
 
         return ResponseEntity.ok().build();
     }
@@ -84,14 +87,17 @@ public class AdminService {
             return ResponseEntity.notFound().build();
         }
 
-        chatService.sendMessage(0L, sellerRegister.get().getId(),
+        chatService.sendMessage(0L, sellerRegister.get().getUserId(),
                 "You are not allowed to be a seller.");
 
         User user = userRepo.findById(sellerRegister.get().getUserId()).get();
         emailService.send(user.getEmail(), "Seller request",
                 "You are not allowed to be a seller.");
 
-        sellerRegisterRepo.delete(sellerRegister.get());
+        //sellerRegisterRepo.delete(sellerRegister.get());
+        sellerRegister.get().setStatus(SellerRegisterRequestStatus.REJECTED);
+        sellerRegisterRepo.save(sellerRegister.get());
+
         return ResponseEntity.ok().build();
     }
 }

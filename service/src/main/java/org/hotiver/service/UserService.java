@@ -3,6 +3,7 @@ package org.hotiver.service;
 import Utils.EmailUtils;
 import Utils.HashUtils;
 import jakarta.transaction.Transactional;
+import org.hotiver.common.SellerRegisterRequestStatus;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
@@ -18,6 +19,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.text.DateFormat;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -62,9 +65,16 @@ public class UserService {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "you already a seller"));
         }
-        if (sellerRegisterRepo.existsByUserId(userId)){
+
+        Date today = Date.from(Instant.now());
+        if (sellerRegisterRepo.existsByUserIdAndRequestDate(userId, today)) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("message", "you already send a request"));
+                    .body(Map.of("message", "you already send a request, wait for answer."));
+        }
+
+        if (sellerRegisterRepo.existsByUserIdAndStatus(userId, SellerRegisterRequestStatus.ACTIVE)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "you already send a request, wait for answer."));
         }
 
         SellerRegister sellerRegister = SellerRegister.builder()
@@ -72,6 +82,8 @@ public class UserService {
                 .requestedNickname(sellerRegisterDto.getRequestedNickname())
                 .displayName(sellerRegisterDto.getDisplayName())
                 .profileDescription(sellerRegisterDto.getDescription())
+                .requestDate(Date.from(Instant.now()))
+                .status(SellerRegisterRequestStatus.ACTIVE)
                 .build();
 
         try {

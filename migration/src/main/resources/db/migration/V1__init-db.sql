@@ -59,16 +59,18 @@ CREATE TABLE seller(
     id BIGINT,
     nickname VARCHAR(20) NOT NULL,
     rating NUMERIC(2,1) NOT NULL,
-    profile_description VARCHAR(400),
+    profile_description VARCHAR(400) NOT NULL,
     CONSTRAINT pk_seller PRIMARY KEY (id)
 );
 
 CREATE TABLE register_seller_request(
-    id BIGINT,
-    user_id BIGINT,
-    requested_nickname VARCHAR(20),
-    display_name VARCHAR(40),
-    profile_description VARCHAR(400),
+    id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    request_date DATE NOT NULL DEFAULT NOW(),
+    requested_nickname VARCHAR(20) NOT NULL,
+    display_name VARCHAR(40) NOT NULL,
+    profile_description VARCHAR(400) NOT NULL,
+    status VARCHAR(25) NOT NULL,
     CONSTRAINT pk_register_seller_request PRIMARY KEY (id)
 );
 

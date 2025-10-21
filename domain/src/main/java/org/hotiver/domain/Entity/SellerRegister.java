@@ -2,6 +2,9 @@ package org.hotiver.domain.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hotiver.common.SellerRegisterRequestStatus;
+
+import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,7 +17,7 @@ public class SellerRegister {
 
     @Id
     @GeneratedValue(
-            strategy = GenerationType.IDENTITY,
+            strategy = GenerationType.SEQUENCE,
             generator = "sequence-register_seller_request"
     )
     @SequenceGenerator(
@@ -26,9 +29,14 @@ public class SellerRegister {
 
     private Long userId;
 
+    private Date requestDate;
+
     private String requestedNickname;
 
     private String displayName;
 
     private String profileDescription;
+
+    @Enumerated(EnumType.STRING)
+    private SellerRegisterRequestStatus status;
 }

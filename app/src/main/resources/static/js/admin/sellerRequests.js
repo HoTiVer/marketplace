@@ -36,12 +36,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <p><strong>Description:</strong> ${req.profileDescription}</p>
                         <div class="flex gap-2 mt-2">
                             <button class="acceptBtn bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">Accept</button>
-                            <button class="deleteBtn bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
+                            <button class="rejectBtn bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Reject</button>
                         </div>
                     `;
 
                     const acceptBtn = card.querySelector(".acceptBtn");
-                    const deleteBtn = card.querySelector(".deleteBtn");
+                    const rejectBtn = card.querySelector(".rejectBtn");
 
                     acceptBtn.addEventListener("click", async () => {
                         try {
@@ -60,18 +60,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                         }
                     });
 
-                    deleteBtn.addEventListener("click", async () => {
-                        if (!confirm("Are you sure you want to delete this request?")) return;
+                    rejectBtn.addEventListener("click", async () => {
+                        if (!confirm("Are you sure you want to reject this request?")) return;
                         try {
-                            const delRes = await fetchWithAuth(`/api/admin/request/seller-register${req.id}`, {
+                            const delRes = await fetchWithAuth(`/api/admin/request/seller-register/${req.id}`, {
                                 method: "DELETE"
                             });
                             if (delRes.ok) {
-                                alert("Request deleted ✅");
+                                alert("Request rejected ✅");
                                 await loadRequests();
                             } else {
                                 const text = await delRes.text();
-                                alert("Failed to delete: " + text);
+                                alert("Failed to reject: " + text);
                             }
                         } catch (err) {
                             alert("Error: " + err.message);
