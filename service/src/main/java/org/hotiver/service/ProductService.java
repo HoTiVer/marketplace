@@ -76,6 +76,8 @@ public class ProductService {
         if (product.isEmpty()){
             return ResponseEntity.notFound().build();
         }
+        if (!product.get().getIsVisible())
+            return ResponseEntity.notFound().build();
 
         var existingProduct = product.get();
 
