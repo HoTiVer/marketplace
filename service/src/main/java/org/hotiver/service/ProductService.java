@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.hotiver.domain.Entity.Category;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
+import org.hotiver.repo.CategoryRepo;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
@@ -17,10 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -29,15 +28,17 @@ public class ProductService {
     private final ChatService chatService;
     private final SellerRepo sellerRepo;
     private final ProductRepo productRepo;
-    private final ObjectMapper mapper;
     private final UserRepo userRepo;
+    private final CategoryRepo categoryRepo;
 
-    public ProductService(ChatService chatService, SellerRepo sellerRepo, ProductRepo productRepo, UserRepo userRepo) {
+    public ProductService(ChatService chatService, SellerRepo sellerRepo,
+                          ProductRepo productRepo, UserRepo userRepo,
+                          CategoryRepo categoryRepo) {
         this.chatService = chatService;
         this.sellerRepo = sellerRepo;
         this.productRepo = productRepo;
-        mapper = new ObjectMapper();
         this.userRepo = userRepo;
+        this.categoryRepo = categoryRepo;
     }
 
     public ResponseEntity<Map<String, Object>> addProduct(ProductAddDto productAddDto) {
@@ -45,27 +46,26 @@ public class ProductService {
         String email = authentication.getName();
 
         Seller seller = sellerRepo.findByEmail(email);
+        Optional<Category> category = categoryRepo.findByName(productAddDto.getCategoryName());
+        if (category.isEmpty())
+            return ResponseEntity.badRequest().build();
 
 
-//        Product product = Product.builder()
-//                .name(productAddDto.getName())
-//                .price(productAddDto.getPrice())
-//                .category(productAddDto.getCategory())
-//                .description(productAddDto.getDescription())
-//                .seller(seller)
-//                .isVisible(false)
-//                .build();
-//
-//        String jsonString = null;
-//        try {
-//            jsonString = mapper.writeValueAsString(productAddDto.getCharacteristic());
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        product.setCharacteristic(jsonString);
-//
-//        productRepo.save(product);
+        Product product = Product.builder()
+                .name(productAddDto.getName())
+                .price(productAddDto.getPrice())
+                .category(category.get())
+                .description(productAddDto.getDescription())
+                .characteristic(new HashMap<>(productAddDto.getCharacteristic()))
+                .seller(seller)
+                .isVisible(false)
+                .build();
+
+        try {
+            productRepo.save(product);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
 
         return ResponseEntity.ok().body(Map.of("message", "new product added"));
     }
@@ -82,18 +82,12 @@ public class ProductService {
         ProductGetDto returnProduct = ProductGetDto.builder()
                 .name(existingProduct.getName())
                 .price(existingProduct.getPrice())
-                //.category(existingProduct.getCategory())
+                .categoryName(existingProduct.getCategory().getName())
                 .description(existingProduct.getDescription())
+                .characteristic(existingProduct.getCharacteristic())
                 .sellerUsername(existingProduct.getSeller().getNickname())
                 .sellerDisplayName(existingProduct.getSeller().getUser().getDisplayName())
                 .build();
-
-//        try {
-//            var map = mapper.readValue(existingProduct.getCharacteristic(), Map.class);
-//            returnProduct.setCharacteristic(map);
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException(e);
-//        }
 
         return ResponseEntity.ok().body(returnProduct);
     }
@@ -113,9 +107,9 @@ public class ProductService {
         var product = opProduct.get();
 
         for (var role : roles){
-            if (role.getAuthority().equals("ROLE_MODERATOR")){
+            if (role.getAuthority().equals("ROLE_ADMIN")){
                 chatService.sendMessage(0L, user.getId(),
-                        "moderator deleted your product");
+                        "admin deleted your product");
 
                 productRepo.deleteById(id);
                 return ResponseEntity.ok().build();
@@ -150,25 +144,29 @@ public class ProductService {
             product.setDescription(productAddDto.getDescription());
         }
 
-        if (productAddDto.getCategoryName() != null) {
-            //product.setCategory(productAddDto.getCategory());
+        String categoryName = productAddDto.getCategoryName();
+        if (categoryName != null) {
+            Optional<Category> category = categoryRepo.findByName(categoryName);
+
+            if (category.isEmpty())
+                return ResponseEntity.badRequest().build();
+
+
+            product.setCategory(category.get());
         }
 
         if (productAddDto.getCharacteristic() != null) {
-            String jsonString = null;
-            try {
-                jsonString = mapper.writeValueAsString(productAddDto.getCharacteristic());
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+//            String jsonString = null;
+//            try {
+//                jsonString = mapper.writeValueAsString(productAddDto.getCharacteristic());
+//            } catch (JsonProcessingException e) {
+//                throw new RuntimeException(e);
+//            }
             //product.setCharacteristic(jsonString);
+            product.setCharacteristic(productAddDto.getCharacteristic());
         }
 
         productRepo.save(product);
         return ResponseEntity.ok().build();
     }
-
-//    public List<ProductCategory.CategoryDto> getProductCategories() {
-//        return ProductCategory.getAllCategoriesDto();
-//    }
 }

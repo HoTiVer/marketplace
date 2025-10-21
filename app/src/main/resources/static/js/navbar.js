@@ -45,7 +45,7 @@ export async function renderNavbar(authData) {
 
         if (hasSellerRole) {
             const sellerBtn = document.createElement("a");
-            sellerBtn.href = "/seller/create-product.html";
+            sellerBtn.href = "/create-product.html";
             sellerBtn.textContent = "Create Product";
             sellerBtn.className =
                 "w-full block px-4 py-2 text-left text-green-600 hover:bg-green-50 transition";

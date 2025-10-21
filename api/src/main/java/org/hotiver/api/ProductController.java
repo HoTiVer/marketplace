@@ -23,10 +23,6 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
-//    @GetMapping("/product/categories")
-//    public List<ProductCategory.CategoryDto> getProductCategories(){
-//        return productService.getProductCategories();
-//    }
 
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping("/product")
@@ -34,12 +30,13 @@ public class ProductController {
         return productService.addProduct(productAddDto);
     }
 
-    @PreAuthorize("hasAnyRole('SELLER', 'MODERATOR','ADMIN')")
+    @PreAuthorize("hasAnyRole('SELLER','ADMIN')")
     @DeleteMapping("/product/{id}")
     public ResponseEntity<?> deleteProductById(@PathVariable Long id){
         return productService.deleteProductById(id);
     }
 
+    @PreAuthorize("hasRole('SELLER')")
     @PutMapping("/product/{id}")
     public ResponseEntity<?> updateProductById(@PathVariable Long id,
                                                @RequestBody ProductAddDto productAddDto){
