@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!res.ok) throw new Error("Failed to load categories");
 
             const categories = await res.json();
-            categorySelect.innerHTML = ""; // очищаем список
+            categorySelect.innerHTML = "";
 
             if (categories.length === 0) {
                 categorySelect.innerHTML = `<option value="">No categories available</option>`;
@@ -24,13 +24,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 categorySelect.innerHTML = `<option value="">Select category...</option>`;
                 categories.forEach(cat => {
                     const option = document.createElement("option");
-                    option.value = cat.name; // или cat.id, если сервер ждёт id
+                    option.value = cat.name;
                     option.textContent = cat.name;
                     categorySelect.appendChild(option);
                 });
             }
         } catch (err) {
-            categorySelect.innerHTML = `<option value="">⚠ ${err.message}</option>`;
+            categorySelect.innerHTML = `<option value=""> ${err.message}</option>`;
         }
     }
 
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
 
         try {
-            const res = await fetchWithAuth("/product", {
+            const res = await fetchWithAuth("/api/product", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
