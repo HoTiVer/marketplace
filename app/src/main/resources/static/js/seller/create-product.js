@@ -8,6 +8,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("productForm");
     const container = document.getElementById("characteristicsContainer");
     const addBtn = document.getElementById("addCharacteristic");
+    const categorySelect = document.getElementById("categorySelect");
+
+    async function loadCategories() {
+        try {
+            const res = await fetchWithAuth("/api/category");
+            if (!res.ok) throw new Error("Failed to load categories");
+
+            const categories = await res.json();
+            categorySelect.innerHTML = ""; // очищаем список
+
+            if (categories.length === 0) {
+                categorySelect.innerHTML = `<option value="">No categories available</option>`;
+            } else {
+                categorySelect.innerHTML = `<option value="">Select category...</option>`;
+                categories.forEach(cat => {
+                    const option = document.createElement("option");
+                    option.value = cat.name; // или cat.id, если сервер ждёт id
+                    option.textContent = cat.name;
+                    categorySelect.appendChild(option);
+                });
+            }
+        } catch (err) {
+            categorySelect.innerHTML = `<option value="">⚠ ${err.message}</option>`;
+        }
+    }
+
+    await loadCategories();
 
     addBtn.addEventListener("click", () => {
         const wrapper = document.createElement("div");
@@ -26,7 +53,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-
         const characteristic = {};
         container.querySelectorAll("div").forEach(div => {
             const inputs = div.querySelectorAll("input");
@@ -39,7 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             name: document.getElementById("name").value.trim(),
             price: parseFloat(document.getElementById("price").value),
             description: document.getElementById("description").value.trim(),
-            categoryName: document.getElementById("categoryName").value.trim(),
+            categoryName: categorySelect.value,
             characteristic
         };
 

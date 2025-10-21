@@ -28,11 +28,15 @@
             <textarea id="description" rows="4" class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-300" required></textarea>
         </div>
 
+        <!-- 🔽 Категории теперь загружаются динамически -->
         <div>
-            <label class="block text-gray-700 font-medium mb-2">Category Name</label>
-            <input type="text" id="categoryName" class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-300" required>
+            <label class="block text-gray-700 font-medium mb-2">Category</label>
+            <select id="categorySelect" class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-300" required>
+                <option value="">Loading categories...</option>
+            </select>
         </div>
 
+        <!-- Характеристики -->
         <div id="characteristicsSection">
             <label class="block text-gray-700 font-medium mb-2">Characteristics</label>
             <div id="characteristicsContainer" class="space-y-3"></div>
