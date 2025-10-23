@@ -52,10 +52,19 @@ export async function renderNavbar(authData) {
             dropdown.insertBefore(sellerBtn, logoutBtn);
         }
 
+
+        const chatsBtn = document.createElement("a");
+        chatsBtn.href = "/chats.html";
+        chatsBtn.textContent = "Chats";
+        chatsBtn.className =
+            "w-full block px-4 py-2 text-left text-purple-600 hover:bg-purple-50 transition";
+        dropdown.insertBefore(chatsBtn, logoutBtn);
+
     } else {
         authButtons.classList.remove("hidden");
         userMenu.classList.add("hidden");
     }
+
 
     menuBtn.addEventListener("click", () => dropdown.classList.toggle("hidden"));
     logoutBtn.addEventListener("click", logout);
