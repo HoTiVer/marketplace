@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Seller Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 min-h-screen flex flex-col">
+<div id="navbar"></div>
+
+<main class="flex-1 pt-24 w-full flex flex-col items-center p-6">
+    <p id="loading" class="text-gray-600 text-lg">Loading seller data...</p>
+
+    <div id="sellerContainer" class="hidden bg-white rounded-2xl shadow-lg p-6 w-full max-w-md flex flex-col gap-4">
+        <h2 id="displayName" class="text-2xl font-bold text-gray-800 text-center"></h2>
+        <p class="text-gray-600"><span class="font-semibold">Nickname:</span> <span id="nickname"></span></p>
+        <p class="text-gray-600"><span class="font-semibold">Rating:</span> <span id="rating"></span></p>
+        <p class="text-gray-600"><span class="font-semibold">Description:</span></p>
+        <p id="profileDescription" class="text-gray-700 whitespace-pre-line"></p>
+
+        <a id="viewProductsBtn"
+           href="#"
+           class="mt-4 text-center bg-indigo-600 text-white py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition">
+            View Products
+        </a>
+    </div>
+</main>
+
+<script type="module" src="/js/seller/seller.js"></script>
+</body>
+</html>

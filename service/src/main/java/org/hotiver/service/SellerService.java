@@ -51,7 +51,7 @@ public class SellerService {
             return ResponseEntity.notFound().build();
         }
         List<ListProductDto> returnProducts = new ArrayList<>();
-        List<Product> sellerProducts = productRepo.findAllBySellerId(opSeller.get().getId());
+        List<Product> sellerProducts = productRepo.findAllVisibleBySellerId(opSeller.get().getId());
 
         for (var product : sellerProducts) {
             ListProductDto listProductDto = new ListProductDto(

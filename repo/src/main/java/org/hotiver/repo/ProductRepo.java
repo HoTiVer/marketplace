@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Long> {
-    @Query("SELECT p FROM Product p WHERE p.seller.id = :id")
-    List<Product> findAllBySellerId(Long id);
+
+    @Query("SELECT p FROM Product p WHERE p.seller.id = :id AND p.isVisible = true")
+    List<Product> findAllVisibleBySellerId(Long id);
 }
