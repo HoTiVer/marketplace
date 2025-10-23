@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const mainContent = document.getElementById("mainContent");
     const userCard = document.getElementById("userCard");
     const becomeSellerBtn = document.getElementById("becomeSellerBtn");
+    const goToSellerPageBtn = document.getElementById("goToSellerPageBtn");
     const sellerModal = document.getElementById("sellerModal");
     const cancelSellerBtn = document.getElementById("cancelSellerBtn");
     const submitSellerBtn = document.getElementById("submitSellerBtn");
@@ -29,12 +30,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             const sellerNicknameContainer = document.getElementById("sellerNicknameContainer");
 
             if (isSeller) {
-                document.getElementById("sellerNickname").textContent = info.sellerNickname || "—";
+                const nickname = info.sellerNickname || "—";
+                document.getElementById("sellerNickname").textContent = nickname;
                 sellerNicknameContainer.classList.remove("hidden");
                 becomeSellerBtn.classList.add("hidden");
+
+                // Показываем кнопку перехода
+                goToSellerPageBtn.classList.remove("hidden");
+                goToSellerPageBtn.onclick = () => {
+                    window.location.href = `/seller/${nickname}`;
+                };
             } else {
                 sellerNicknameContainer.classList.add("hidden");
                 becomeSellerBtn.classList.remove("hidden");
+                goToSellerPageBtn.classList.add("hidden");
             }
 
             mainContent.classList.remove("hidden");
@@ -79,9 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const result = await res.json();
 
-            // Show backend message regardless of success or error
             alert(result.message || "Unknown server response");
-
             sellerModal.classList.add("hidden");
 
             if (res.ok) {
