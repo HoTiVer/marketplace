@@ -1,9 +1,11 @@
 package org.hotiver.api;
 
+import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
 import org.hotiver.service.SellerService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,5 +28,12 @@ public class SellerController {
     @GetMapping("/seller/{username}/products")
     public ResponseEntity<List<ListProductDto>> getSellerProducts(@PathVariable String username){
         return sellerService.getSellerProducts(username);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/seller/message/{username}")
+    public ResponseEntity<?> sendMessageToSeller(@PathVariable String username,
+                                                 @RequestBody SendMessageDto message){
+        return sellerService.sendMessageToSeller(username, message);
     }
 }

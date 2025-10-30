@@ -2,6 +2,7 @@ package org.hotiver.service;
 
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Seller;
+import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
 import org.hotiver.repo.ProductRepo;
@@ -18,14 +19,17 @@ public class SellerService {
 
     private final SellerRepo sellerRepo;
     private final ProductRepo productRepo;
+    private final ChatService chatService;
 
-    public SellerService(SellerRepo sellerRepo, ProductRepo productRepo) {
+    public SellerService(SellerRepo sellerRepo, ProductRepo productRepo,
+                         ChatService chatService) {
         this.sellerRepo = sellerRepo;
         this.productRepo = productRepo;
+        this.chatService = chatService;
     }
 
     public ResponseEntity<SellerProfileDto> getSellerByUsername(String username) {
-        Optional<Seller> opSeller = sellerRepo.findByUsername(username);
+        Optional<Seller> opSeller = sellerRepo.findByNickname(username);
 
         if (opSeller.isEmpty()){
             return ResponseEntity.notFound().build();
@@ -45,7 +49,7 @@ public class SellerService {
     }
 
     public ResponseEntity<List<ListProductDto>> getSellerProducts(String username) {
-        Optional<Seller> opSeller = sellerRepo.findByUsername(username);
+        Optional<Seller> opSeller = sellerRepo.findByNickname(username);
 
         if (opSeller.isEmpty()){
             return ResponseEntity.notFound().build();
@@ -63,5 +67,9 @@ public class SellerService {
         }
 
         return ResponseEntity.ok().body(returnProducts);
+    }
+
+    public ResponseEntity<?> sendMessageToSeller(String username, SendMessageDto message) {
+        return chatService.sendMessageToSeller(username, message);
     }
 }

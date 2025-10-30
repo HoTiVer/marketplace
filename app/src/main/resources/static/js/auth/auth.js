@@ -120,12 +120,12 @@ export async function loginUser(email, password) {
     }
 }
 
-export async function registerUser(email, nickname, password) {
+export async function registerUser(email, displayName, password) {
     try {
         const response = await fetch("/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, nickname, password})
+            body: JSON.stringify({ email, displayName, password})
         });
 
         const data = await response.json();

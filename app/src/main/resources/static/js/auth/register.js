@@ -9,11 +9,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const body = {
             email: registerForm.email.value,
-            nickname: registerForm.nickname.value,
+            displayName: registerForm.displayName.value,
             password: registerForm.password.value
         };
 
-        const data = await registerUser(body.email, body.nickname, body.password);
+        const data = await registerUser(body.email, body.displayName, body.password);
 
         if (data.isSuccess) {
             msgEl.textContent = data.message || "Registration successful!";

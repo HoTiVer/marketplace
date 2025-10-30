@@ -2,6 +2,7 @@ package org.hotiver.service;
 
 import org.hotiver.domain.Entity.Chat;
 import org.hotiver.domain.Entity.Message;
+import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.chat.ChatDto;
 import org.hotiver.dto.chat.ChatMessageDto;
@@ -9,6 +10,7 @@ import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.user.UserChatsDto;
 import org.hotiver.repo.ChatRepo;
 import org.hotiver.repo.MessageRepo;
+import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -26,11 +29,13 @@ public class ChatService {
     private final UserRepo userRepo;
     private final ChatRepo chatRepo;
     private final MessageRepo messageRepo;
+    private final SellerRepo sellerRepo;
 
-    public ChatService(UserRepo userRepo, ChatRepo chatRepo, MessageRepo messageRepo) {
+    public ChatService(UserRepo userRepo, ChatRepo chatRepo, MessageRepo messageRepo, SellerRepo sellerRepo) {
         this.userRepo = userRepo;
         this.chatRepo = chatRepo;
         this.messageRepo = messageRepo;
+        this.sellerRepo = sellerRepo;
     }
 
     public List<UserChatsDto> getUserChats() {
@@ -41,12 +46,16 @@ public class ChatService {
         Long userId = user.getId();
 
         List<Chat> userChats = chatRepo.findChatsByUserId(userId);
+        return getUserChatsDto(userChats, userId);
+    }
+
+    private List<UserChatsDto> getUserChatsDto(List<Chat> userChats, Long userId) {
         List<UserChatsDto> returnedChats = new ArrayList<>();
 
-        UserChatsDto userChatsDto = new UserChatsDto();
-        for (var chat : userChats){
+        for (var chat : userChats) {
+            UserChatsDto userChatsDto = new UserChatsDto();
             userChatsDto.setChatId(chat.getId());
-            if (chat.getUser1().getId() == userId){
+            if (Objects.equals(chat.getUser1().getId(), userId)){
                 userChatsDto.setName(chat.getUser2().getDisplayName());
             }
             else {
@@ -114,9 +123,13 @@ public class ChatService {
     }
 
     public void sendMessage(Long senderId, Long receiverId, String message) {
-        if (receiverId == 0 || message == null){
+        if (Objects.equals(receiverId, senderId) || message == null){
             return;
         }
+
+//        if (Objects.equals(receiverId, senderId) || receiverId == 0) {
+//            return;
+//        }
         Chat chat = chatRepo.findChatByUsersIds(senderId, receiverId);
         Optional<User> sender = userRepo.findById(senderId);
 
@@ -136,5 +149,36 @@ public class ChatService {
                 .build();
 
         messageRepo.save(messageObj);
+    }
+
+    public ResponseEntity<?> sendMessageToSeller(String sellerNickName, SendMessageDto message) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        String senderEmail = auth.getName();
+        Optional<User> sender = userRepo.findByEmail(senderEmail);
+        Optional<Seller> seller = sellerRepo.findByNickname(sellerNickName);
+
+        if (seller.isEmpty() || sender.isEmpty()){
+            return ResponseEntity.badRequest().build();
+        }
+        Chat chat = chatRepo.findChatByUsersIds(sender.get().getId(), seller.get().getId());
+
+        if (chat == null){
+            chat = new Chat();
+            var receiver = userRepo.findById(seller.get().getId());
+            chat.setUser1(sender.get());
+            chat.setUser2(receiver.get());
+            chatRepo.save(chat);
+        }
+
+        Message messageObj = Message.builder()
+                .chat(chat)
+                .content(message.getContent())
+                .sender(sender.get())
+                .sentAt(LocalDateTime.now())
+                .build();
+
+        messageRepo.save(messageObj);
+
+        return ResponseEntity.ok().build();
     }
 }
