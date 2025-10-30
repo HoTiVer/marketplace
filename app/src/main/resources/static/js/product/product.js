@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const productId = Number(pathParts[pathParts.length - 1]);
 
     if (!productId) {
-        loading.textContent = "❌ Product ID not provided";
+        loading.textContent = "Product ID not provided";
         return;
     }
 
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const response = await fetchWithAuth(`/api/product/${productId}`);
 
         if (!response.ok) {
-            loading.textContent = `❌ Failed to load product (${response.status})`;
+            loading.textContent = `Failed to load product (${response.status})`;
             return;
         }
 
@@ -67,6 +67,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
     } catch (err) {
-        loading.textContent = `⚠️ Error: ${err.message}`;
+        loading.textContent = `⚠Error: ${err.message}`;
     }
 });

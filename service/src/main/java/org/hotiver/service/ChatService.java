@@ -57,7 +57,7 @@ public class ChatService {
         return returnedChats;
     }
 
-    public ResponseEntity<?> getChat(Long id) {
+    public ResponseEntity<ChatDto> getChat(Long id) {
         Optional<Chat> chatOptional = chatRepo.findById(id);
         if (chatOptional.isEmpty()) {
             return ResponseEntity.notFound().build();

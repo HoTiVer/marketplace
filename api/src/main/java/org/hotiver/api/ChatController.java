@@ -1,5 +1,6 @@
 package org.hotiver.api;
 
+import org.hotiver.dto.chat.ChatDto;
 import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.user.UserChatsDto;
 import org.hotiver.service.ChatService;
@@ -23,7 +24,7 @@ public class ChatController {
     }
 
     @GetMapping("/cabinet/message/{id}")
-    public ResponseEntity<?> getChat(@PathVariable Long id){
+    public ResponseEntity<ChatDto> getChat(@PathVariable Long id){
         return chatService.getChat(id);
     }
 

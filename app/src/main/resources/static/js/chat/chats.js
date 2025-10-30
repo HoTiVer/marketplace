@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const res = await fetchWithAuth("/cabinet/message");
 
         if (!res.ok) {
-            loading.textContent = `❌ Failed to load chats (${res.status})`;
+            loading.textContent = `Failed to load chats (${res.status})`;
             return;
         }
 
@@ -31,12 +31,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             div.className = "bg-white rounded-lg shadow p-4 cursor-pointer hover:bg-gray-50 transition";
             div.textContent = chat.name;
             div.onclick = () => {
-                window.location.href = `/cabinet/message/${chat.chatId}`;
+                window.location.href = `/chat/${chat.chatId}`;
             };
             chatsContainer.appendChild(div);
         });
 
     } catch (err) {
-        loading.textContent = `⚠️ Error: ${err.message}`;
+        loading.textContent = `Error: ${err.message}`;
     }
 });
