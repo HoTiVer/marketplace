@@ -11,7 +11,8 @@
 <main class="flex-1 pt-24 w-full flex flex-col items-center p-6">
     <p id="loading" class="text-gray-600 text-lg">Loading seller data...</p>
 
-    <div id="sellerContainer" class="hidden bg-white rounded-2xl shadow-lg p-6 w-full max-w-md flex flex-col gap-4">
+    <div id="sellerContainer"
+         class="hidden bg-white rounded-2xl shadow-lg p-6 w-full max-w-md flex flex-col gap-4">
         <h2 id="displayName" class="text-2xl font-bold text-gray-800 text-center"></h2>
         <p class="text-gray-600"><span class="font-semibold">Nickname:</span> <span id="nickname"></span></p>
         <p class="text-gray-600"><span class="font-semibold">Rating:</span> <span id="rating"></span></p>
@@ -23,6 +24,18 @@
            class="mt-4 text-center bg-indigo-600 text-white py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition">
             View Products
         </a>
+
+        <div class="border-t pt-4 mt-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Send a message to seller</h3>
+            <textarea id="messageContent" rows="3"
+                      class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none resize-none"
+                      placeholder="Write your message here..."></textarea>
+            <button id="sendMessageBtn"
+                    class="mt-2 bg-purple-600 text-white px-4 py-2 rounded-lg shadow hover:bg-purple-700 transition">
+                Send Message
+            </button>
+            <p id="messageStatus" class="text-sm text-gray-600 mt-2 hidden"></p>
+        </div>
     </div>
 </main>
 

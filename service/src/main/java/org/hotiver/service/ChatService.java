@@ -55,7 +55,7 @@ public class ChatService {
         for (var chat : userChats) {
             UserChatsDto userChatsDto = new UserChatsDto();
             userChatsDto.setChatId(chat.getId());
-            if (Objects.equals(chat.getUser1().getId(), userId)){
+            if (Objects.equals(chat.getUser1().getId(), userId)) {
                 userChatsDto.setName(chat.getUser2().getDisplayName());
             }
             else {
@@ -126,10 +126,6 @@ public class ChatService {
         if (Objects.equals(receiverId, senderId) || message == null){
             return;
         }
-
-//        if (Objects.equals(receiverId, senderId) || receiverId == 0) {
-//            return;
-//        }
         Chat chat = chatRepo.findChatByUsersIds(senderId, receiverId);
         Optional<User> sender = userRepo.findById(senderId);
 
@@ -157,9 +153,14 @@ public class ChatService {
         Optional<User> sender = userRepo.findByEmail(senderEmail);
         Optional<Seller> seller = sellerRepo.findByNickname(sellerNickName);
 
-        if (seller.isEmpty() || sender.isEmpty()){
+        if (seller.isEmpty() || sender.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
+
+        if (sender.get().getId().equals(seller.get().getId())) {
+            return ResponseEntity.badRequest().build();
+        }
+
         Chat chat = chatRepo.findChatByUsersIds(sender.get().getId(), seller.get().getId());
 
         if (chat == null){
