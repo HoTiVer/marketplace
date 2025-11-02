@@ -21,7 +21,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         const response = await fetchWithAuth(`/api/product/${productId}`);
-
         if (!response.ok) {
             loading.textContent = `Failed to load product (${response.status})`;
             return;
@@ -51,6 +50,38 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
         }
 
+        const addToWishlistBtn = document.getElementById("addToWishlistBtn");
+        addToWishlistBtn.onclick = async () => {
+            try {
+                const res = await fetchWithAuth(`/api/wishlist/${productId}`, { method: "POST" });
+                if (res.ok) {
+                    alert(`✅ "${product.name}" added to wishlist!`);
+                } else if (res.status === 409) {
+                    alert("Already in wishlist.");
+                } else {
+                    alert(`Failed to add to wishlist (${res.status})`);
+                }
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        };
+
+        const addToCartBtn = document.getElementById("addToCartBtn");
+        addToCartBtn.onclick = async () => {
+            try {
+                const res = await fetchWithAuth(`/api/cart/${productId}`, { method: "POST" });
+                if (res.ok) {
+                    alert(`🛒 "${product.name}" added to cart!`);
+                } else if (res.status === 409) {
+                    alert("Already in cart.");
+                } else {
+                    alert(`Failed to add to cart (${res.status})`);
+                }
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        };
+
         const charContainer = document.getElementById("characteristics");
         if (product.characteristic && Object.keys(product.characteristic).length > 0) {
             Object.entries(product.characteristic).forEach(([key, value]) => {
@@ -67,6 +98,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
     } catch (err) {
-        loading.textContent = `⚠Error: ${err.message}`;
+        loading.textContent = `⚠ Error: ${err.message}`;
     }
 });

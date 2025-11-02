@@ -1,5 +1,6 @@
 package org.hotiver.service;
 
+import com.fasterxml.jackson.databind.introspect.TypeResolutionContext;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.product.ListProductDto;
@@ -11,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +36,7 @@ public class WishListService {
         var userWishList = user.getWishlist();
 
         if (userWishList.isEmpty()){
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok().body(Collections.emptyList());
         }
 
         List<ListProductDto> wishListProducts = new ArrayList<>();
