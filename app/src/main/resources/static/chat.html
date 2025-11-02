@@ -11,15 +11,26 @@
 <main class="flex-1 p-6 flex flex-col items-center pt-24 w-full max-w-4xl mx-auto">
     <div id="loading" class="text-gray-500 text-lg">Loading chat...</div>
 
-    <div id="chatContainer" class="hidden bg-white shadow-xl rounded-2xl p-6 w-full flex flex-col gap-4">
-        <h1 id="chatTitle" class="text-3xl font-bold text-gray-800 mb-4"></h1>
+    <div id="chatContainer"
+         class="hidden bg-white shadow-xl rounded-2xl p-6 w-full flex flex-col gap-4">
+        <div class="flex items-center justify-between mb-4">
+            <h1 id="chatTitle" class="text-3xl font-bold text-gray-800"></h1>
+            <button id="sellerPageBtn"
+                    class="hidden bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                Seller Page
+            </button>
+        </div>
 
-        <div id="messages" class="flex flex-col gap-3 max-h-[60vh] overflow-y-auto"></div>
+        <div id="messages"
+             class="flex flex-col gap-3 max-h-[60vh] overflow-y-auto border rounded-lg p-3 bg-gray-50"></div>
 
         <div class="mt-4 flex gap-2">
             <input id="messageInput" type="text" placeholder="Type a message..."
                    class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-            <button id="sendBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Send</button>
+            <button id="sendBtn"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                Send
+            </button>
         </div>
     </div>
 </main>

@@ -13,7 +13,9 @@ import java.util.List;
 @Builder
 public class ChatDto {
     private Long chatId;
-    private List<Long> participantIds;
+    private String chatName;
+    private Boolean isSeller;
+    //private List<Long> participantIds;
     private List<ChatMessageDto> messages;
 }
 

@@ -67,15 +67,43 @@ public class ChatService {
     }
 
     public ResponseEntity<ChatDto> getChat(Long id) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        Optional<User> user = userRepo.findByEmail(email);
+
         Optional<Chat> chatOptional = chatRepo.findById(id);
         if (chatOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Chat chat = chatOptional.get();
-
         List<Message> messages = messageRepo.findAllByChatOrderBySentAtAsc(chat);
 
-        List<ChatMessageDto> messageDtos = messages.stream().map(m -> ChatMessageDto.builder()
+        String chatName;
+        boolean isSeller;
+        Long chatNameUserId;
+        if (chat.getUser1().getId().equals(user.get().getId())) {
+            chatNameUserId = chat.getUser2().getId();
+            isSeller = sellerRepo.existsById(chatNameUserId);
+            if (isSeller) {
+                Optional<Seller>  sellerOptional = sellerRepo.findById(chatNameUserId);
+                chatName = sellerOptional.get().getNickname();
+            }
+            else
+                chatName = chat.getUser2().getDisplayName();
+        }
+        else {
+            chatNameUserId = chat.getUser1().getId();
+            isSeller = sellerRepo.existsById(chatNameUserId);
+            if (isSeller) {
+                Optional<Seller>  sellerOptional = sellerRepo.findById(chatNameUserId);
+                chatName = sellerOptional.get().getNickname();
+            }
+            else
+                chatName = chat.getUser1().getDisplayName();
+        }
+
+        List<ChatMessageDto> messagesDto = messages.stream().map(m -> ChatMessageDto.builder()
                 .id(m.getId())
                 .senderId(m.getSender().getId())
                 .senderName(m.getSender().getDisplayName())
@@ -86,8 +114,9 @@ public class ChatService {
 
         ChatDto chatDto = ChatDto.builder()
                 .chatId(chat.getId())
-                .participantIds(List.of(chat.getUser1().getId(), chat.getUser2().getId()))
-                .messages(messageDtos)
+                .chatName(chatName)
+                .isSeller(isSeller)
+                .messages(messagesDto)
                 .build();
 
         return ResponseEntity.ok(chatDto);
