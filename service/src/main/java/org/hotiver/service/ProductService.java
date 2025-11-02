@@ -171,4 +171,30 @@ public class ProductService {
         productRepo.save(product);
         return ResponseEntity.ok().build();
     }
+
+    public ResponseEntity<List<ProductGetDto>> getCurrentSellerProducts(String username) {
+        if (username == null)
+            return  ResponseEntity.badRequest().build();
+
+        Seller seller = sellerRepo.findByEmail(username);
+
+        List<ProductGetDto> productGetDto = new ArrayList<>();
+
+        ProductGetDto productDto;
+
+        for (var product : seller.getProducts()) {
+            productDto = new ProductGetDto(
+                    product.getName(),
+                    product.getPrice(),
+                    product.getDescription(),
+                    product.getCategory().getName(),
+                    product.getCharacteristic(),
+                    product.getSeller().getUser().getDisplayName(),
+                    product.getSeller().getNickname()
+            );
+            productGetDto.add(productDto);
+        }
+
+        return ResponseEntity.ok().body(productGetDto);
+    }
 }

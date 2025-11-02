@@ -31,6 +31,6 @@ public class Seller  {
 
     private String profileDescription;
 
-//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "seller")
-//    private List<Product> products;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "seller")
+    private List<Product> products;
 }

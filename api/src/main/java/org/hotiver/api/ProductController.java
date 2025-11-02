@@ -5,6 +5,7 @@ import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,4 +45,18 @@ public class ProductController {
         return productService.updateProductById(id, productAddDto);
     }
 
+    @PreAuthorize("hasRole('SELLER')")
+    @GetMapping("/seller/products")
+    public ResponseEntity<List<ProductGetDto>> getCurrentSellerProducts(Authentication auth) {
+        String username = auth.getName();
+        return productService.getCurrentSellerProducts(username);
+    }
+
+
+    //TODO different endpoints for different variations of products
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/products")
+    public ResponseEntity<List<ProductGetDto>> getAllProducts() {
+        return null;
+    }
 }
