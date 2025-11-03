@@ -2,14 +2,11 @@ package org.hotiver.api;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-public class HomeController {
-
-    @GetMapping("/api/home")
+@Controller
+public class PageController {
+    @GetMapping("/")
     public String getMainPage() {
-        return "home";
+        return "index.html";
     }
-
 }
