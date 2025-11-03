@@ -159,13 +159,6 @@ public class ProductService {
         }
 
         if (productAddDto.getCharacteristic() != null) {
-//            String jsonString = null;
-//            try {
-//                jsonString = mapper.writeValueAsString(productAddDto.getCharacteristic());
-//            } catch (JsonProcessingException e) {
-//                throw new RuntimeException(e);
-//            }
-            //product.setCharacteristic(jsonString);
             product.setCharacteristic(productAddDto.getCharacteristic());
         }
 
