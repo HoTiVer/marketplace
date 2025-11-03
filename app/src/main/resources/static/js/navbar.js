@@ -45,8 +45,8 @@ export async function renderNavbar(authData) {
 
         if (hasSellerRole) {
             const sellerBtn = document.createElement("a");
-            sellerBtn.href = "/create-product.html";
-            sellerBtn.textContent = "Create Product";
+            sellerBtn.href = "/seller-manage-products.html";
+            sellerBtn.textContent = "Manage Products";
             sellerBtn.className =
                 "w-full block px-4 py-2 text-left text-green-600 hover:bg-green-50 transition";
             dropdown.insertBefore(sellerBtn, logoutBtn);

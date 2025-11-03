@@ -82,6 +82,7 @@ public class ProductService {
         var existingProduct = product.get();
 
         ProductGetDto returnProduct = ProductGetDto.builder()
+                .id(existingProduct.getId())
                 .name(existingProduct.getName())
                 .price(existingProduct.getPrice())
                 .categoryName(existingProduct.getCategory().getName())
@@ -184,6 +185,7 @@ public class ProductService {
 
         for (var product : seller.getProducts()) {
             productDto = new ProductGetDto(
+                    product.getId(),
                     product.getName(),
                     product.getPrice(),
                     product.getDescription(),
