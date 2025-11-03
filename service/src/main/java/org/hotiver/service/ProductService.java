@@ -58,7 +58,7 @@ public class ProductService {
                 .description(productAddDto.getDescription())
                 .characteristic(new HashMap<>(productAddDto.getCharacteristic()))
                 .seller(seller)
-                .isVisible(false)
+                .isVisible(true)
                 .build();
 
         try {
