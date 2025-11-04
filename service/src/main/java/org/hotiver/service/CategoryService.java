@@ -1,5 +1,8 @@
 package org.hotiver.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.repo.CategoryRepo;
@@ -13,12 +16,27 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepo categoryRepo;
+    private final RedisService redisService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final String categoryKey = "categories";
 
-    public CategoryService(CategoryRepo categoryRepo) {
+    public CategoryService(CategoryRepo categoryRepo, RedisService redisService) {
         this.categoryRepo = categoryRepo;
+        this.redisService = redisService;
     }
 
     public List<CategoryDto> getCategories() {
+
+        if (redisService.hasKey(categoryKey)) {
+            String categoryJson = redisService.getValue(categoryKey);
+            try {
+                return objectMapper
+                        .readValue(categoryJson, new TypeReference<List<CategoryDto>>() {});
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         List<Category> categories = categoryRepo.findAllSortedByName();
         List<CategoryDto> returnCategory = new ArrayList<>();
 
@@ -29,6 +47,15 @@ public class CategoryService {
             returnCategory.add(categoryDto);
 
         }
+
+        try {
+            String categoriesJson = objectMapper.writeValueAsString(returnCategory);
+            int minutes = 10;
+            redisService.saveValue(categoryKey, categoriesJson, minutes);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
         return returnCategory;
     }
 
@@ -43,6 +70,7 @@ public class CategoryService {
 
         try {
             categoryRepo.save(category);
+            redisService.deleteValue(categoryKey);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -51,6 +79,7 @@ public class CategoryService {
 
     public void deleteCategory(Long id) {
         categoryRepo.deleteById(id);
+        redisService.deleteValue(categoryKey);
     }
 
     public ResponseEntity<?> editCategory(Long id, CategoryDto categoryDto) {
@@ -64,6 +93,7 @@ public class CategoryService {
         editedCategory.setName(categoryDto.getName());
         try {
             categoryRepo.save(editedCategory);
+            redisService.deleteValue(categoryKey);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
