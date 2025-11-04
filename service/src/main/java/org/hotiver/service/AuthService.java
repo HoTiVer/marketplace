@@ -2,6 +2,9 @@ package org.hotiver.service;
 
 import Utils.EmailUtils;
 import Utils.HashUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
@@ -20,6 +23,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.sql.Date;
@@ -37,10 +41,11 @@ public class AuthService {
     private final RedisService redisService;
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
+    private final ObjectMapper mapper;
 
     public AuthService(JwtService jwtService, EmailService emailService,
                        RedisService redisService, UserRepo userRepo,
-                       RoleRepo roleRepo) {
+                       RoleRepo roleRepo, ObjectMapper mapper) {
         timeToSaveJwtRefresh = TimeUnit.MILLISECONDS
                 .toMinutes(jwtService.getJwtRefreshExpiration());
         this.emailService = emailService;
@@ -48,6 +53,7 @@ public class AuthService {
         this.jwtService = jwtService;
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
+        this.mapper = mapper;
     }
 
     @Transactional
@@ -297,23 +303,38 @@ public class AuthService {
     }
 
     public ResponseEntity<UserInfoDto> getUserInfoForFrontend() {
-        var context = SecurityContextHolder.getContext();
-        var email = context.getAuthentication().getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Optional<User> user = userRepo.findByEmail(email);
-        if (user.isPresent()) {
-            UserInfoDto userInfoDto = new UserInfoDto();
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
 
-            List<Role> roles = user.get().getRoles();
-            List<String> returnRoles = new ArrayList<>();
-            for (var role : roles){
-                returnRoles.add(role.getName().toString());
+        String redisKey = "authData:" + user.getId();
+
+
+        if (redisService.hasKey(redisKey)) {
+            try {
+                String cached = redisService.getValue(redisKey);
+                UserInfoDto cachedDto = mapper.readValue(cached, UserInfoDto.class);
+                return ResponseEntity.ok(cachedDto);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
             }
-            userInfoDto.setRoles(returnRoles);
-            return ResponseEntity.ok(userInfoDto);
         }
 
-        return ResponseEntity.badRequest().build();
+        UserInfoDto dto = new UserInfoDto();
+        dto.setRoles(
+                user.getRoles().stream()
+                        .map(role -> role.getName().toString())
+                        .toList()
+        );
+        try {
+            String json = mapper.writeValueAsString(dto);
+            redisService.saveValue(redisKey, json, 10);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return ResponseEntity.ok(dto);
     }
 
     private User createNewDefaultUser(String email, String password, String displayName) {

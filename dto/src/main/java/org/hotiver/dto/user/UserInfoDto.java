@@ -8,7 +8,5 @@ import java.util.List;
 @Setter
 @Getter
 public class UserInfoDto {
-
     List<String> roles;
-
 }
