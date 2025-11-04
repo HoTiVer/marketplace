@@ -1,16 +1,32 @@
-<nav class="fixed top-0 left-0 w-full bg-white p-4 shadow-md z-50 flex justify-between items-center">
+<nav class="fixed top-0 left-0 w-full bg-white p-4 shadow-md z-50 flex flex-wrap justify-between items-center gap-3">
 
     <div class="flex items-center gap-2">
-        <a href="/index.html" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition">
+        <a href="/index.html"
+           class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition">
             Home
         </a>
     </div>
+
+
+    <form id="navbarSearchForm"
+          class="flex items-center bg-gray-100 rounded-xl px-3 py-2 w-full sm:w-96 shadow-inner">
+        <input type="text"
+               id="navbarSearchInput"
+               placeholder="Search products..."
+               class="flex-1 bg-transparent outline-none px-2 text-gray-700"
+               required>
+        <button type="submit"
+                class="text-gray-500 hover:text-blue-600 transition">
+            🔍
+        </button>
+    </form>
 
     <div class="flex items-center gap-3">
         <a href="/wishlist.html"
            class="px-4 py-2 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition">
             Wishlist
         </a>
+
         <a href="/cart.html"
            class="px-4 py-2 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition">
             Cart
@@ -26,6 +42,7 @@
                 Register
             </a>
         </div>
+
         <div class="relative hidden" id="userMenu">
             <button id="menuBtn"
                     class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition">

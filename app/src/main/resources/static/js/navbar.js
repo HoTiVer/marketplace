@@ -52,7 +52,6 @@ export async function renderNavbar(authData) {
             dropdown.insertBefore(sellerBtn, logoutBtn);
         }
 
-
         const chatsBtn = document.createElement("a");
         chatsBtn.href = "/chats.html";
         chatsBtn.textContent = "Chats";
@@ -65,12 +64,20 @@ export async function renderNavbar(authData) {
         userMenu.classList.add("hidden");
     }
 
-
     menuBtn.addEventListener("click", () => dropdown.classList.toggle("hidden"));
     logoutBtn.addEventListener("click", logout);
-
     document.addEventListener("click", (e) => {
         if (!userMenu.contains(e.target)) dropdown.classList.add("hidden");
+    });
+
+    const searchForm = document.getElementById("navbarSearchForm");
+    const searchInput = document.getElementById("navbarSearchInput");
+
+    searchForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const query = searchInput.value.trim();
+        if (!query) return;
+        window.location.href = `/search.html?q=${encodeURIComponent(query)}`;
     });
 
     navbarContainer.style.visibility = "visible";
