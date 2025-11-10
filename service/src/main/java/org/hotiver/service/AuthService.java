@@ -327,12 +327,12 @@ public class AuthService {
                         .map(role -> role.getName().toString())
                         .toList()
         );
-        try {
-            String json = mapper.writeValueAsString(dto);
-            redisService.saveValue(redisKey, json, 10);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            String json = mapper.writeValueAsString(dto);
+//            redisService.saveValue(redisKey, json, 10);
+//        } catch (JsonProcessingException e) {
+//            e.printStackTrace();
+//        }
 
         return ResponseEntity.ok(dto);
     }
