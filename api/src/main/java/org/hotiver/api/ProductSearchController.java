@@ -1,5 +1,6 @@
 package org.hotiver.api;
 
+import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.ProductProjection;
 import org.hotiver.service.ProductSearchService;
 import org.springframework.data.domain.Page;
@@ -18,8 +19,11 @@ public class ProductSearchController {
     }
 
     @GetMapping("/product")
-    public String productSearchByKeyWords(@RequestParam String searchTerm) {
-        return productSearchService.productSearchByKeyWords(searchTerm);
+    public ResponseEntity<Page<ProductGetDto>> productSearchByKeyWords(
+            @RequestParam String searchTerm,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return productSearchService.productSearchByKeyWords(searchTerm, page, size);
     }
 
     @GetMapping("/product/category/{category}")
