@@ -53,13 +53,8 @@ public class User {
     )
     private Set<Product> wishlist = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_cart",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id")
-    )
-    private Set<Product> cart = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CartItem> cart = new HashSet<>();
 
     private Boolean isTwoFactorEnable;
 }

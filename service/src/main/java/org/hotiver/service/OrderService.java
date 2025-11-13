@@ -35,10 +35,6 @@ public class OrderService {
 
         List<Product> products = new ArrayList<>();
 
-        for (int i = 0; i < createOrderDto.getProducts().size(); i++) {
-
-        }
-
 
         return "order created";
     }

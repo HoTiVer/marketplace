@@ -1,5 +1,6 @@
 package org.hotiver.api;
 
+import org.hotiver.dto.cart.CartItemDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.service.CartService;
@@ -21,7 +22,7 @@ public class CartController {
     }
 
     @GetMapping
-    public List<ListProductDto> getUserCart() {
+    public List<CartItemDto> getUserCart() {
         return cartService.getUserCart();
     }
 
@@ -35,4 +36,8 @@ public class CartController {
         cartService.deleteProductFromCart(productId);
     }
 
+    @PutMapping("/{productId}")
+    public void updateProductCount(@PathVariable Long productId, @RequestParam Integer count) {
+        cartService.updateProductCount(productId, count);
+    }
 }

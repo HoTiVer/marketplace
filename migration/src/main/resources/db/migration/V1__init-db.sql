@@ -98,12 +98,6 @@ CREATE TABLE user_wishes(
     CONSTRAINT pk_user_wishes PRIMARY KEY (user_id, product_id)
 );
 
-CREATE TABLE user_cart(
-    user_id BIGINT,
-    product_id BIGINT,
-    CONSTRAINT pk_user_cart PRIMARY KEY (user_id, product_id)
-);
-
 CREATE TABLE public."order"(
     order_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
@@ -119,6 +113,13 @@ CREATE TABLE public."order"(
     recipient_name VARCHAR(50),
     recipient_phone VARCHAR(20),
     CONSTRAINT pk_order PRIMARY KEY (order_id)
+);
+
+CREATE TABLE cart_item (
+    user_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    PRIMARY KEY (user_id, product_id)
 );
 
 ALTER TABLE public."user"
@@ -171,13 +172,6 @@ ALTER TABLE user_wishes
 ALTER TABLE user_wishes
     ADD CONSTRAINT fk_user_wishes_on_product FOREIGN KEY (product_id) REFERENCES product(id);
 
-ALTER TABLE user_cart
-    ADD CONSTRAINT fk_user_cart_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id);
-
-ALTER TABLE user_cart
-    ADD CONSTRAINT fk_user_cart_on_product FOREIGN KEY (product_id) REFERENCES product(id);
-
-
 ALTER TABLE public."order"
     ADD CONSTRAINT fk_order_on_product FOREIGN KEY (product_id) REFERENCES product(id);
 
@@ -186,3 +180,11 @@ ALTER TABLE public."order"
 
 ALTER TABLE public."order"
     ADD CONSTRAINT fk_order_on_seller FOREIGN KEY (seller_id) REFERENCES seller(id);
+
+
+
+ALTER TABLE cart_item
+    ADD CONSTRAINT fk_cart_item_on_product FOREIGN KEY (product_id) REFERENCES product(id);
+
+ALTER TABLE cart_item
+    ADD CONSTRAINT fk_cart_item_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id);
