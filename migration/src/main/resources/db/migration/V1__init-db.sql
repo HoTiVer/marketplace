@@ -14,6 +14,8 @@ CREATE SEQUENCE IF NOT EXISTS sequence_message START WITH 1 INCREMENT BY 5;
 
 --CREATE SEQUENCE IF NOT EXISTS sequence_user_wishes START WITH 1 INCREMENT BY 5;
 
+CREATE SEQUENCE IF NOT EXISTS sequence_order START WITH 1 INCREMENT BY 5;
+
 CREATE TABLE public."user"(
     id BIGINT,
     email VARCHAR(100) NOT NULL,
@@ -102,6 +104,23 @@ CREATE TABLE user_cart(
     CONSTRAINT pk_user_cart PRIMARY KEY (user_id, product_id)
 );
 
+CREATE TABLE public."order"(
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    seller_id BIGINT NOT NULL CHECK ( seller_id != user_id ),
+    quantity INT NOT NULL CHECK ( quantity > 0),
+    order_date DATE NOT NULL,
+    delivery_date DATE,
+    status VARCHAR(50) NOT NULL,
+    total_price DOUBLE PRECISION NOT NULL,
+    delivery_address VARCHAR(255),
+    delivery_city VARCHAR(100),
+    recipient_name VARCHAR(50),
+    recipient_phone VARCHAR(20),
+    CONSTRAINT pk_order PRIMARY KEY (order_id)
+);
+
 ALTER TABLE public."user"
     ADD CONSTRAINT uc_user_email UNIQUE (email);
 
@@ -157,3 +176,13 @@ ALTER TABLE user_cart
 
 ALTER TABLE user_cart
     ADD CONSTRAINT fk_user_cart_on_product FOREIGN KEY (product_id) REFERENCES product(id);
+
+
+ALTER TABLE public."order"
+    ADD CONSTRAINT fk_order_on_product FOREIGN KEY (product_id) REFERENCES product(id);
+
+ALTER TABLE public."order"
+    ADD CONSTRAINT fk_order_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id);
+
+ALTER TABLE public."order"
+    ADD CONSTRAINT fk_order_on_seller FOREIGN KEY (seller_id) REFERENCES seller(id);
