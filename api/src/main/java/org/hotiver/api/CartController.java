@@ -36,7 +36,7 @@ public class CartController {
         cartService.deleteProductFromCart(productId);
     }
 
-    @PutMapping("/{productId}")
+    @PatchMapping("/{productId}")
     public void updateProductCount(@PathVariable Long productId, @RequestParam Integer count) {
         cartService.updateProductCount(productId, count);
     }

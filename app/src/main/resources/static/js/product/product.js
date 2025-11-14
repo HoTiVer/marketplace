@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         loading.classList.add("hidden");
         productContainer.classList.remove("hidden");
 
+        // Заполняем данные
         document.getElementById("productName").textContent = product.name;
         document.getElementById("price").textContent = `$${product.price.toFixed(2)}`;
         document.getElementById("categoryName").textContent = `Category: ${product.categoryName}`;
@@ -42,38 +43,40 @@ document.addEventListener("DOMContentLoaded", async () => {
             goToSellerPageBtn.classList.remove("hidden");
             goToSellerProductsBtn.classList.remove("hidden");
 
-            goToSellerPageBtn.onclick = () => {
-                window.location.href = `/seller/${product.sellerUsername}`;
-            };
-            goToSellerProductsBtn.onclick = () => {
-                window.location.href = `/seller/${product.sellerUsername}/products`;
-            };
+            goToSellerPageBtn.onclick = () => window.location.href = `/seller/${product.sellerUsername}`;
+            goToSellerProductsBtn.onclick = () => window.location.href = `/seller/${product.sellerUsername}/products`;
         }
 
+        // Wishlist
         const addToWishlistBtn = document.getElementById("addToWishlistBtn");
         addToWishlistBtn.onclick = async () => {
             try {
                 const res = await fetchWithAuth(`/api/wishlist/${productId}`, { method: "POST" });
-                if (res.ok) {
-                    alert(`✅ "${product.name}" added to wishlist!`);
-                } else if (res.status === 409) {
-                    alert("Already in wishlist.");
-                } else {
-                    alert(`Failed to add to wishlist (${res.status})`);
-                }
+                if (res.ok) alert(`✅ "${product.name}" added to wishlist!`);
+                else if (res.status === 409) alert("Already in wishlist.");
+                else alert(`Failed to add to wishlist (${res.status})`);
             } catch (err) {
                 alert(`Error: ${err.message}`);
             }
         };
 
+        // Cart с логикой увеличения количества
         const addToCartBtn = document.getElementById("addToCartBtn");
         addToCartBtn.onclick = async () => {
             try {
-                const res = await fetchWithAuth(`/api/cart/${productId}`, { method: "POST" });
+                // Пробуем добавить
+                let res = await fetchWithAuth(`/api/cart/${productId}?count=1`, { method: "POST" });
+
                 if (res.ok) {
                     alert(`🛒 "${product.name}" added to cart!`);
-                } else if (res.status === 409) {
-                    alert("Already in cart.");
+                    return;
+                }
+
+                // Если уже в корзине (409), увеличиваем количество через PATCH
+                if (res.status === 409) {
+                    res = await fetchWithAuth(`/api/cart/${productId}?count=1`, { method: "PATCH" });
+                    if (res.ok) alert(`🛒 Quantity of "${product.name}" increased by 1!`);
+                    else alert(`Failed to update cart (${res.status})`);
                 } else {
                     alert(`Failed to add to cart (${res.status})`);
                 }
@@ -82,15 +85,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         };
 
+        // Характеристики
         const charContainer = document.getElementById("characteristics");
         if (product.characteristic && Object.keys(product.characteristic).length > 0) {
             Object.entries(product.characteristic).forEach(([key, value]) => {
                 const div = document.createElement("div");
                 div.className = "bg-gray-50 border rounded-lg p-4";
-                div.innerHTML = `
-                    <p class="text-gray-800 font-medium">${key}</p>
-                    <p class="text-gray-600">${value}</p>
-                `;
+                div.innerHTML = `<p class="text-gray-800 font-medium">${key}</p>
+                                 <p class="text-gray-600">${value}</p>`;
                 charContainer.appendChild(div);
             });
         } else {
