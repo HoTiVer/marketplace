@@ -19,6 +19,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
@@ -58,6 +60,9 @@ public class ProductService {
                 .description(productAddDto.getDescription())
                 .characteristic(new HashMap<>(productAddDto.getCharacteristic()))
                 .seller(seller)
+                .stockQuantity(productAddDto.getQuantity())
+                .salesCount(0)
+                .publishingDate(Date.valueOf(LocalDate.now()))
                 .isVisible(true)
                 .build();
 

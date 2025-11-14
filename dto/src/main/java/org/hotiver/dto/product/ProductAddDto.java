@@ -17,4 +17,6 @@ public class ProductAddDto {
     private String categoryName;
 
     private Map<String, Object> characteristic;
+
+    private Integer quantity;
 }
