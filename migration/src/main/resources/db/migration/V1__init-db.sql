@@ -53,6 +53,9 @@ CREATE TABLE product(
     category_id BIGINT NOT NULL,
     characteristic JSONB,
     seller_id BIGINT NOT NULL,
+    stock_quantity BIGINT NOT NULL CHECK ( stock_quantity >= 0 ),
+    sales_count BIGINT NOT NULL DEFAULT 0,
+    publishing_date DATE NOT NULL DEFAULT NOW(),
     is_visible BOOLEAN NOT NULL,
     CONSTRAINT pk_product PRIMARY KEY (id)
 );

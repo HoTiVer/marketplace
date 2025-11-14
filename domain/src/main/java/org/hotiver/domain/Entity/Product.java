@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Type;
 
+import java.sql.Date;
 import java.util.Map;
 
 @Setter
@@ -44,6 +45,12 @@ public class Product {
 
     @ManyToOne
     private Seller seller;
+
+    private Integer stockQuantity;
+
+    private Integer salesCount;
+
+    private Date publishingDate;
 
     private Boolean isVisible;
 }

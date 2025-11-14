@@ -1,6 +1,7 @@
 package org.hotiver.repo;
 
 import org.hotiver.domain.Entity.Product;
+import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.ProductProjection;
 import org.hotiver.dto.product.ProductSearchDto;
@@ -57,4 +58,46 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
        )
 """, nativeQuery = true)
     List<ProductSearchDto> findByKeyWord(@Param("searchTerm") String searchTerm);
+
+    @Query(value = """
+          SELECT
+                p.id as productId,
+                p.name as productName,
+                p.price as price
+          FROM product p
+          WHERE is_visible = true
+          ORDER BY random()
+          LIMIT :limit
+          """, nativeQuery = true
+    )
+    List<ListProductDto> findRandomVisibleProducts(
+            @Param("limit") Integer limitForFeaturesProducts);
+
+    @Query(value = """
+          SELECT
+                p.id as productId,
+                p.name as productName,
+                p.price as price
+          FROM product p
+          WHERE is_visible = true
+          ORDER BY p.publishing_date DESC
+          LIMIT :limit
+          """, nativeQuery = true
+    )
+    List<ListProductDto> findNewestVisibleProducts(
+            @Param("limit") Integer limitForNewProducts);
+
+    @Query(value = """
+          SELECT
+                p.id as productId,
+                p.name as productName,
+                p.price as price
+          FROM product p
+          WHERE is_visible = true
+          ORDER BY p.sales_count DESC
+          LIMIT :limit
+          """, nativeQuery = true
+    )
+    List<ListProductDto> findPopularVisibleProducts(
+            @Param("limit") Integer limitForPopularProducts);
 }
