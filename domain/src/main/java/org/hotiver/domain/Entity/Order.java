@@ -51,7 +51,7 @@ public class Order {
 
     private String deliveryAddress;
     private String deliveryCity;
-    private String receiverName;
-    private String receiverPhone;
+    private String recipientName;
+    private String recipientPhone;
 
 }

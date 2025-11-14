@@ -1,41 +1,72 @@
 package org.hotiver.service;
 
-import org.hotiver.domain.Entity.Product;
+import org.hotiver.common.OrderStatus;
+import org.hotiver.domain.Entity.CartItem;
+import org.hotiver.domain.Entity.Order;
+import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.order.CreateOrderDto;
-import org.hotiver.repo.OrderRepo;
-import org.hotiver.repo.ProductRepo;
-import org.hotiver.repo.SellerRepo;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.sql.Date;
+import java.time.LocalDate;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class OrderService {
 
     private final ProductRepo productRepo;
     private final UserRepo userRepo;
-    private final SellerRepo sellerRepo;
     private final OrderRepo orderRepo;
+    private final CartItemRepo cartItemRepo;
 
     public OrderService(ProductRepo productRepo, UserRepo userRepo,
-                        SellerRepo sellerRepo, OrderRepo orderRepo) {
+                        OrderRepo orderRepo, CartItemRepo cartItemRepo) {
         this.productRepo = productRepo;
         this.userRepo = userRepo;
-        this.sellerRepo = sellerRepo;
         this.orderRepo = orderRepo;
+        this.cartItemRepo = cartItemRepo;
     }
 
-    public String createOrder(CreateOrderDto createOrderDto) {
-        String deliveryAddress;
-        String deliveryCity;
-        String receiverName;
-        String receiverPhone;
+    @Transactional
+    public ResponseEntity<?> createOrder(CreateOrderDto createOrderDto) {
+        var context = SecurityContextHolder.getContext();
+        String email = context.getAuthentication().getName();
+        User user = userRepo.findByEmail(email).get();
 
-        List<Product> products = new ArrayList<>();
+        Set<CartItem> userCart = new HashSet<>(user.getCart());
 
+        if (userCart.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
 
-        return "order created";
+        for (CartItem cartItem : userCart) {
+            var product = productRepo.findById(cartItem.getProduct().getId()).get();
+            Order order = Order.builder()
+                    .product(product)
+                    .user(user)
+                    .seller(product.getSeller())
+                    .quantity(cartItem.getQuantity())
+                    .orderDate(Date.valueOf(LocalDate.now()))
+                    .deliveryDate(null)
+                    .status(OrderStatus.CREATED)
+                    .totalPrice(product.getPrice() * cartItem.getQuantity())
+                    .deliveryCity(createOrderDto.getDeliveryCity())
+                    .deliveryAddress(createOrderDto.getDeliveryAddress())
+                    .recipientName(createOrderDto.getReceiverName())
+                    .recipientPhone(createOrderDto.getReceiverPhone())
+                    .build();
+
+            orderRepo.save(order);
+            user.getCart().remove(cartItem);
+            cartItemRepo.delete(cartItem);
+
+        }
+
+        return ResponseEntity.ok().build();
     }
 }

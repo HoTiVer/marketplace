@@ -14,7 +14,7 @@ CREATE SEQUENCE IF NOT EXISTS sequence_message START WITH 1 INCREMENT BY 5;
 
 --CREATE SEQUENCE IF NOT EXISTS sequence_user_wishes START WITH 1 INCREMENT BY 5;
 
-CREATE SEQUENCE IF NOT EXISTS sequence_order START WITH 1 INCREMENT BY 5;
+CREATE SEQUENCE IF NOT EXISTS public.sequence_order START WITH 1 INCREMENT BY 5;
 
 CREATE TABLE public."user"(
     id BIGINT,
@@ -99,7 +99,7 @@ CREATE TABLE user_wishes(
 );
 
 CREATE TABLE public."order"(
-    order_id BIGINT NOT NULL,
+    id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
     seller_id BIGINT NOT NULL CHECK ( seller_id != user_id ),
@@ -112,7 +112,7 @@ CREATE TABLE public."order"(
     delivery_city VARCHAR(100),
     recipient_name VARCHAR(50),
     recipient_phone VARCHAR(20),
-    CONSTRAINT pk_order PRIMARY KEY (order_id)
+    CONSTRAINT pk_order PRIMARY KEY (id)
 );
 
 CREATE TABLE cart_item (

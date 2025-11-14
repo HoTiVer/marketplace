@@ -2,6 +2,7 @@ package org.hotiver.api;
 
 import org.hotiver.dto.order.CreateOrderDto;
 import org.hotiver.service.OrderService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,7 +21,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public String createOrder(@RequestBody CreateOrderDto createOrderDto) {
+    public ResponseEntity<?> createOrder(@RequestBody CreateOrderDto createOrderDto) {
         return orderService.createOrder(createOrderDto);
     }
 }
