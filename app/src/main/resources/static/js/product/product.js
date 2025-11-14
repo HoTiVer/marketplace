@@ -30,7 +30,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         loading.classList.add("hidden");
         productContainer.classList.remove("hidden");
 
-        // Заполняем данные
         document.getElementById("productName").textContent = product.name;
         document.getElementById("price").textContent = `$${product.price.toFixed(2)}`;
         document.getElementById("categoryName").textContent = `Category: ${product.categoryName}`;
@@ -47,7 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             goToSellerProductsBtn.onclick = () => window.location.href = `/seller/${product.sellerUsername}/products`;
         }
 
-        // Wishlist
         const addToWishlistBtn = document.getElementById("addToWishlistBtn");
         addToWishlistBtn.onclick = async () => {
             try {
@@ -60,11 +58,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         };
 
-        // Cart с логикой увеличения количества
         const addToCartBtn = document.getElementById("addToCartBtn");
         addToCartBtn.onclick = async () => {
             try {
-                // Пробуем добавить
+
                 let res = await fetchWithAuth(`/api/cart/${productId}?count=1`, { method: "POST" });
 
                 if (res.ok) {
@@ -72,7 +69,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     return;
                 }
 
-                // Если уже в корзине (409), увеличиваем количество через PATCH
                 if (res.status === 409) {
                     res = await fetchWithAuth(`/api/cart/${productId}?count=1`, { method: "PATCH" });
                     if (res.ok) alert(`🛒 Quantity of "${product.name}" increased by 1!`);
@@ -85,7 +81,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         };
 
-        // Характеристики
         const charContainer = document.getElementById("characteristics");
         if (product.characteristic && Object.keys(product.characteristic).length > 0) {
             Object.entries(product.characteristic).forEach(([key, value]) => {
@@ -100,6 +95,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
     } catch (err) {
-        loading.textContent = `⚠ Error: ${err.message}`;
+        loading.textContent = `Error: ${err.message}`;
     }
 });

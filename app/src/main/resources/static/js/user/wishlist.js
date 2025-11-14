@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const wishlist = await response.json();
-
         wishlistContainer.innerHTML = "";
 
         if (wishlist.length === 0) {
@@ -34,7 +33,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     Your wishlist is empty
                 </p>`;
         } else {
-
             wishlist.reverse().forEach(product => {
                 const card = document.createElement("div");
                 card.className =
@@ -45,22 +43,40 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <h2 class="text-xl font-bold text-gray-800 mb-2">${product.productName}</h2>
                         <p class="text-gray-600 text-lg mb-4">$${product.price.toFixed(2)}</p>
                     </div>
-                    <div class="flex justify-between items-center mt-4">
-                        <button
-                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                    <div class="flex justify-between items-center mt-4 gap-2">
+                        <button class="viewBtn bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
                             View
                         </button>
-                        <button
-                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                        <button class="addCartBtn bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition">
+                            Add to Cart
+                        </button>
+                        <button class="removeBtn bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
                             Remove
                         </button>
                     </div>
                 `;
 
-                const [viewBtn, removeBtn] = card.querySelectorAll("button");
+                const viewBtn = card.querySelector(".viewBtn");
+                const addCartBtn = card.querySelector(".addCartBtn");
+                const removeBtn = card.querySelector(".removeBtn");
 
                 viewBtn.onclick = () => {
                     window.location.href = `/product/${product.productId}`;
+                };
+
+                addCartBtn.onclick = async () => {
+                    try {
+
+                        let res = await fetchWithAuth(`/api/cart/${product.productId}?count=1`, {
+                            method: "POST"
+                        });
+
+                        if (res.ok) {
+                            alert(`🛒 "${product.productName}" added to cart!`);
+                        }
+                    } catch (err) {
+                        alert(`Error: ${err.message}`);
+                    }
                 };
 
                 removeBtn.onclick = async () => {
