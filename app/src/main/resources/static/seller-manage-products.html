@@ -22,7 +22,6 @@
          class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl"></div>
 </main>
 
-<!-- Modal -->
 <div id="productModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
     <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h2 id="modalTitle" class="text-2xl font-bold mb-6">Add Product</h2>
@@ -35,17 +34,29 @@
 
             <div>
                 <label class="block text-gray-700 font-medium mb-2">Price</label>
-                <input id="productPrice" type="number" step="0.01" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500" required>
+                <input id="productPrice" type="number" step="0.01"
+                       class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500" required>
             </div>
 
             <div>
                 <label class="block text-gray-700 font-medium mb-2">Description</label>
-                <textarea id="productDescription" rows="3" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500" required></textarea>
+                <textarea id="productDescription" rows="3"
+                          class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
+                          required></textarea>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-medium mb-2">Quantity</label>
+                <input id="productQuantity" type="number" min="0"
+                       class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
+                       required>
             </div>
 
             <div>
                 <label class="block text-gray-700 font-medium mb-2">Category</label>
-                <select id="categorySelect" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500" required>
+                <select id="categorySelect"
+                        class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
+                        required>
                     <option value="">Loading categories...</option>
                 </select>
             </div>
@@ -53,7 +64,8 @@
             <div>
                 <label class="block text-gray-700 font-medium mb-2">Characteristics</label>
                 <div id="characteristicsContainer" class="space-y-3"></div>
-                <button id="addCharacteristic" type="button" class="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                <button type="button" id="addCharacteristic"
+                        class="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
                     + Add Characteristic
                 </button>
             </div>

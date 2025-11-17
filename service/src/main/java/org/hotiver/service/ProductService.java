@@ -1,7 +1,5 @@
 package org.hotiver.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.hotiver.domain.Entity.Category;
@@ -10,6 +8,7 @@ import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
+import org.hotiver.dto.seller.SellerProductProjection;
 import org.hotiver.repo.CategoryRepo;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.SellerRepo;
@@ -152,6 +151,10 @@ public class ProductService {
             product.setDescription(productAddDto.getDescription());
         }
 
+        if (productAddDto.getQuantity() != null) {
+            product.setStockQuantity(productAddDto.getQuantity());
+        }
+
         String categoryName = productAddDto.getCategoryName();
         if (categoryName != null) {
             Optional<Category> category = categoryRepo.findByName(categoryName);
@@ -171,29 +174,32 @@ public class ProductService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<List<ProductGetDto>> getCurrentSellerProducts(String username) {
+    public ResponseEntity<List<SellerProductProjection>> getCurrentSellerProducts(String username) {
         if (username == null)
             return  ResponseEntity.badRequest().build();
 
         Seller seller = sellerRepo.findByEmail(username);
 
-        List<ProductGetDto> productGetDto = new ArrayList<>();
+//        List<ProductGetDto> productGetDto = new ArrayList<>();
+//
+//        ProductGetDto productDto;
+//
+//        for (var product : seller.getProducts()) {
+//            productDto = new ProductGetDto(
+//                    product.getId(),
+//                    product.getName(),
+//                    product.getPrice(),
+//                    product.getDescription(),
+//                    product.getCategory().getName(),
+//                    product.getCharacteristic(),
+//                    product.getSeller().getUser().getDisplayName(),
+//                    product.getSeller().getNickname()
+//            );
+//            productGetDto.add(productDto);
+//        }
 
-        ProductGetDto productDto;
-
-        for (var product : seller.getProducts()) {
-            productDto = new ProductGetDto(
-                    product.getId(),
-                    product.getName(),
-                    product.getPrice(),
-                    product.getDescription(),
-                    product.getCategory().getName(),
-                    product.getCharacteristic(),
-                    product.getSeller().getUser().getDisplayName(),
-                    product.getSeller().getNickname()
-            );
-            productGetDto.add(productDto);
-        }
+        List<SellerProductProjection> productGetDto = productRepo
+                .getCurrentSellerProducts(seller.getId());
 
         return ResponseEntity.ok().body(productGetDto);
     }

@@ -1,10 +1,8 @@
 package org.hotiver.repo;
 
 import org.hotiver.domain.Entity.Product;
-import org.hotiver.dto.product.ListProductDto;
-import org.hotiver.dto.product.ProductGetDto;
-import org.hotiver.dto.product.ProductProjection;
-import org.hotiver.dto.product.ProductSearchDto;
+import org.hotiver.dto.product.*;
+import org.hotiver.dto.seller.SellerProductProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -100,4 +98,20 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     )
     List<ListProductDto> findPopularVisibleProducts(
             @Param("limit") Integer limitForPopularProducts);
+
+    @Query("""
+    SELECT\s
+        p.id AS id,
+        p.name AS name,
+        p.price AS price,
+        p.description AS description,
+        p.category.name AS categoryName,
+        p.characteristic AS characteristic,
+        p.seller.user.displayName AS sellerDisplayName,
+        p.seller.nickname AS sellerUsername,
+        p.stockQuantity as quantity
+    FROM Product p
+    WHERE p.seller.id = :id AND p.isVisible = true
+""")
+    List<SellerProductProjection> getCurrentSellerProducts(Long id);
 }

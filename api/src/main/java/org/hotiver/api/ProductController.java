@@ -2,6 +2,7 @@ package org.hotiver.api;
 
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
+import org.hotiver.dto.seller.SellerProductProjection;
 import org.hotiver.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,7 +48,7 @@ public class ProductController {
 
     @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/seller/products")
-    public ResponseEntity<List<ProductGetDto>> getCurrentSellerProducts(Authentication auth) {
+    public ResponseEntity<List<SellerProductProjection>> getCurrentSellerProducts(Authentication auth) {
         String username = auth.getName();
         return productService.getCurrentSellerProducts(username);
     }
