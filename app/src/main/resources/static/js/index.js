@@ -21,8 +21,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         li.textContent = cat.name;
         li.className = "px-3 py-2 rounded-lg hover:bg-blue-100 cursor-pointer";
         li.onclick = () => {
-            window.location.href = `/category.html?id=${cat.id}`;
-        };
+            window.location.href = `/search.html?category=${cat.id}`;
+        }
         categoriesList.appendChild(li);
     });
 
