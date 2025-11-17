@@ -32,7 +32,7 @@ A marketplace is a type of e-commerce platform where:
 
 ### 🔧 Tech Stack
 
-- Backend: Java 17, Spring Boot
+- Backend: Java 21, Spring Boot
 
 - Security:	Spring Security, JWT, Google OAuth
 
