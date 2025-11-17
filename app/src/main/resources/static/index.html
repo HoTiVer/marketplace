@@ -5,15 +5,43 @@
     <title>Main page</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 flex items-center justify-center h-screen">
-
+<body class="bg-gray-100 min-h-screen">
 
 <div id="navbar"></div>
+
+<div class="flex mt-20 px-4 gap-4">
+
+    <aside class="w-64 bg-white rounded-xl shadow p-4 flex-shrink-0">
+        <h2 class="text-xl font-bold mb-4">Categories</h2>
+        <ul id="categoriesList" class="flex flex-col gap-2">
+
+        </ul>
+    </aside>
+
+
+    <main class="flex-1 flex flex-col gap-8">
+        <section>
+            <h2 class="text-2xl font-bold mb-4">Featured Products</h2>
+            <div id="featuredProducts" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold mb-4">New Products</h2>
+            <div id="newProducts" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold mb-4">Popular Products</h2>
+            <div id="popularProducts" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            </div>
+        </section>
+    </main>
+</div>
+
 <script type="module" src="/js/index.js"></script>
 </body>
-<script>
-
-</script>
-
 </html>
-
