@@ -23,22 +23,45 @@ export async function refreshAccessToken() {
     }
 }
 
+// export async function fetchWithAuth(url, options = {}) {
+//     let token = localStorage.getItem("accessToken");
+//     if (!options.headers) options.headers = {};
+//     options.headers["Authorization"] = "Bearer " + token;
+//
+//     let res = await fetch(url, options);
+//
+//     if (res.status === 401) {
+//         token = await refreshAccessToken();
+//         if (token) {
+//             options.headers["Authorization"] = "Bearer " + token;
+//             res = await fetch(url, options);
+//         }
+//     }
+//     return res;
+// }
+
 export async function fetchWithAuth(url, options = {}) {
     let token = localStorage.getItem("accessToken");
+
     if (!options.headers) options.headers = {};
-    options.headers["Authorization"] = "Bearer " + token;
+
+    if (token) {
+        options.headers["Authorization"] = "Bearer " + token;
+    }
 
     let res = await fetch(url, options);
 
-    if (res.status === 401) {
+    if (res.status === 401 && token) {
         token = await refreshAccessToken();
         if (token) {
             options.headers["Authorization"] = "Bearer " + token;
             res = await fetch(url, options);
         }
     }
+
     return res;
 }
+
 
 export async function logout() {
     const token = localStorage.getItem("accessToken");
