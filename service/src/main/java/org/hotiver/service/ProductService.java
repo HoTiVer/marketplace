@@ -116,7 +116,7 @@ public class ProductService {
         for (var role : roles){
             if (role.getAuthority().equals("ROLE_ADMIN")){
                 chatService.sendMessage(0L, user.getId(),
-                        "admin deleted your product");
+                        "admin deleted your product with id: " + product.getId());
 
                 productRepo.deleteById(id);
                 return ResponseEntity.ok().build();

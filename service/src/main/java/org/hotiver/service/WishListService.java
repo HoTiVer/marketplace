@@ -90,6 +90,9 @@ public class WishListService {
         if (user.getWishlist().contains(product.get())){
             return;
         }
+        if (user.getId().equals(product.get().getSeller().getId())) {
+            return;
+        }
         var products = user.getWishlist();
         products.add(product.get());
         user.setWishlist(products);

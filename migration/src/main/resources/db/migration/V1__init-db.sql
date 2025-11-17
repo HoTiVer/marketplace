@@ -146,10 +146,10 @@ ALTER TABLE user_role
     ADD CONSTRAINT fk_user_role_on_role FOREIGN KEY (role_id) REFERENCES role(id);
 
 ALTER TABLE product
-    ADD CONSTRAINT fk_product_on_category FOREIGN KEY (category_id) REFERENCES category(id);
+    ADD CONSTRAINT fk_product_on_category FOREIGN KEY (category_id) REFERENCES category(id) ON UPDATE CASCADE;
 
 ALTER TABLE product
-    ADD CONSTRAINT fk_product_on_seller FOREIGN KEY (seller_id) REFERENCES seller(id);
+    ADD CONSTRAINT fk_product_on_seller FOREIGN KEY (seller_id) REFERENCES seller(id) ON DELETE CASCADE;
 
 ALTER TABLE seller
     ADD CONSTRAINT fk_seller_on_user FOREIGN KEY (id) REFERENCES public."user"(id);
@@ -170,10 +170,10 @@ ALTER TABLE message
     ADD CONSTRAINT fk_message_on_user FOREIGN KEY (sender_id) REFERENCES public."user"(id);
 
 ALTER TABLE user_wishes
-    ADD CONSTRAINT fk_user_wishes_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id);
+    ADD CONSTRAINT fk_user_wishes_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
 
 ALTER TABLE user_wishes
-    ADD CONSTRAINT fk_user_wishes_on_product FOREIGN KEY (product_id) REFERENCES product(id);
+    ADD CONSTRAINT fk_user_wishes_on_product FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE;
 
 ALTER TABLE public."order"
     ADD CONSTRAINT fk_order_on_product FOREIGN KEY (product_id) REFERENCES product(id);
@@ -187,7 +187,7 @@ ALTER TABLE public."order"
 
 
 ALTER TABLE cart_item
-    ADD CONSTRAINT fk_cart_item_on_product FOREIGN KEY (product_id) REFERENCES product(id);
+    ADD CONSTRAINT fk_cart_item_on_product FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE;
 
 ALTER TABLE cart_item
-    ADD CONSTRAINT fk_cart_item_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id);
+    ADD CONSTRAINT fk_cart_item_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
