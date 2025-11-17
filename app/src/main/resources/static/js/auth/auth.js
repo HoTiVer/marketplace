@@ -1,4 +1,3 @@
-// auth.js
 export async function refreshAccessToken() {
     const refreshToken = localStorage.getItem("refreshToken");
     if (!refreshToken) return null;

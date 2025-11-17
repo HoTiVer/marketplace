@@ -16,9 +16,15 @@ export async function renderNavbar(authData) {
     const logoutBtn = document.getElementById("logoutBtn");
     const profileBtn = document.getElementById("profileBtn");
 
+    const wishlistLink = document.getElementById("wishlistLink");
+    const cartLink = document.getElementById("cartLink");
+
     if (authData) {
         authButtons.classList.add("hidden");
         userMenu.classList.remove("hidden");
+
+        wishlistLink.classList.remove("hidden");
+        cartLink.classList.remove("hidden");
 
         profileBtn.addEventListener("click", () => {
             window.location.href = `/user/personal-info.html`;
@@ -62,6 +68,9 @@ export async function renderNavbar(authData) {
     } else {
         authButtons.classList.remove("hidden");
         userMenu.classList.add("hidden");
+
+        wishlistLink.classList.add("hidden");
+        cartLink.classList.add("hidden");
     }
 
     menuBtn.addEventListener("click", () => dropdown.classList.toggle("hidden"));

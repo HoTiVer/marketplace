@@ -35,7 +35,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 sellerNicknameContainer.classList.remove("hidden");
                 becomeSellerBtn.classList.add("hidden");
 
-                // Показываем кнопку перехода
                 goToSellerPageBtn.classList.remove("hidden");
                 goToSellerPageBtn.onclick = () => {
                     window.location.href = `/seller/${nickname}`;
@@ -54,7 +53,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // --- Become Seller Button ---
     becomeSellerBtn.addEventListener("click", () => {
         sellerModal.classList.remove("hidden");
     });
