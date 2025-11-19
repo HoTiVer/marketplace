@@ -12,7 +12,7 @@ import java.sql.Date;
 public class UserOrderDto {
     private Long orderId;
     private Long productId;
-    private Long sellerId;
+    private String sellerNickname;
     private Integer quantity;
     private Date orderDate;
     private Date deliveryDate;

@@ -15,7 +15,6 @@ export async function renderNavbar(authData) {
     const dropdown = document.getElementById("dropdown");
     const logoutBtn = document.getElementById("logoutBtn");
     const profileBtn = document.getElementById("profileBtn");
-
     const wishlistLink = document.getElementById("wishlistLink");
     const cartLink = document.getElementById("cartLink");
 
@@ -29,6 +28,14 @@ export async function renderNavbar(authData) {
         profileBtn.addEventListener("click", () => {
             window.location.href = `/user/personal-info.html`;
         });
+
+
+        const ordersBtn = document.createElement("a");
+        ordersBtn.href = "/user-orders.html";
+        ordersBtn.textContent = "Orders";
+        ordersBtn.className =
+            "w-full block px-4 py-2 text-left text-indigo-600 hover:bg-indigo-50 transition";
+        dropdown.insertBefore(ordersBtn, logoutBtn);
 
         const hasAdminRole = authData.roles?.includes("ADMIN") ?? false;
         const hasSellerRole = authData.roles?.includes("SELLER") ?? false;
