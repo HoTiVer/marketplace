@@ -7,16 +7,23 @@ import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.order.CreateOrderDto;
+import org.hotiver.dto.order.UserOrderDto;
 import org.hotiver.repo.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+
 import java.sql.Date;
 import java.time.LocalDate;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -88,5 +95,34 @@ public class OrderService {
         userCart.clear();
 
         return ResponseEntity.ok().build();
+    }
+
+    public Page<UserOrderDto> getUserOrders(int page, int size) {
+        var context = SecurityContextHolder.getContext();
+        String email = context.getAuthentication().getName();
+        User user = userRepo.findByEmail(email).get();
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserOrderDto> userOrderDto = orderRepo.findUserOrders(user.getId(), pageable);
+        return userOrderDto;
+    }
+
+    public ResponseEntity<?> cancelUserOrder(Long orderId) {
+        var context = SecurityContextHolder.getContext();
+        String email = context.getAuthentication().getName();
+        User user = userRepo.findByEmail(email).get();
+
+        Optional<Order> order = orderRepo.findById(orderId);
+
+        if (order.isPresent()) {
+            if (order.get().getUser().getId().equals(user.getId())
+                    && !order.get().getStatus().equals(OrderStatus.CANCELLED)) {
+
+                order.get().setStatus(OrderStatus.CANCELLED);
+                orderRepo.save(order.get());
+                return ResponseEntity.ok().build();
+            }
+        }
+        return ResponseEntity.badRequest().build();
     }
 }
