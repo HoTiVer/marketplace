@@ -21,7 +21,7 @@ public class CartItem {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
     @MapsId("productId")
     @JoinColumn(name = "product_id")
     private Product product;

@@ -10,6 +10,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const totalSec = document.getElementById("totalSection");
     const totalPriceEl = document.getElementById("totalPrice");
 
+    const orderCard = document.getElementById("orderCard");
+    const openOrderCardBtn = document.getElementById("openOrderCardBtn");
+    const closeOrderCardBtn = document.getElementById("closeOrderCard");
+    const orderStatus = document.getElementById("orderStatus");
+
     async function loadCart() {
         try {
             const res = await fetchWithAuth("/api/cart");
@@ -21,38 +26,34 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (items.length === 0) {
                 container.innerHTML = `<p class="text-center text-gray-600 italic">Cart is empty 😢</p>`;
                 totalSec.classList.add("hidden");
+                openOrderCardBtn.classList.add("hidden");
                 container.classList.remove("hidden");
                 return;
             }
 
             let total = 0;
+
             items.forEach(item => {
                 total += item.price * item.quantity;
 
                 const row = document.createElement("div");
-                row.className =
-                    "flex justify-between items-center bg-gray-50 p-4 rounded-xl shadow";
+                row.className = "flex justify-between items-center bg-gray-50 p-4 rounded-xl shadow";
 
                 row.innerHTML = `
                     <div>
                         <p class="font-semibold text-gray-800">${item.productName}</p>
                         <p class="text-gray-600">$${item.price.toFixed(2)}</p>
                     </div>
-
                     <div class="flex items-center gap-2">
                         <button class="minus bg-gray-300 px-2 rounded">-</button>
                         <span class="w-8 text-center">${item.quantity}</span>
                         <button class="plus bg-gray-300 px-2 rounded">+</button>
                     </div>
-
                     <button class="delete bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition">🗑</button>
                 `;
 
                 row.querySelector(".plus").onclick = () => updateCount(item.productId, item.quantity + 1);
-                row.querySelector(".minus").onclick = () => {
-                    if (item.quantity > 1)
-                        updateCount(item.productId, item.quantity - 1);
-                };
+                row.querySelector(".minus").onclick = () => item.quantity > 1 && updateCount(item.productId, item.quantity - 1);
                 row.querySelector(".delete").onclick = () => deleteItem(item.productId);
 
                 container.appendChild(row);
@@ -61,6 +62,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             totalPriceEl.textContent = total.toFixed(2);
             totalSec.classList.remove("hidden");
             container.classList.remove("hidden");
+            openOrderCardBtn.classList.remove("hidden");
 
         } catch (err) {
             loading.textContent = "Failed to load cart";
@@ -68,18 +70,50 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function updateCount(productId, count) {
-        await fetchWithAuth(`/api/cart/${productId}?count=${count}`, {
-            method: "PATCH"
-        });
+        await fetchWithAuth(`/api/cart/${productId}?count=${count}`, { method: "PATCH" });
         await loadCart();
     }
 
     async function deleteItem(productId) {
-        await fetchWithAuth(`/api/cart/${productId}`, {
-            method: "DELETE"
-        });
+        await fetchWithAuth(`/api/cart/${productId}`, { method: "DELETE" });
         await loadCart();
     }
+
+    async function createOrder() {
+        orderStatus.textContent = "";
+        const body = {
+            receiverName: document.getElementById("receiverName").value,
+            receiverPhone: document.getElementById("receiverPhone").value,
+            deliveryCity: document.getElementById("deliveryCity").value,
+            deliveryAddress: document.getElementById("deliveryAddress").value
+        };
+
+        try {
+            const res = await fetchWithAuth("/api/order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+
+            if (res.ok) {
+                orderStatus.textContent = "Order created successfully!";
+                orderStatus.className = "text-green-600 font-semibold";
+                orderCard.classList.add("hidden");
+                await loadCart();
+            } else {
+                const text = await res.text();
+                orderStatus.textContent = `Failed to create order: ${text}`;
+                orderStatus.className = "text-red-600 font-semibold";
+            }
+        } catch (err) {
+            orderStatus.textContent = `Error: ${err.message}`;
+            orderStatus.className = "text-red-600 font-semibold";
+        }
+    }
+
+    openOrderCardBtn.onclick = () => orderCard.classList.remove("hidden");
+    closeOrderCardBtn.onclick = () => orderCard.classList.add("hidden");
+    document.getElementById("createOrderBtn").onclick = createOrder;
 
     await loadCart();
 });

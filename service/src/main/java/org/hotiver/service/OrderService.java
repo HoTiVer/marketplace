@@ -85,6 +85,8 @@ public class OrderService {
 
         }
 
+        userCart.clear();
+
         return ResponseEntity.ok().build();
     }
 }

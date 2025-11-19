@@ -6,17 +6,41 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 pt-20">
+
 <div id="navbar"></div>
 
 <section class="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
     <h1 class="text-2xl font-bold mb-4">🛒 Your Shopping Cart</h1>
 
     <div id="loading" class="text-center text-gray-600">Loading...</div>
+
     <div id="cartContainer" class="hidden flex flex-col gap-4"></div>
 
     <div id="totalSection" class="hidden mt-6 text-right text-xl font-bold">
         Total: $<span id="totalPrice">0</span>
     </div>
+
+    <div id="orderCard" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h2 class="text-xl font-semibold mb-3">Delivery Info</h2>
+
+            <input id="receiverName" class="w-full p-3 border rounded-lg mb-3" placeholder="Receiver Name">
+            <input id="receiverPhone" class="w-full p-3 border rounded-lg mb-3" placeholder="Phone">
+            <input id="deliveryCity" class="w-full p-3 border rounded-lg mb-3" placeholder="City">
+            <input id="deliveryAddress" class="w-full p-3 border rounded-lg mb-4" placeholder="Address">
+
+            <button id="createOrderBtn" class="bg-green-600 text-white w-full py-3 rounded-xl font-semibold hover:bg-green-700 transition">
+                ✔ Place Order
+            </button>
+
+            <p id="orderStatus" class="text-center text-lg mt-3"></p>
+            <button id="closeOrderCard" class="mt-4 w-full py-2 text-gray-700 hover:text-gray-900">Cancel</button>
+        </div>
+    </div>
+
+    <button id="openOrderCardBtn" class="hidden mt-6 w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition">
+        Proceed to Checkout
+    </button>
 </section>
 
 <script type="module" src="./js/cart/cart.js"></script>
