@@ -105,7 +105,9 @@ public class UserService {
         return ResponseEntity.ok(Map.of("message", "you are not seller yet"));
     }
 
+    //TODO optimize code
     public PersonalInfoDto getPersonalInfo() {
+        //TODO optimize code
         User user = getCurrentUser();
 
         PersonalInfoDto personalInfoDto = PersonalInfoDto.builder()
@@ -116,7 +118,7 @@ public class UserService {
                 .build();
 
         if (sellerRepo.existsById(user.getId())) {
-            var seller = sellerRepo.findByEmail(user.getEmail());
+            var seller = sellerRepo.findByEmail(user.getEmail()).get();
             personalInfoDto.setIsSeller(true);
             personalInfoDto.setSellerNickname(seller.getNickname());
         }

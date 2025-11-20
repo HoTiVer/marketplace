@@ -46,7 +46,7 @@ public class ProductService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
-        Seller seller = sellerRepo.findByEmail(email);
+        Seller seller = sellerRepo.findByEmail(email).get();
         Optional<Category> category = categoryRepo.findByName(productAddDto.getCategoryName());
         if (category.isEmpty())
             return ResponseEntity.badRequest().build();
@@ -178,7 +178,7 @@ public class ProductService {
         if (username == null)
             return  ResponseEntity.badRequest().build();
 
-        Seller seller = sellerRepo.findByEmail(username);
+        Seller seller = sellerRepo.findByEmail(username).get();
 
 //        List<ProductGetDto> productGetDto = new ArrayList<>();
 //

@@ -63,7 +63,7 @@ CREATE TABLE product(
 CREATE TABLE seller(
     id BIGINT,
     nickname VARCHAR(20) NOT NULL,
-    rating NUMERIC(2,1) NOT NULL CHECK ( rating BETWEEN 1 AND 5),
+    rating NUMERIC(2,1) NOT NULL CHECK ( rating BETWEEN 0 AND 5),
     profile_description VARCHAR(400) NOT NULL,
     CONSTRAINT pk_seller PRIMARY KEY (id)
 );

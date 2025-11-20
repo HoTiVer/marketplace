@@ -1,9 +1,11 @@
 package org.hotiver.api;
 
 import org.hotiver.dto.chat.SendMessageDto;
+import org.hotiver.dto.order.SellerOrderDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
 import org.hotiver.service.SellerService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,5 +37,14 @@ public class SellerController {
     public ResponseEntity<?> sendMessageToSeller(@PathVariable String username,
                                                  @RequestBody SendMessageDto message){
         return sellerService.sendMessageToSeller(username, message);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/seller/manage-orders")
+    public Page<SellerOrderDto> getSellerOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return sellerService.getSellerOrders(page, size);
     }
 }

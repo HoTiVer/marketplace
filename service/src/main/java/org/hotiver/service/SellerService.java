@@ -3,11 +3,17 @@ package org.hotiver.service;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.dto.chat.SendMessageDto;
+import org.hotiver.dto.order.SellerOrderDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
+import org.hotiver.repo.OrderRepo;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.SellerRepo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,12 +25,14 @@ public class SellerService {
 
     private final SellerRepo sellerRepo;
     private final ProductRepo productRepo;
+    private final OrderRepo orderRepo;
     private final ChatService chatService;
 
     public SellerService(SellerRepo sellerRepo, ProductRepo productRepo,
-                         ChatService chatService) {
+                         OrderRepo orderRepo, ChatService chatService) {
         this.sellerRepo = sellerRepo;
         this.productRepo = productRepo;
+        this.orderRepo = orderRepo;
         this.chatService = chatService;
     }
 
@@ -71,5 +79,15 @@ public class SellerService {
 
     public ResponseEntity<?> sendMessageToSeller(String username, SendMessageDto message) {
         return chatService.sendMessageToSeller(username, message);
+    }
+
+    public Page<SellerOrderDto> getSellerOrders(int page, int size) {
+        var context = SecurityContextHolder.getContext();
+        var email = context.getAuthentication().getName();
+
+        Optional<Seller> opSeller = sellerRepo.findByEmail(email);
+
+        Pageable pageable = PageRequest.of(page, size);
+        return orderRepo.findSellerOrders(opSeller.get().getId(), pageable);
     }
 }
