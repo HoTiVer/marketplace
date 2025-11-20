@@ -2,6 +2,8 @@ package org.hotiver.api;
 
 import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.order.SellerOrderDto;
+import org.hotiver.dto.order.SellerOrdersResponse;
+import org.hotiver.dto.order.UpdateStatusDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
 import org.hotiver.service.SellerService;
@@ -39,12 +41,20 @@ public class SellerController {
         return sellerService.sendMessageToSeller(username, message);
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and hasRole('SELLER')")
     @GetMapping("/seller/manage-orders")
-    public Page<SellerOrderDto> getSellerOrders(
+    public SellerOrdersResponse getSellerOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         return sellerService.getSellerOrders(page, size);
+    }
+
+    @PreAuthorize("isAuthenticated() and hasRole('SELLER')")
+    @PatchMapping("/seller/manage-orders/{orderId}")
+    public ResponseEntity<?> changeOrderStatus(@PathVariable Long orderId,
+                                               @RequestBody UpdateStatusDto updateStatusDto) {
+
+        return sellerService.changeOrderStatus(orderId, updateStatusDto.getStatus());
     }
 }

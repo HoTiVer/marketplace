@@ -108,21 +108,23 @@ public class OrderService {
     }
 
     public ResponseEntity<?> cancelUserOrder(Long orderId) {
-        var context = SecurityContextHolder.getContext();
-        String email = context.getAuthentication().getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepo.findByEmail(email).get();
 
-        Optional<Order> order = orderRepo.findById(orderId);
+        Order order = orderRepo.findById(orderId).orElse(null);
+        OrderStatus newStatus = OrderStatus.CANCELLED;
 
-        if (order.isPresent()) {
-            if (order.get().getUser().getId().equals(user.getId())
-                    && !order.get().getStatus().equals(OrderStatus.CANCELLED)) {
-
-                order.get().setStatus(OrderStatus.CANCELLED);
-                orderRepo.save(order.get());
-                return ResponseEntity.ok().build();
-            }
+        if (order == null) {
+            return ResponseEntity.notFound().build();
         }
+
+        if (order.getUser().getId().equals(user.getId())
+                && order.getStatus().canChangeTo(newStatus)) {
+                order.setStatus(newStatus);
+                orderRepo.save(order);
+                return ResponseEntity.ok().build();
+        }
+
         return ResponseEntity.badRequest().build();
     }
 }
