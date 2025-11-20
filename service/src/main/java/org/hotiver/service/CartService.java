@@ -33,22 +33,9 @@ public class CartService {
     public List<CartItemDto> getUserCart() {
         var context = SecurityContextHolder.getContext();
         String email = context.getAuthentication().getName();
-
         User user = userRepo.findByEmail(email).get();
 
-        var userCart = user.getCart();
-
-        List<CartItemDto> productDtoList = new ArrayList<>();
-        for (CartItem cartItem : userCart) {
-            CartItemDto productDto = new CartItemDto(
-                    cartItem.getProduct().getId(),
-                    cartItem.getProduct().getName(),
-                    cartItem.getProduct().getPrice(),
-                    cartItem.getQuantity());
-
-            productDtoList.add(productDto);
-        }
-        return productDtoList;
+        return  cartItemRepo.findByUserId(user.getId());
     }
 
     public ResponseEntity<?> addProductToCart(Long productId) {

@@ -14,6 +14,7 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
         SELECT
                 o.id as orderId,
                 p.id as productId,
+                p.name as productName,
                 s.nickname as sellerNickname,
                 o.quantity as quantity,
                 o.order_date as orderDate,
