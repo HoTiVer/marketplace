@@ -29,6 +29,8 @@ export async function renderNavbar(authData) {
             window.location.href = `/user/personal-info.html`;
         });
 
+        const hasAdminRole = authData.roles?.includes("ADMIN") ?? false;
+        const hasSellerRole = authData.roles?.includes("SELLER") ?? false;
 
         const ordersBtn = document.createElement("a");
         ordersBtn.href = "/user-orders.html";
@@ -37,8 +39,22 @@ export async function renderNavbar(authData) {
             "w-full block px-4 py-2 text-left text-indigo-600 hover:bg-indigo-50 transition";
         dropdown.insertBefore(ordersBtn, logoutBtn);
 
-        const hasAdminRole = authData.roles?.includes("ADMIN") ?? false;
-        const hasSellerRole = authData.roles?.includes("SELLER") ?? false;
+
+        if (hasSellerRole) {
+            const sellerOrdersBtn = document.createElement("a");
+            sellerOrdersBtn.href = "/seller-orders.html";
+            sellerOrdersBtn.textContent = "Seller Orders";
+            sellerOrdersBtn.className =
+                "w-full block px-4 py-2 text-left text-green-600 hover:bg-green-50 transition";
+            dropdown.insertBefore(sellerOrdersBtn, logoutBtn);
+
+            const sellerBtn = document.createElement("a");
+            sellerBtn.href = "/seller-manage-products.html";
+            sellerBtn.textContent = "Manage Products";
+            sellerBtn.className =
+                "w-full block px-4 py-2 text-left text-green-600 hover:bg-green-50 transition";
+            dropdown.insertBefore(sellerBtn, logoutBtn);
+        }
 
         if (hasAdminRole) {
             const adminBtn = document.createElement("a");
@@ -54,15 +70,6 @@ export async function renderNavbar(authData) {
             categoryBtn.className =
                 "w-full block px-4 py-2 text-left text-blue-600 hover:bg-blue-50 transition";
             dropdown.insertBefore(categoryBtn, logoutBtn);
-        }
-
-        if (hasSellerRole) {
-            const sellerBtn = document.createElement("a");
-            sellerBtn.href = "/seller-manage-products.html";
-            sellerBtn.textContent = "Manage Products";
-            sellerBtn.className =
-                "w-full block px-4 py-2 text-left text-green-600 hover:bg-green-50 transition";
-            dropdown.insertBefore(sellerBtn, logoutBtn);
         }
 
         const chatsBtn = document.createElement("a");
