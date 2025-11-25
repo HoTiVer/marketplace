@@ -122,7 +122,17 @@ CREATE TABLE cart_item (
     user_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
     quantity INT NOT NULL DEFAULT 1,
-    PRIMARY KEY (user_id, product_id)
+    CONSTRAINT pk_cart_item PRIMARY KEY (user_id, product_id)
+);
+
+CREATE TABLE review (
+    id BIGINT,
+    product_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    rating INT CHECK ( rating BETWEEN 0 AND 5),
+    comment VARCHAR(500),
+    created_at DATE DEFAULT now(),
+    CONSTRAINT pk_review PRIMARY KEY (id)
 );
 
 ALTER TABLE public."user"
@@ -191,3 +201,9 @@ ALTER TABLE cart_item
 
 ALTER TABLE cart_item
     ADD CONSTRAINT fk_cart_item_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
+
+ALTER TABLE review
+    ADD CONSTRAINT fk_review_on_product FOREIGN KEY (product_id) references product(id) ON DELETE CASCADE;
+
+ALTER TABLE review
+    ADD CONSTRAINT fk_review_on_user FOREIGN KEY (user_id) references public."user"(id) ON DELETE CASCADE;

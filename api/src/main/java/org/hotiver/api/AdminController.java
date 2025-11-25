@@ -32,4 +32,10 @@ public class AdminController {
         return adminService.declineSellerRegisterRequest(id);
     }
 
+    //TODO add more endpoints for stats
+    @GetMapping("/stats")
+    public String getStats() {
+        return null;
+    }
+
 }
