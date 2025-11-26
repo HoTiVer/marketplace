@@ -55,4 +55,14 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
         ORDER BY o.order_date DESC, o.product_id ASC
     """, nativeQuery = true)
     Page<SellerOrderDto> findSellerOrders(@Param("id") Long sellerId, Pageable pageable);
+
+    @Query(value = """
+        SELECT EXISTS(
+                SELECT 1
+                FROM public."order" o
+                WHERE o.user_id = :userId AND o.product_id = :productId
+        )
+        """, nativeQuery = true)
+    boolean isUserBoughtProduct(@Param("userId") Long userId,
+                                @Param("productId") Long productId);
 }

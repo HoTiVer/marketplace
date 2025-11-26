@@ -16,6 +16,8 @@ CREATE SEQUENCE IF NOT EXISTS sequence_message START WITH 1 INCREMENT BY 5;
 
 CREATE SEQUENCE IF NOT EXISTS public.sequence_order START WITH 1 INCREMENT BY 5;
 
+CREATE SEQUENCE IF NOT EXISTS sequence_review START WITH 1 INCREMENT BY 5;
+
 CREATE TABLE public."user"(
     id BIGINT,
     email VARCHAR(100) NOT NULL,
@@ -129,9 +131,10 @@ CREATE TABLE review (
     id BIGINT,
     product_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
-    rating INT CHECK ( rating BETWEEN 0 AND 5),
+    rating INT CHECK ( rating BETWEEN 1 AND 5) NOT NULL,
     comment VARCHAR(500),
-    created_at DATE DEFAULT now(),
+    created_at DATE NOT NULL DEFAULT now(),
+    updated_at DATE NOT NULL DEFAULT NOW(),
     CONSTRAINT pk_review PRIMARY KEY (id)
 );
 
