@@ -8,6 +8,7 @@ import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
+import org.hotiver.dto.review.ReviewPageDto;
 import org.hotiver.repo.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -104,15 +105,20 @@ public class ReviewService {
         }
     }
 
-    public ResponseEntity<List<ProductReviewDto>> getProductReview(Long productId) {
+    public ResponseEntity<ReviewPageDto> getProductReview(Long productId) {
         Product product = productRepo.findById(productId).orElse(null);
 
         if (product == null) {
             return ResponseEntity.notFound().build();
         }
 
-        List<ProductReviewDto> productReview = reviewRepo.getProductReview(productId);
 
-        return ResponseEntity.ok(productReview);
+        List<ProductReviewDto> productReviews = reviewRepo.getProductReview(productId);
+
+        ReviewPageDto reviewPageDto = new ReviewPageDto(
+                product.getId(),
+                product.getName(),
+                productReviews);
+        return ResponseEntity.ok(reviewPageDto);
     }
 }

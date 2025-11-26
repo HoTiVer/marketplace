@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
+import org.hotiver.dto.review.ReviewPageDto;
 import org.hotiver.service.ReviewService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,7 +31,7 @@ public class ReviewController {
     }
 
     @GetMapping("/product/{productId}/review")
-    public ResponseEntity<List<ProductReviewDto>> getProductReview(@PathVariable Long productId){
+    public ResponseEntity<ReviewPageDto> getProductReview(@PathVariable Long productId){
         return reviewService.getProductReview(productId);
     }
 }
