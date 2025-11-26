@@ -81,6 +81,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         };
 
+        const goToReviewsBtn = document.getElementById("goToReviewsBtn");
+        goToReviewsBtn.onclick = () => {
+            window.location.href = `/product/${productId}/reviews`;
+        };
+
+
         const charContainer = document.getElementById("characteristics");
         if (product.characteristic && Object.keys(product.characteristic).length > 0) {
             Object.entries(product.characteristic).forEach(([key, value]) => {
