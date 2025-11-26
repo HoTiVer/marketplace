@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
@@ -65,7 +66,7 @@ public class ReviewService {
 
         if (!orderRepo.isUserBoughtProduct(user.getId(), product.getId(), OrderStatus.COMPLETED.toString())) {
             return ResponseEntity.badRequest()
-                    .body(new ResponseDto("you should buy it before placing comment"));
+                    .body(new ResponseDto("you should fully buy it before placing comment"));
         }
 
         Review review = reviewRepo.findReviewByUserIdAndProductId(user.getId(), product.getId());
@@ -76,6 +77,7 @@ public class ReviewService {
 
             reviewRepo.save(review);
             calculateSellerRating(product.getSeller().getId());
+            calculateProductRating(product.getId());
             return ResponseEntity.ok(new ResponseDto("success"));
         }
 
@@ -90,18 +92,35 @@ public class ReviewService {
 
         reviewRepo.save(review);
         calculateSellerRating(product.getSeller().getId());
+        calculateProductRating(product.getId());
 
         return ResponseEntity.ok()
                 .body(new ResponseDto("success"));
     }
 
     private void calculateSellerRating(Long sellerId) {
-        BigDecimal averageRating = reviewRepo.calculateSellerRating(sellerId).orElse(null);
+        BigDecimal averageRating = reviewRepo.calculateSellerRating(sellerId)
+                .map(r -> r.setScale(1, RoundingMode.HALF_UP))
+                .orElse(null);
+
         Seller seller = sellerRepo.findById(sellerId).orElse(null);
 
         if (seller != null && averageRating != null) {
             seller.setRating(averageRating);
             sellerRepo.save(seller);
+        }
+    }
+
+    private void calculateProductRating(Long productId) {
+        BigDecimal averageRating = reviewRepo.calculateProductRating(productId)
+                .map(r -> r.setScale(1, RoundingMode.HALF_UP))
+                .orElse(null);
+
+        Product product = productRepo.findById(productId).orElse(null);
+
+        if (product != null && averageRating != null) {
+            product.setRating(averageRating);
+            productRepo.save(product);
         }
     }
 
@@ -115,10 +134,16 @@ public class ReviewService {
 
         List<ProductReviewDto> productReviews = reviewRepo.getProductReview(productId);
 
+        BigDecimal productAverageRating = reviewRepo.calculateProductRating(productId)
+                .map(r -> r.setScale(1, RoundingMode.HALF_UP))
+                .orElse(null);
+
         ReviewPageDto reviewPageDto = new ReviewPageDto(
                 product.getId(),
                 product.getName(),
+                productAverageRating,
                 productReviews);
+
         return ResponseEntity.ok(reviewPageDto);
     }
 }

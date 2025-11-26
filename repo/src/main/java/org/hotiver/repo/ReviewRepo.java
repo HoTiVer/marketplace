@@ -51,4 +51,12 @@ public interface ReviewRepo extends JpaRepository<Review, Long> {
     WHERE s.id = :sellerId
     """, nativeQuery = true)
     Optional<BigDecimal> calculateSellerRating(Long sellerId);
+
+    @Query(value = """
+    SELECT AVG(r.rating)
+    FROM review r
+    JOIN public.product p on p.id = r.product_id
+    WHERE p.id = :productId
+    """, nativeQuery = true)
+    Optional<BigDecimal> calculateProductRating(Long productId);
 }

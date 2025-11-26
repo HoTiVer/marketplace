@@ -60,11 +60,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    const productRatingEl = document.getElementById("productRating");
+
     async function loadProductReviews() {
         const res = await fetchWithAuth(`/api/product/${productId}/review`);
         const product = await res.json();
 
         productNameEl.textContent = product.productName;
+
+        if (product.rating && product.rating > 0) {
+            const fullStars = Math.floor(product.rating);
+            const halfStar = (product.rating - fullStars >= 0.5) ? '½' : '';
+            const stars = "⭐".repeat(fullStars) + halfStar;
+            productRatingEl.textContent = `${stars} (${product.rating.toFixed(1)})`;
+        } else {
+            productRatingEl.textContent = '';
+        }
+
         allReviews = product.productReviews ?? [];
         shownReviews = 0;
 
