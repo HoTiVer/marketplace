@@ -13,13 +13,13 @@ A marketplace is a type of e-commerce platform where:
 
 ### This application implements all core marketplace components:
 
-❌ Product catalog
+✅ Product catalog
 
 ✅ Seller management and registration workflow
 
 ✅ Shopping cart & wishlist
 
-❌ Checkout system with order tracking
+✅ Checkout system with order tracking
 
 ✅ Buyer–Seller direct messaging
 
