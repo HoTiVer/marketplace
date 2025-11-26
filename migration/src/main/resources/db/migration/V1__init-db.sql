@@ -58,6 +58,7 @@ CREATE TABLE product(
     stock_quantity BIGINT NOT NULL CHECK ( stock_quantity >= 0 ),
     sales_count BIGINT NOT NULL DEFAULT 0,
     publishing_date DATE NOT NULL DEFAULT NOW(),
+    rating NUMERIC(1, 2) NOT NULL DEFAULT 0 CHECK (rating BETWEEN 0 AND 5),
     is_visible BOOLEAN NOT NULL,
     CONSTRAINT pk_product PRIMARY KEY (id)
 );

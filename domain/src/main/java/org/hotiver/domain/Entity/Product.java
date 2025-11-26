@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Type;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.Map;
 
@@ -51,6 +52,9 @@ public class Product {
     private Integer salesCount;
 
     private Date publishingDate;
+
+    @Column(precision = 2, scale = 1)
+    private BigDecimal rating;
 
     private Boolean isVisible;
 }

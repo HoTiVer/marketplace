@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
@@ -62,6 +63,7 @@ public class ProductService {
                 .stockQuantity(productAddDto.getQuantity())
                 .salesCount(0)
                 .publishingDate(Date.valueOf(LocalDate.now()))
+                .rating(BigDecimal.valueOf(0.0))
                 .isVisible(true)
                 .build();
 
