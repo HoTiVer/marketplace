@@ -35,12 +35,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         document.getElementById("displayName").textContent = seller.displayName || "—";
         document.getElementById("nickname").textContent = seller.nickname || "—";
-        document.getElementById("rating").textContent = seller.rating?.toFixed(2) ?? "0.00";
+        //document.getElementById("rating").textContent = seller.rating?.toFixed(2) ?? "0.00";
         document.getElementById("profileDescription").textContent =
             seller.profileDescription || "No description provided.";
 
         viewProductsBtn.href = `/seller/${sellerNickname}/products`;
 
+        const ratingEl = document.getElementById("rating");
+        if (!seller.rating || seller.rating === 0) {
+            ratingEl.textContent = "";
+        } else {
+            const fullStars = Math.floor(seller.rating);
+            const halfStar = seller.rating % 1 >= 0.5 ? "½" : "";
+            ratingEl.textContent = "⭐".repeat(fullStars) + halfStar + ` (${seller.rating.toFixed(1)})`;
+        }
 
         sendMessageBtn.addEventListener("click", async () => {
             const content = messageContent.value.trim();
