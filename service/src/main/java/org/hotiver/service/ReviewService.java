@@ -1,20 +1,22 @@
 package org.hotiver.service;
 
+import org.hotiver.common.OrderStatus;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Review;
+import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.ResponseDto;
+import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
-import org.hotiver.repo.OrderRepo;
-import org.hotiver.repo.ProductRepo;
-import org.hotiver.repo.ReviewRepo;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class ReviewService {
@@ -23,13 +25,15 @@ public class ReviewService {
     private final ReviewRepo reviewRepo;
     private final ProductRepo productRepo;
     private final OrderRepo orderRepo;
+    private final SellerRepo sellerRepo;
 
     public ReviewService(UserRepo userRepo, ReviewRepo reviewRepo,
-                         ProductRepo productRepo, OrderRepo orderRepo) {
+                         ProductRepo productRepo, OrderRepo orderRepo, SellerRepo sellerRepo) {
         this.userRepo = userRepo;
         this.reviewRepo = reviewRepo;
         this.productRepo = productRepo;
         this.orderRepo = orderRepo;
+        this.sellerRepo = sellerRepo;
     }
 
     public ResponseEntity<ResponseDto> addReviewToProduct(ReviewDto reviewDto, Long id) {
@@ -58,7 +62,7 @@ public class ReviewService {
                     .body(new ResponseDto("rating must be between 1 and 5"));
         }
 
-        if (!orderRepo.isUserBoughtProduct(user.getId(), product.getId())) {
+        if (!orderRepo.isUserBoughtProduct(user.getId(), product.getId(), OrderStatus.COMPLETED.toString())) {
             return ResponseEntity.badRequest()
                     .body(new ResponseDto("you should buy it before placing comment"));
         }
@@ -70,6 +74,7 @@ public class ReviewService {
             review.setUpdatedAt(Date.valueOf(LocalDate.now()));
 
             reviewRepo.save(review);
+            calculateSellerRating(product.getSeller().getId());
             return ResponseEntity.ok(new ResponseDto("success"));
         }
 
@@ -83,8 +88,31 @@ public class ReviewService {
                 .build();
 
         reviewRepo.save(review);
+        calculateSellerRating(product.getSeller().getId());
 
         return ResponseEntity.ok()
                 .body(new ResponseDto("success"));
+    }
+
+    private void calculateSellerRating(Long sellerId) {
+        BigDecimal averageRating = reviewRepo.calculateSellerRating(sellerId).orElse(null);
+        Seller seller = sellerRepo.findById(sellerId).orElse(null);
+
+        if (seller != null && averageRating != null) {
+            seller.setRating(averageRating);
+            sellerRepo.save(seller);
+        }
+    }
+
+    public ResponseEntity<List<ProductReviewDto>> getProductReview(Long productId) {
+        Product product = productRepo.findById(productId).orElse(null);
+
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<ProductReviewDto> productReview = reviewRepo.getProductReview(productId);
+
+        return ResponseEntity.ok(productReview);
     }
 }

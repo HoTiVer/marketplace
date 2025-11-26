@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class ReviewDto {
 
-    private Short rating;
+    private Integer rating;
 
     private String comment;
 

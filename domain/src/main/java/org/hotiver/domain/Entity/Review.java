@@ -32,7 +32,7 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    private Short rating;
+    private Integer rating;
 
     private String comment;
 

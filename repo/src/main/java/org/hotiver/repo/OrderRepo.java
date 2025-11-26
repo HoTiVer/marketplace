@@ -60,9 +60,12 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
         SELECT EXISTS(
                 SELECT 1
                 FROM public."order" o
-                WHERE o.user_id = :userId AND o.product_id = :productId
+                WHERE o.user_id = :userId
+                        AND o.product_id = :productId
+                        AND o.status = :orderStatus
         )
         """, nativeQuery = true)
     boolean isUserBoughtProduct(@Param("userId") Long userId,
-                                @Param("productId") Long productId);
+                                @Param("productId") Long productId,
+                                @Param("orderStatus") String status);
 }

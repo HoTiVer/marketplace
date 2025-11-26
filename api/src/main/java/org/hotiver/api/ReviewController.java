@@ -2,11 +2,14 @@ package org.hotiver.api;
 
 import jakarta.validation.Valid;
 import org.hotiver.dto.ResponseDto;
+import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
 import org.hotiver.service.ReviewService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -19,10 +22,15 @@ public class ReviewController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/product/{id}/review")
+    @PostMapping("/product/{productId}/review")
     public ResponseEntity<ResponseDto> addReviewToProduct(@RequestBody ReviewDto reviewDto,
-                                                          @PathVariable Long id){
+                                                          @PathVariable Long productId){
 
-        return reviewService.addReviewToProduct(reviewDto, id);
+        return reviewService.addReviewToProduct(reviewDto, productId);
+    }
+
+    @GetMapping("/product/{productId}/review")
+    public ResponseEntity<List<ProductReviewDto>> getProductReview(@PathVariable Long productId){
+        return reviewService.getProductReview(productId);
     }
 }
