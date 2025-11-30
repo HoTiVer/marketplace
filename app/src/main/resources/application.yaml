@@ -52,6 +52,20 @@ spring:
           auth: true
           starttls:
             enable: true
+  kafka:
+    producer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        delevery.timeout.ms: 100
+        linger.ms: 10
+        request.timeout.ms: 5000
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    admin:
+      auto-create: true
 
 jwt:
   secret: ${JWT_SECRET}

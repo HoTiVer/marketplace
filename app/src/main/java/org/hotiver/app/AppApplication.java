@@ -27,6 +27,7 @@ public class AppApplication {
 			System.setProperty("EMAIL_PASSWORD", dotenv.get("EMAIL_PASSWORD"));
 			System.setProperty("GOOGLE_CLIENT_ID", dotenv.get("GOOGLE_CLIENT_ID"));
 			System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET"));
+            System.setProperty("KAFKA_BOOTSTRAP_SERVERS", dotenv.get("KAFKA_BOOTSTRAP_SERVERS"));
 		}
 		catch (Exception e){
 			System.out.println(e.getMessage());
