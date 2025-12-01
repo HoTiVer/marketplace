@@ -1,5 +1,7 @@
 package org.hotiver.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hotiver.common.OrderStatus;
 import org.hotiver.domain.Entity.CartItem;
 import org.hotiver.domain.Entity.Order;
@@ -7,6 +9,7 @@ import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.order.CreateOrderDto;
+import org.hotiver.dto.order.OrderCreatedEvent;
 import org.hotiver.dto.order.UserOrderDto;
 import org.hotiver.repo.*;
 import org.springframework.data.domain.Page;
@@ -33,13 +36,16 @@ public class OrderService {
     private final UserRepo userRepo;
     private final OrderRepo orderRepo;
     private final CartItemRepo cartItemRepo;
+    private final RedisOutboxService redisOutboxService;
 
     public OrderService(ProductRepo productRepo, UserRepo userRepo,
-                        OrderRepo orderRepo, CartItemRepo cartItemRepo) {
+                        OrderRepo orderRepo, CartItemRepo cartItemRepo,
+                        RedisOutboxService redisOutboxService) {
         this.productRepo = productRepo;
         this.userRepo = userRepo;
         this.orderRepo = orderRepo;
         this.cartItemRepo = cartItemRepo;
+        this.redisOutboxService = redisOutboxService;
     }
 
     @Transactional
@@ -90,11 +96,37 @@ public class OrderService {
             user.getCart().remove(cartItem);
             cartItemRepo.delete(cartItem);
 
+            saveOrderInOutbox(order);
         }
 
         userCart.clear();
 
         return ResponseEntity.ok().build();
+    }
+
+    private void saveOrderInOutbox(Order order) {
+        OrderCreatedEvent orderCreatedEvent = OrderCreatedEvent.builder()
+                .orderId(order.getId())
+                .productId(order.getProduct().getId())
+                .productName(order.getProduct().getName())
+                .categoryId(order.getProduct().getCategory().getId())
+                .categoryName(order.getProduct().getCategory().getName())
+                .sellerId(order.getSeller().getId())
+                .productQuantity(order.getQuantity())
+                .totalAmount(order.getTotalPrice())
+                .createdAt(order.getOrderDate())
+                .build();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(orderCreatedEvent);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        redisOutboxService.savePurchaseEvent(json);
     }
 
     public Page<UserOrderDto> getUserOrders(int page, int size) {

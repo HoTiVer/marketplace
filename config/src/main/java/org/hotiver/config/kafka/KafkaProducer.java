@@ -12,17 +12,8 @@ import java.util.Map;
 public class KafkaProducer {
 
     @Bean
-    public NewTopic createSendCategoryInfoTopic() {
-        return TopicBuilder.name("send-category-info-topic")
-                .partitions(3)
-                .replicas(3)
-                .configs(Map.of("min.insync.replicas", "2"))
-                .build();
-    }
-
-    @Bean
-    public NewTopic createSendProductInfoTopic() {
-        return TopicBuilder.name("send-product-info-topic")
+    public NewTopic createOrderCreatedTopic() {
+        return TopicBuilder.name("order-created-topic")
                 .partitions(3)
                 .replicas(3)
                 .configs(Map.of("min.insync.replicas", "2"))
