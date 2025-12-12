@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -139,12 +140,22 @@ public class ProductService {
                         "admin deleted your product with id: " + product.getId());
 
                 productRepo.deleteById(id);
+                try {
+                    imageService.deleteAllProductImages(id);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 return ResponseEntity.ok().build();
             }
         }
 
         if (Objects.equals(product.getSeller().getId(), user.getId())){
             productRepo.deleteById(id);
+            try {
+                imageService.deleteAllProductImages(id);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             return ResponseEntity.ok().build();
         }
 

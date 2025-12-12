@@ -33,4 +33,19 @@ public class ImageService {
         Files.deleteIfExists(file);
     }
 
+    public void deleteAllProductImages(Long productId) throws IOException {
+        Path directory = Paths.get(rootDir + "/products/"+ productId.toString());
+        if (Files.exists(directory)) {
+            Files.walk(directory)
+                    .sorted((a, b) -> b.compareTo(a))
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        }
+    }
+
 }
