@@ -52,7 +52,6 @@ public class OutboxProcessorService {
         for (var msg : messages) {
             try {
                 String payload = (String) msg.getValue().get("payload");
-
                 kafkaTemplate.send("order-created-topic", payload).get();
 
                 redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP, msg.getId());
