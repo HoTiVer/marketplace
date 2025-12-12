@@ -52,7 +52,7 @@ CREATE TABLE product(
     name VARCHAR(100),
     price DOUBLE PRECISION,
     description VARCHAR(500),
-    category_id BIGINT NOT NULL,
+    category_id BIGINT NOT NULL DEFAULT 0,
     characteristic JSONB,
     seller_id BIGINT NOT NULL,
     stock_quantity BIGINT NOT NULL CHECK ( stock_quantity >= 0 ),
@@ -106,7 +106,7 @@ CREATE TABLE user_wishes(
 
 CREATE TABLE public."order"(
     id BIGINT NOT NULL,
-    product_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL DEFAULT 0,
     user_id BIGINT NOT NULL,
     seller_id BIGINT NOT NULL CHECK ( seller_id != user_id ),
     quantity INT NOT NULL CHECK ( quantity > 0),
@@ -154,19 +154,19 @@ ALTER TABLE category
 
 
 ALTER TABLE user_role
-    ADD CONSTRAINT fk_user_role_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id);
+    ADD CONSTRAINT fk_user_role_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
 
 ALTER TABLE user_role
     ADD CONSTRAINT fk_user_role_on_role FOREIGN KEY (role_id) REFERENCES role(id);
 
 ALTER TABLE product
-    ADD CONSTRAINT fk_product_on_category FOREIGN KEY (category_id) REFERENCES category(id) ON UPDATE CASCADE;
+    ADD CONSTRAINT fk_product_on_category FOREIGN KEY (category_id) REFERENCES category(id) ON UPDATE CASCADE ON DELETE SET DEFAULT;
 
 ALTER TABLE product
     ADD CONSTRAINT fk_product_on_seller FOREIGN KEY (seller_id) REFERENCES seller(id) ON DELETE CASCADE;
 
 ALTER TABLE seller
-    ADD CONSTRAINT fk_seller_on_user FOREIGN KEY (id) REFERENCES public."user"(id);
+    ADD CONSTRAINT fk_seller_on_user FOREIGN KEY (id) REFERENCES public."user"(id) ON DELETE CASCADE;
 
 ALTER TABLE register_seller_request
     ADD CONSTRAINT fk_register_seller_request_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id);
@@ -190,13 +190,13 @@ ALTER TABLE user_wishes
     ADD CONSTRAINT fk_user_wishes_on_product FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE;
 
 ALTER TABLE public."order"
-    ADD CONSTRAINT fk_order_on_product FOREIGN KEY (product_id) REFERENCES product(id);
+    ADD CONSTRAINT fk_order_on_product FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE SET DEFAULT;
 
 ALTER TABLE public."order"
-    ADD CONSTRAINT fk_order_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id);
+    ADD CONSTRAINT fk_order_on_user FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
 
 ALTER TABLE public."order"
-    ADD CONSTRAINT fk_order_on_seller FOREIGN KEY (seller_id) REFERENCES seller(id);
+    ADD CONSTRAINT fk_order_on_seller FOREIGN KEY (seller_id) REFERENCES seller(id) ON DELETE CASCADE;
 
 
 

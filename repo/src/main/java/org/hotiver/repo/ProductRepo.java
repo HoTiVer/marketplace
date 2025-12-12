@@ -47,13 +47,16 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     JOIN category c ON p.category_id = c.id
     JOIN seller s ON p.seller_id = s.id
     JOIN public."user" u ON s.id = u.id
-    WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
-       OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
-       OR EXISTS (
-           SELECT 1
-           FROM jsonb_each_text(p.characteristic) AS kv
-           WHERE kv.value ILIKE CONCAT('%', :searchTerm, '%')
-       )
+    WHERE p.is_visible = true
+          AND (
+                LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+                OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+                OR EXISTS (
+                    SELECT 1
+                    FROM jsonb_each_text(p.characteristic) AS kv
+                    WHERE kv.value ILIKE CONCAT('%', :searchTerm, '%')
+                )
+              )
 """, nativeQuery = true)
     List<ProductSearchDto> findByKeyWord(@Param("searchTerm") String searchTerm);
 

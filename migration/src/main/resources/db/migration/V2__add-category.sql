@@ -1,5 +1,6 @@
 INSERT INTO category
 VALUES
+    (0, 'empty'),
     (1, 'electronics'),
     (2, 'clothing'),
     (3, 'home'),

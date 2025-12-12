@@ -97,6 +97,10 @@ VALUES
 
 -- seller 6
 (30, 'Video Game: Dota Legends', 59.99, 'Action strategy video game', 9,
- '{"genre": "MOBA", "platform": "PC"}', 6, true, 19, 14, '2025-02-22');
+ '{"genre": "MOBA", "platform": "PC"}', 6, true, 19, 14, '2025-02-22'),
+
+(0, 'Deleted product', 0, 'deleted product', 1,
+    null, 0, false, 0, 0, '2025-02-22');
+
 
 SELECT SETVAL('sequence_product', max(id)) FROM product;
