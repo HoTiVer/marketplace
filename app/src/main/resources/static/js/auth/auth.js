@@ -23,23 +23,6 @@ export async function refreshAccessToken() {
     }
 }
 
-// export async function fetchWithAuth(url, options = {}) {
-//     let token = localStorage.getItem("accessToken");
-//     if (!options.headers) options.headers = {};
-//     options.headers["Authorization"] = "Bearer " + token;
-//
-//     let res = await fetch(url, options);
-//
-//     if (res.status === 401) {
-//         token = await refreshAccessToken();
-//         if (token) {
-//             options.headers["Authorization"] = "Bearer " + token;
-//             res = await fetch(url, options);
-//         }
-//     }
-//     return res;
-// }
-
 export async function fetchWithAuth(url, options = {}) {
     let token = localStorage.getItem("accessToken");
 
@@ -74,28 +57,6 @@ export async function logout() {
     localStorage.removeItem("refreshToken");
     window.location.href = "/index.html";
 }
-
-// export async function isAuthenticated() {
-//     const token = localStorage.getItem("accessToken")
-//     if (!token) return false;
-//
-//     try {
-//         const res = await fetch("/auth/validate-access", {
-//             method: "POST",
-//             headers: {"Authorization": "Bearer " + token}
-//         })
-//         if (res.status === 401)
-//             return {authenticated: false, reason: "unauthorized"}
-//
-//         if (res.status === 403)
-//             return { authenticated: false, reason: "forbidden"}
-//
-//         return { authenticated: res.ok, reason: res.ok ? "ok" : "error" };
-//     } catch (err) {
-//         console.error("Auth validation failed:", err);
-//         return { authenticated: false, reason: "network_error" };
-//     }
-// }
 
 export async function getAuthData(){
     try {

@@ -8,6 +8,8 @@ import org.hibernate.annotations.Type;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Setter
@@ -57,4 +59,14 @@ public class Product {
     private BigDecimal rating;
 
     private Boolean isVisible;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductImage> images = new ArrayList<>();
+
+    public void addProductImage(ProductImage productImage) {
+        if (images == null) {
+            images = new ArrayList<>();
+        }
+        images.add(productImage);
+    }
 }

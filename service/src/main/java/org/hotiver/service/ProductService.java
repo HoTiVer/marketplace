@@ -2,21 +2,16 @@ package org.hotiver.service;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.hotiver.domain.Entity.Category;
-import org.hotiver.domain.Entity.Product;
-import org.hotiver.domain.Entity.Seller;
-import org.hotiver.domain.Entity.User;
+import org.hotiver.domain.Entity.*;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.seller.SellerProductProjection;
-import org.hotiver.repo.CategoryRepo;
-import org.hotiver.repo.ProductRepo;
-import org.hotiver.repo.SellerRepo;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -32,31 +27,35 @@ public class ProductService {
     private final ProductRepo productRepo;
     private final UserRepo userRepo;
     private final CategoryRepo categoryRepo;
+    private final ImageService imageService;
+    private final ProductImageRepo productImageRepo;
 
     public ProductService(ChatService chatService, SellerRepo sellerRepo,
                           ProductRepo productRepo, UserRepo userRepo,
-                          CategoryRepo categoryRepo) {
+                          CategoryRepo categoryRepo, ImageService imageService, ProductImageRepo productImageRepo) {
         this.chatService = chatService;
         this.sellerRepo = sellerRepo;
         this.productRepo = productRepo;
         this.userRepo = userRepo;
         this.categoryRepo = categoryRepo;
+        this.imageService = imageService;
+        this.productImageRepo = productImageRepo;
     }
 
-    public ResponseEntity<Map<String, Object>> addProduct(ProductAddDto productAddDto) {
+    public ResponseEntity<Map<String, Object>> addProduct(ProductAddDto productAddDto,
+                                                          MultipartFile image) {
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
-        Seller seller = sellerRepo.findByEmail(email).get();
-        Optional<Category> category = categoryRepo.findByName(productAddDto.getCategoryName());
-        if (category.isEmpty())
-            return ResponseEntity.badRequest().build();
-
+        Seller seller = sellerRepo.findByEmail(email).orElseThrow();
+        Category category = categoryRepo.findByName(productAddDto.getCategoryName())
+                .orElseThrow();
 
         Product product = Product.builder()
                 .name(productAddDto.getName())
                 .price(productAddDto.getPrice())
-                .category(category.get())
+                .category(category)
                 .description(productAddDto.getDescription())
                 .characteristic(new HashMap<>(productAddDto.getCharacteristic()))
                 .seller(seller)
@@ -67,14 +66,33 @@ public class ProductService {
                 .isVisible(true)
                 .build();
 
+        product = productRepo.save(product);
+
         try {
-            productRepo.save(product);
+            if (image != null && !image.isEmpty()) {
+                String imageUrl = imageService.saveProductImage(product.getId(), image);
+
+                ProductImage productImage = ProductImage.builder()
+                        .product(product)
+                        .url(imageUrl)
+                        .isMain(true)
+                        .build();
+
+                product.addProductImage(productImage);
+
+                productRepo.save(product);
+            }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Product created but image upload failed"));
         }
 
-        return ResponseEntity.ok().body(Map.of("message", "new product added"));
+        return ResponseEntity.ok(Map.of(
+                "message", "Product created",
+                "productId", product.getId()
+        ));
     }
+
 
     public ResponseEntity<ProductGetDto> getProductById(Long id) {
         Optional<Product> product = productRepo.findById(id);

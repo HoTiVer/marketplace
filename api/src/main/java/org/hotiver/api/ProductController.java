@@ -4,10 +4,12 @@ import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.seller.SellerProductProjection;
 import org.hotiver.service.ProductService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,9 +30,12 @@ public class ProductController {
 
 
     @PreAuthorize("hasRole('SELLER')")
-    @PostMapping("/product")
-    public ResponseEntity<?> addProduct(@RequestBody ProductAddDto productAddDto){
-        return productService.addProduct(productAddDto);
+    @PostMapping(value = "/product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> addProduct(
+            @RequestPart("data") ProductAddDto productAddDto,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        return productService.addProduct(productAddDto, image);
     }
 
     @PreAuthorize("hasAnyRole('SELLER','ADMIN')")

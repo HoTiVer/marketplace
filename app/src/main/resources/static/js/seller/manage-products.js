@@ -15,13 +15,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const categorySelect = document.getElementById("categorySelect");
     const charContainer = document.getElementById("characteristicsContainer");
     const addCharBtn = document.getElementById("addCharacteristic");
+    const fileInput = document.getElementById("productImage");
 
     let editingProduct = null;
 
     async function loadCategories() {
         const res = await fetchWithAuth("/api/category");
         const categories = await res.json();
-
         categorySelect.innerHTML = `<option value="">Select category...</option>`;
         categories.forEach(cat => {
             const opt = document.createElement("option");
@@ -45,8 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         for (const prod of products) {
             const card = document.createElement("div");
-            card.className =
-                "bg-white rounded-2xl shadow-lg p-6 flex flex-col justify-between hover:shadow-xl transition";
+            card.className = "bg-white rounded-2xl shadow-lg p-6 flex flex-col justify-between hover:shadow-xl transition";
 
             card.innerHTML = `
                 <div>
@@ -63,7 +62,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             `;
 
             card.querySelector(".editBtn").onclick = () => openModal(prod);
-
             card.querySelector(".deleteBtn").onclick = async () => {
                 if (!confirm(`Delete "${prod.name}"?`)) return;
                 const resp = await fetchWithAuth(`/api/product/${prod.id}`, { method: "DELETE" });
@@ -81,6 +79,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         modalTitle.textContent = product ? "Edit Product" : "Add Product";
         form.reset();
         charContainer.innerHTML = "";
+        fileInput.value = "";
         document.getElementById("productQuantity").value = 0;
 
         if (product) {
@@ -125,13 +124,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const characteristic = {};
         charContainer.querySelectorAll("div").forEach(div => {
             const [keyInput, valueInput] = div.querySelectorAll("input");
-            if (keyInput.value) {
-                characteristic[keyInput.value] = valueInput.value;
-            }
+            if (keyInput.value) characteristic[keyInput.value] = valueInput.value;
         });
 
-
-        const body = {
+        const productData = {
             name: form.productName.value.trim(),
             price: parseFloat(form.productPrice.value),
             description: form.productDescription.value.trim(),
@@ -140,14 +136,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             quantity: parseInt(document.getElementById("productQuantity").value) || 0
         };
 
+        const formData = new FormData();
+
+        const jsonBlob = new Blob([JSON.stringify(productData)], { type: "application/json" });
+        formData.append("data", jsonBlob);
+
+        if (fileInput.files.length > 0) {
+            formData.append("image", fileInput.files[0]);
+        }
+
         const url = editingProduct ? `/api/product/${editingProduct.id}` : "/api/product";
         const method = editingProduct ? "PUT" : "POST";
 
-        const res = await fetchWithAuth(url, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-        });
+        const res = await fetchWithAuth(url, { method, body: formData });
 
         if (!res.ok) {
             alert(`Error: ${res.status}`);
