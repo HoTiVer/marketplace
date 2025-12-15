@@ -45,10 +45,13 @@ public class ProductController {
     }
 
     @PreAuthorize("hasRole('SELLER')")
-    @PutMapping("/product/{id}")
-    public ResponseEntity<?> updateProductById(@PathVariable Long id,
-                                               @RequestBody ProductAddDto productAddDto){
-        return productService.updateProductById(id, productAddDto);
+    @PutMapping(value = "/product/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateProductById(
+            @PathVariable Long id,
+            @RequestPart("data") ProductAddDto dto,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        return productService.updateProductById(id, dto, image);
     }
 
     @PreAuthorize("hasRole('SELLER')")

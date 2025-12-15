@@ -162,7 +162,9 @@ public class ProductService {
         return ResponseEntity.badRequest().build();
     }
 
-    public ResponseEntity<?> updateProductById(Long id, ProductAddDto productAddDto) {
+    public ResponseEntity<?> updateProductById(Long id,
+                                               ProductAddDto productAddDto,
+                                               MultipartFile image) {
         Optional<Product> opProduct = productRepo.findById(id);
         if (opProduct.isEmpty()){
             return ResponseEntity.notFound().build();
@@ -210,24 +212,6 @@ public class ProductService {
             return  ResponseEntity.badRequest().build();
 
         Seller seller = sellerRepo.findByEmail(username).get();
-
-//        List<ProductGetDto> productGetDto = new ArrayList<>();
-//
-//        ProductGetDto productDto;
-//
-//        for (var product : seller.getProducts()) {
-//            productDto = new ProductGetDto(
-//                    product.getId(),
-//                    product.getName(),
-//                    product.getPrice(),
-//                    product.getDescription(),
-//                    product.getCategory().getName(),
-//                    product.getCharacteristic(),
-//                    product.getSeller().getUser().getDisplayName(),
-//                    product.getSeller().getNickname()
-//            );
-//            productGetDto.add(productDto);
-//        }
 
         List<SellerProductProjection> productGetDto = productRepo
                 .getCurrentSellerProducts(seller.getId());

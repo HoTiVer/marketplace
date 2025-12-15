@@ -115,6 +115,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
         p.stockQuantity as quantity
     FROM Product p
     WHERE p.seller.id = :id AND p.isVisible = true
+    ORDER BY p.name
 """)
     List<SellerProductProjection> getCurrentSellerProducts(Long id);
 }
