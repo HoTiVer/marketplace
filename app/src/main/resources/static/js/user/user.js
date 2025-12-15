@@ -71,6 +71,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
+        const nicknameRegex = /^[A-Za-z0-9]+$/;
+        if (!nicknameRegex.test(nickname)) {
+            alert("Seller nickname can contain only letters and numbers");
+            document.getElementById("requestedNickname").focus();
+            return;
+        }
+
         const body = {
             requestedNickname: nickname,
             displayName: displayNameInput,

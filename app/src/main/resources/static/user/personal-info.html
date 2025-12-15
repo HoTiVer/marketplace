@@ -37,7 +37,17 @@
         <h2 class="text-xl font-semibold mb-4 text-center">Seller Registration</h2>
 
         <label class="block mb-2 text-sm font-medium">Seller Nickname</label>
-        <input id="requestedNickname" type="text" class="w-full border rounded px-3 py-2 mb-3" placeholder="Enter nickname" />
+        <input id="requestedNickname"
+               type="text"
+               pattern="[A-Za-z0-9]+"
+               class="w-full border rounded px-3 py-2"
+               placeholder="Enter nickname"
+               required />
+
+        <p class="text-sm text-gray-500 mb-3">
+            Nickname may contain only <span class="font-semibold">letters and numbers</span>
+        </p>
+
 
         <label class="block mb-2 text-sm font-medium">Display Name</label>
         <input id="displayNameInput" type="text" class="w-full border rounded px-3 py-2 mb-3" placeholder="Enter display name" />

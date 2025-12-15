@@ -53,6 +53,13 @@ public class UserService {
                             "and displayName"));
         }
 
+        if (!sellerRegisterDto.getRequestedNickname().matches("^[A-Za-z0-9]+$")) {
+            throw new IllegalArgumentException(
+                    "Nickname may contain only English letters and numbers"
+            );
+        }
+
+
         if (sellerRepo.existsByNickname(sellerRegisterDto.getRequestedNickname())){
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "seller with this nickname exists"));
