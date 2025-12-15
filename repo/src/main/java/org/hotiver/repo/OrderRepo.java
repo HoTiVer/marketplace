@@ -29,7 +29,7 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
         JOIN public.product p on p.id = o.product_id
         JOIN public.seller s on s.id = p.seller_id
         WHERE o.user_id = :id
-        ORDER BY o.order_date DESC, o.product_id ASC
+        ORDER BY o.order_date DESC, p.name ASC
     """, nativeQuery = true)
     Page<UserOrderDto> findUserOrders(@Param("id") Long userId, Pageable pageable);
 
@@ -52,7 +52,7 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
         JOIN public.product p on p.id = o.product_id
         JOIN public.seller s on s.id = p.seller_id
         WHERE o.seller_id = :id
-        ORDER BY o.order_date DESC, o.product_id ASC
+        ORDER BY o.order_date DESC, p.name ASC
     """, nativeQuery = true)
     Page<SellerOrderDto> findSellerOrders(@Param("id") Long sellerId, Pageable pageable);
 

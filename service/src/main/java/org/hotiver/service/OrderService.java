@@ -57,7 +57,8 @@ public class OrderService {
         Set<CartItem> userCart = new HashSet<>(user.getCart());
 
         if (userCart.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto("You must add products in car before buying"));
         }
 
         for (CartItem cartItem : userCart) {
@@ -70,7 +71,9 @@ public class OrderService {
 
             Integer quantity = cartItem.getQuantity();
             if (quantity > product.getStockQuantity() && quantity > 0) {
-                return ResponseEntity.badRequest().build();
+                return ResponseEntity.badRequest()
+                        .body(new ResponseDto("Your order quantity of product "
+                                + product.getName() + " exceeds stock"));
             }
 
             Order order = Order.builder()

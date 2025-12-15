@@ -23,8 +23,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             loading.classList.add("hidden");
             container.innerHTML = "";
 
-            if (items.length === 0) {
-                container.innerHTML = `<p class="text-center text-gray-600 italic">Cart is empty 😢</p>`;
+            if (!items.length) {
+                container.innerHTML =
+                    `<p class="text-center text-gray-600 italic">Cart is empty 😢</p>`;
                 totalSec.classList.add("hidden");
                 openOrderCardBtn.classList.add("hidden");
                 container.classList.remove("hidden");
@@ -37,11 +38,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                 total += item.price * item.quantity;
 
                 const row = document.createElement("div");
-                row.className = "flex justify-between items-center bg-gray-50 p-4 rounded-xl shadow";
+                row.className =
+                    "flex justify-between items-center bg-gray-50 p-4 rounded-xl shadow";
 
                 row.innerHTML = `
                     <div>
-                        <p class="font-semibold text-gray-800">${item.productName}</p>
+                        <p 
+                            class="product-link font-semibold text-blue-600 hover:underline cursor-pointer"
+                            data-id="${item.productId}"
+                            >
+                            ${item.productName}
+                        </p>
                         <p class="text-gray-600">$${item.price.toFixed(2)}</p>
                     </div>
                     <div class="flex items-center gap-2">
@@ -52,9 +59,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <button class="delete bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition">🗑</button>
                 `;
 
-                row.querySelector(".plus").onclick = () => updateCount(item.productId, item.quantity + 1);
-                row.querySelector(".minus").onclick = () => item.quantity > 1 && updateCount(item.productId, item.quantity - 1);
-                row.querySelector(".delete").onclick = () => deleteItem(item.productId);
+                row.querySelector(".product-link").onclick = (e) => {
+                    e.stopPropagation();
+                    window.location.href = `/product/${item.productId}`;
+                };
+
+
+                row.querySelector(".plus").onclick =
+                    () => updateCount(item.productId, item.quantity + 1);
+                row.querySelector(".minus").onclick =
+                    () => item.quantity > 1 && updateCount(item.productId, item.quantity - 1);
+                row.querySelector(".delete").onclick =
+                    () => deleteItem(item.productId);
 
                 container.appendChild(row);
             });
@@ -64,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             container.classList.remove("hidden");
             openOrderCardBtn.classList.remove("hidden");
 
-        } catch (err) {
+        } catch {
             loading.textContent = "Failed to load cart";
         }
     }
@@ -79,14 +95,41 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadCart();
     }
 
+    function validateOrderForm(body) {
+        const nameRegex = /^[A-Za-zА-Яа-яЇїІіЄє\s]{2,}$/;
+        const phoneRegex = /^[0-9+\-\s]{7,15}$/;
+
+        if (!nameRegex.test(body.receiverName)) {
+            return "Invalid receiver name";
+        }
+        if (!phoneRegex.test(body.receiverPhone)) {
+            return "Invalid phone number";
+        }
+        if (!body.deliveryCity || body.deliveryCity.length < 2) {
+            return "City is required";
+        }
+        if (!body.deliveryAddress || body.deliveryAddress.length < 5) {
+            return "Address is required";
+        }
+        return null;
+    }
+
     async function createOrder() {
         orderStatus.textContent = "";
+
         const body = {
-            receiverName: document.getElementById("receiverName").value,
-            receiverPhone: document.getElementById("receiverPhone").value,
-            deliveryCity: document.getElementById("deliveryCity").value,
-            deliveryAddress: document.getElementById("deliveryAddress").value
+            receiverName: document.getElementById("receiverName").value.trim(),
+            receiverPhone: document.getElementById("receiverPhone").value.trim(),
+            deliveryCity: document.getElementById("deliveryCity").value.trim(),
+            deliveryAddress: document.getElementById("deliveryAddress").value.trim()
         };
+
+        const validationError = validateOrderForm(body);
+        if (validationError) {
+            orderStatus.textContent = validationError;
+            orderStatus.className = "text-red-600 font-semibold";
+            return;
+        }
 
         try {
             const res = await fetchWithAuth("/api/order", {
@@ -101,12 +144,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                 orderCard.classList.add("hidden");
                 await loadCart();
             } else {
-                const text = await res.text();
-                orderStatus.textContent = `Failed to create order: ${text}`;
+                let errorMessage = "Failed to create order";
+
+                try {
+                    const data = await res.json();
+                    if (data.message) errorMessage = data.message;
+                } catch {
+                    errorMessage = await res.text();
+                }
+
+                orderStatus.textContent = errorMessage;
                 orderStatus.className = "text-red-600 font-semibold";
             }
         } catch (err) {
-            orderStatus.textContent = `Error: ${err.message}`;
+            orderStatus.textContent = err.message;
             orderStatus.className = "text-red-600 font-semibold";
         }
     }
