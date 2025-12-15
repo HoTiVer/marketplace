@@ -157,6 +157,14 @@ public class OrderService {
                 && order.getStatus().canChangeTo(newStatus)) {
                 order.setStatus(newStatus);
                 orderRepo.save(order);
+
+                Product product = productRepo.findById(order.getProduct().getId()).orElse(null);
+                if (product == null) {
+                    return ResponseEntity.badRequest().build();
+                }
+                product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
+                productRepo.save(product);
+
                 return ResponseEntity.ok().build();
         }
 

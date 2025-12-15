@@ -132,6 +132,15 @@ public class SellerService {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
+        if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.RETURNED) {
+            Product product = productRepo.findById(order.getProduct().getId()).orElse(null);
+            if (product == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
+            productRepo.save(product);
+        }
+
         if (newStatus == OrderStatus.DELIVERED) {
             order.setDeliveryDate(Date.valueOf(LocalDate.now()));
         }
