@@ -1,6 +1,7 @@
 package org.hotiver.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,9 +29,14 @@ public class ImageService {
         return "/products/" + productId + "/" + filename;
     }
 
-    public void deleteImage(String relativePath) throws IOException {
-        Path file = Paths.get(rootDir + relativePath);
-        Files.deleteIfExists(file);
+    public void deleteProductImage(String url) throws IOException {
+        Path path = Paths.get(rootDir, url);
+        if (Files.exists(path)) {
+            Files.delete(path);
+            System.out.println("Deleted: " + path);
+        } else {
+            System.out.println("File not found: " + path);
+        }
     }
 
     public void deleteAllProductImages(Long productId) throws IOException {
@@ -47,5 +53,4 @@ public class ImageService {
                     });
         }
     }
-
 }

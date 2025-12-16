@@ -3,6 +3,7 @@ package org.hotiver.api;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.seller.SellerProductProjection;
+import org.hotiver.service.ImageService;
 import org.hotiver.service.ProductService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,20 @@ public class ProductController {
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         return productService.updateProductById(id, dto, image);
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @PatchMapping("/product/{productId}/image/{imageId}/main")
+    public ResponseEntity<?> makeProductMainImage(@PathVariable Long productId,
+                                                  @PathVariable Long imageId) {
+        return productService.makeProductMainImage(productId, imageId);
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @DeleteMapping("/product/{productId}/image/{imageId}")
+    public ResponseEntity<?> deleteProductImage(@PathVariable Long productId,
+                                                @PathVariable Long imageId) {
+        return productService.deleteProductImage(productId, imageId);
     }
 
     @PreAuthorize("hasRole('SELLER')")

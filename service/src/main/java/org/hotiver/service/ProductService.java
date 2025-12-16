@@ -178,9 +178,18 @@ public class ProductService {
     public ResponseEntity<?> updateProductById(Long id,
                                                ProductAddDto productAddDto,
                                                MultipartFile image) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
         Optional<Product> opProduct = productRepo.findById(id);
         if (opProduct.isEmpty()){
             return ResponseEntity.notFound().build();
+        }
+
+        User user = userRepo.findByEmail(email).get();
+
+        if (!opProduct.get().getSeller().getId().equals(user.getId())){
+            return ResponseEntity.status(403).build();
         }
 
         var product = opProduct.get();
@@ -230,5 +239,83 @@ public class ProductService {
                 .getCurrentSellerProducts(seller.getId());
 
         return ResponseEntity.ok().body(productGetDto);
+    }
+
+    public ResponseEntity<?> deleteProductImage(Long productId, Long imageId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        Product product = productRepo.findById(productId).orElse(null);
+
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var user = userRepo.findByEmail(email).orElse(null);
+        if (!product.getSeller().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
+        var productImages = product.getImages();
+
+        var imageToRemove = productImages
+                .stream()
+                .filter(image -> image.getId().equals(imageId))
+                .findFirst()
+                .orElse(null);
+
+        if (imageToRemove == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            imageService.deleteProductImage(imageToRemove.getUrl());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        product.getImages().remove(imageToRemove);
+        productImageRepo.delete(imageToRemove);
+
+        productRepo.save(product);
+
+        return ResponseEntity.ok().build();
+    }
+
+
+    public ResponseEntity<?> makeProductMainImage(Long productId, Long imageId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        Product product = productRepo.findById(productId).orElse(null);
+
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var user = userRepo.findByEmail(email).orElse(null);
+        if (!product.getSeller().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
+        var productImages = product.getImages();
+
+        for (var image : productImages) {
+            if (image.getIsMain()) {
+                image.setIsMain(false);
+                break;
+            }
+        }
+
+        for (var image : productImages) {
+            if (image.getId().equals(imageId)) {
+                image.setIsMain(true);
+                break;
+            }
+        }
+
+        product.setImages(productImages);
+        productRepo.save(product);
+        return ResponseEntity.ok().build();
     }
 }
