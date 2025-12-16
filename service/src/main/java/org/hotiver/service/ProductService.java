@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hotiver.domain.Entity.*;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
+import org.hotiver.dto.product.ProductImageDto;
 import org.hotiver.dto.seller.SellerProductProjection;
 import org.hotiver.repo.*;
 import org.springframework.http.ResponseEntity;
@@ -104,7 +105,7 @@ public class ProductService {
         if (!product.get().getIsVisible())
             return ResponseEntity.notFound().build();
 
-        var existingProduct = product.get();
+        Product existingProduct = product.get();
 
         ProductGetDto returnProduct = ProductGetDto.builder()
                 .id(existingProduct.getId())
@@ -116,6 +117,18 @@ public class ProductService {
                 .sellerUsername(existingProduct.getSeller().getNickname())
                 .sellerDisplayName(existingProduct.getSeller().getUser().getDisplayName())
                 .build();
+
+        List<ProductImageDto> images = new ArrayList<>();
+
+        for (var image : existingProduct.getImages()) {
+            images.add(new ProductImageDto(
+                image.getId(),
+                    "/images" + image.getUrl(),
+                    image.getIsMain()
+            ));
+        }
+
+        returnProduct.setImages(images);
 
         return ResponseEntity.ok().body(returnProduct);
     }

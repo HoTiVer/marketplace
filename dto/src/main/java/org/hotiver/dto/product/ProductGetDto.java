@@ -2,6 +2,7 @@ package org.hotiver.dto.product;
 
 import lombok.*;
 
+import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -25,4 +26,6 @@ public class ProductGetDto {
     private String sellerDisplayName;
 
     private String sellerUsername;
+
+    private List<ProductImageDto> images;
 }
