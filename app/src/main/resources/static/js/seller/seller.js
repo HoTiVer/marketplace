@@ -21,6 +21,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
+    if (!userData) {
+        messageContent.disabled = true;
+        sendMessageBtn.disabled = true;
+
+        messageContent.classList.add("opacity-50");
+        sendMessageBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+        messageStatus.textContent = "⚠️ You must be logged in to message the seller";
+        messageStatus.classList.remove("hidden");
+        messageStatus.classList.remove("text-green-600");
+        messageStatus.classList.add("text-yellow-600");
+    }
+
     try {
         const response = await fetchWithAuth(`/api/seller/${sellerNickname}`);
 
@@ -30,12 +43,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const seller = await response.json();
+
         loading.classList.add("hidden");
         sellerContainer.classList.remove("hidden");
 
-        document.getElementById("displayName").textContent = seller.displayName || "—";
-        document.getElementById("nickname").textContent = seller.nickname || "—";
-        //document.getElementById("rating").textContent = seller.rating?.toFixed(2) ?? "0.00";
+        document.getElementById("displayName").textContent =
+            seller.displayName || "—";
+        document.getElementById("nickname").textContent =
+            seller.nickname || "—";
         document.getElementById("profileDescription").textContent =
             seller.profileDescription || "No description provided.";
 
@@ -47,10 +62,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         } else {
             const fullStars = Math.floor(seller.rating);
             const halfStar = seller.rating % 1 >= 0.5 ? "½" : "";
-            ratingEl.textContent = "⭐".repeat(fullStars) + halfStar + ` (${seller.rating.toFixed(1)})`;
+            ratingEl.textContent =
+                "⭐".repeat(fullStars) +
+                halfStar +
+                ` (${seller.rating.toFixed(1)})`;
         }
 
         sendMessageBtn.addEventListener("click", async () => {
+            if (!userData) return;
+
             const content = messageContent.value.trim();
 
             if (!content) {
@@ -61,14 +81,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             try {
-                const res = await fetchWithAuth(`/api/seller/message/${sellerNickname}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ content })
-                });
+                const res = await fetchWithAuth(
+                    `/api/seller/message/${sellerNickname}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ content })
+                    }
+                );
 
                 if (!res.ok) {
-                    messageStatus.textContent = `Failed to send message (${res.status})`;
+                    messageStatus.textContent =
+                        `Failed to send message (${res.status})`;
                     messageStatus.classList.remove("hidden", "text-green-600");
                     messageStatus.classList.add("text-red-600");
                     return;

@@ -8,8 +8,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const productContainer = document.getElementById("productContainer");
     const loading = document.getElementById("loading");
 
+    const addToWishlistBtn = document.getElementById("addToWishlistBtn");
+    const addToCartBtn = document.getElementById("addToCartBtn");
+
     const goToSellerPageBtn = document.getElementById("goToSellerPageBtn");
     const goToSellerProductsBtn = document.getElementById("goToSellerProductsBtn");
+    const goToReviewsBtn = document.getElementById("goToReviewsBtn");
+
+    if (!userData) {
+        addToWishlistBtn.classList.add("hidden");
+        addToCartBtn.classList.add("hidden");
+    }
 
     const pathParts = window.location.pathname.split("/").filter(Boolean);
     const productId = Number(pathParts[pathParts.length - 1]);
@@ -27,6 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const product = await response.json();
+
         loading.classList.add("hidden");
         productContainer.classList.remove("hidden");
 
@@ -42,62 +52,80 @@ document.addEventListener("DOMContentLoaded", async () => {
             goToSellerPageBtn.classList.remove("hidden");
             goToSellerProductsBtn.classList.remove("hidden");
 
-            goToSellerPageBtn.onclick = () => window.location.href = `/seller/${product.sellerUsername}`;
-            goToSellerProductsBtn.onclick = () => window.location.href = `/seller/${product.sellerUsername}/products`;
+            goToSellerPageBtn.onclick = () =>
+                window.location.href = `/seller/${product.sellerUsername}`;
+
+            goToSellerProductsBtn.onclick = () =>
+                window.location.href = `/seller/${product.sellerUsername}/products`;
         }
 
-        const addToWishlistBtn = document.getElementById("addToWishlistBtn");
-        addToWishlistBtn.onclick = async () => {
-            try {
-                const res = await fetchWithAuth(`/api/wishlist/${productId}`, { method: "POST" });
-                if (res.ok) alert(`✅ "${product.name}" added to wishlist!`);
-                else if (res.status === 409) alert("Already in wishlist.");
-                else alert(`Failed to add to wishlist (${res.status})`);
-            } catch (err) {
-                alert(`Error: ${err.message}`);
-            }
-        };
+        if (userData) {
+            addToWishlistBtn.onclick = async () => {
+                try {
+                    const res = await fetchWithAuth(`/api/wishlist/${productId}`, {
+                        method: "POST"
+                    });
 
-        const addToCartBtn = document.getElementById("addToCartBtn");
-        addToCartBtn.onclick = async () => {
-            try {
-
-                let res = await fetchWithAuth(`/api/cart/${productId}?count=1`, { method: "POST" });
-
-                if (res.ok) {
-                    alert(`🛒 "${product.name}" added to cart!`);
-                    return;
+                    if (res.ok) alert(`✅ "${product.name}" added to wishlist!`);
+                    else if (res.status === 409) alert("Already in wishlist.");
+                    else alert(`Failed to add to wishlist (${res.status})`);
+                } catch (err) {
+                    alert(`Error: ${err.message}`);
                 }
+            };
 
-                if (res.status === 409) {
-                    res = await fetchWithAuth(`/api/cart/${productId}?count=1`, { method: "PATCH" });
-                    if (res.ok) alert(`🛒 Quantity of "${product.name}" increased by 1!`);
-                    else alert(`Failed to update cart (${res.status})`);
-                } else {
-                    alert(`Failed to add to cart (${res.status})`);
+            addToCartBtn.onclick = async () => {
+                try {
+                    let res = await fetchWithAuth(
+                        `/api/cart/${productId}?count=1`,
+                        { method: "POST" }
+                    );
+
+                    if (res.ok) {
+                        alert(`🛒 "${product.name}" added to cart!`);
+                        return;
+                    }
+
+                    if (res.status === 409) {
+                        res = await fetchWithAuth(
+                            `/api/cart/${productId}?count=1`,
+                            { method: "PATCH" }
+                        );
+
+                        if (res.ok) {
+                            alert(`🛒 Quantity of "${product.name}" increased by 1!`);
+                        } else {
+                            alert(`Failed to update cart (${res.status})`);
+                        }
+                    } else {
+                        alert(`Failed to add to cart (${res.status})`);
+                    }
+                } catch (err) {
+                    alert(`Error: ${err.message}`);
                 }
-            } catch (err) {
-                alert(`Error: ${err.message}`);
-            }
-        };
+            };
+        }
 
-        const goToReviewsBtn = document.getElementById("goToReviewsBtn");
         goToReviewsBtn.onclick = () => {
             window.location.href = `/product/${productId}/reviews`;
         };
 
-
         const charContainer = document.getElementById("characteristics");
+        charContainer.innerHTML = "";
+
         if (product.characteristic && Object.keys(product.characteristic).length > 0) {
             Object.entries(product.characteristic).forEach(([key, value]) => {
                 const div = document.createElement("div");
                 div.className = "bg-gray-50 border rounded-lg p-4";
-                div.innerHTML = `<p class="text-gray-800 font-medium">${key}</p>
-                                 <p class="text-gray-600">${value}</p>`;
+                div.innerHTML = `
+                    <p class="text-gray-800 font-medium">${key}</p>
+                    <p class="text-gray-600">${value}</p>
+                `;
                 charContainer.appendChild(div);
             });
         } else {
-            charContainer.innerHTML = `<p class="text-gray-500 italic">No characteristics available</p>`;
+            charContainer.innerHTML =
+                `<p class="text-gray-500 italic">No characteristics available</p>`;
         }
 
     } catch (err) {
