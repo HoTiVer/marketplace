@@ -48,7 +48,7 @@ async function loadOrders(pageNumber = 0) {
     summary.textContent = 'Loading orders...';
 
     try {
-        const res = await fetchWithAuth(`/api/seller/manage-orders?page=${pageNumber}&size=${size}`);
+        const res = await fetchWithAuth(`/api/order/seller/manage-orders?page=${pageNumber}&size=${size}`);
         if (!res.ok) {
             loading.textContent = `Failed to load orders (${res.status})`;
             return;
@@ -134,7 +134,7 @@ function createOrderCard(o) {
             }
 
             try {
-                const res = await fetchWithAuth(`/api/seller/manage-orders/${o.orderId}`, {
+                const res = await fetchWithAuth(`/api/order/seller/manage-orders/${o.orderId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: newStatus })

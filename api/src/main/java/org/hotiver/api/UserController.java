@@ -16,12 +16,10 @@ import java.util.Map;
 @RestController
 public class UserController {
 
-    private final UserService userService;
-    private final OrderService orderService;
+    private final UserService userService;;
 
-    public UserController(UserService userService, OrderService orderService) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.orderService = orderService;
     }
 
     @GetMapping("/personal-info")
@@ -62,26 +60,6 @@ public class UserController {
     @PostMapping("/personal-info/security/password/verify")
     public ResponseEntity<?> verifyChangeUserPassword(@RequestBody PasswordChangeDto passwordChangeDto) {
         return userService.verifyChangeUserPassword(passwordChangeDto);
-    }
-
-    @GetMapping("/orders")
-    public Page<UserOrderDto> getOrdersHistory(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return orderService.getUserOrders(page, size);
-    }
-
-    @GetMapping("/orders/{orderId}")
-    public String getOrdersHistory(
-            @PathVariable Integer orderId
-    ) {
-        return null;
-    }
-
-    @PatchMapping("/orders/{orderId}/cancel")
-    public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
-        return orderService.cancelUserOrder(orderId);
     }
 
     @PostMapping("/new-seller/register")

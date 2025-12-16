@@ -37,7 +37,7 @@ async function loadOrders(pageNumber = 0) {
     summary.textContent = 'Loading orders...';
 
     try {
-        const res = await fetchWithAuth(`/cabinet/orders?page=${pageNumber}&size=${size}`);
+        const res = await fetchWithAuth(`/api/order/orders?page=${pageNumber}&size=${size}`);
         if (!res.ok) {
             loading.textContent = `Failed to load orders (${res.status})`;
             return;
@@ -148,7 +148,7 @@ function createOrderCard(o) {
         cancelBtn.textContent = 'Cancelling...';
 
         try {
-            const res = await fetchWithAuth(`/cabinet/orders/${o.orderId}/cancel`, { method: 'PATCH' });
+            const res = await fetchWithAuth(`/api/order/orders/${o.orderId}/cancel`, { method: 'PATCH' });
             if (res.ok) {
                 const statusEl = wrapper.querySelector(`#status-${o.orderId}`);
                 statusEl.textContent = 'CANCELLED';

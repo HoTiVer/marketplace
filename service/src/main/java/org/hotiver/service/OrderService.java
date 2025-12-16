@@ -3,14 +3,9 @@ package org.hotiver.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hotiver.common.OrderStatus;
-import org.hotiver.domain.Entity.CartItem;
-import org.hotiver.domain.Entity.Order;
-import org.hotiver.domain.Entity.Product;
-import org.hotiver.domain.Entity.User;
+import org.hotiver.domain.Entity.*;
 import org.hotiver.dto.ResponseDto;
-import org.hotiver.dto.order.CreateOrderDto;
-import org.hotiver.dto.order.OrderCreatedEvent;
-import org.hotiver.dto.order.UserOrderDto;
+import org.hotiver.dto.order.*;
 import org.hotiver.repo.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +21,7 @@ import java.sql.Date;
 import java.time.LocalDate;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -36,15 +32,17 @@ public class OrderService {
     private final UserRepo userRepo;
     private final OrderRepo orderRepo;
     private final CartItemRepo cartItemRepo;
+    private final SellerRepo sellerRepo;
     private final RedisOutboxService redisOutboxService;
 
     public OrderService(ProductRepo productRepo, UserRepo userRepo,
                         OrderRepo orderRepo, CartItemRepo cartItemRepo,
-                        RedisOutboxService redisOutboxService) {
+                        SellerRepo sellerRepo, RedisOutboxService redisOutboxService) {
         this.productRepo = productRepo;
         this.userRepo = userRepo;
         this.orderRepo = orderRepo;
         this.cartItemRepo = cartItemRepo;
+        this.sellerRepo = sellerRepo;
         this.redisOutboxService = redisOutboxService;
     }
 
@@ -99,7 +97,7 @@ public class OrderService {
             user.getCart().remove(cartItem);
             cartItemRepo.delete(cartItem);
 
-            saveOrderInOutbox(order);
+            //saveOrderInOutbox(order);
         }
 
         userCart.clear();
@@ -169,5 +167,72 @@ public class OrderService {
         }
 
         return ResponseEntity.badRequest().build();
+    }
+
+    public SellerOrdersResponse getSellerOrders(int page, int size) {
+        var context = SecurityContextHolder.getContext();
+        var email = context.getAuthentication().getName();
+
+        Optional<Seller> opSeller = sellerRepo.findByEmail(email);
+        if (opSeller.isEmpty()) {
+            throw new RuntimeException("Seller not found");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<SellerOrderDto> sellerOrderDto = orderRepo
+                .findSellerOrders(opSeller.get().getId(), pageable);
+
+        List<OrderStatus> orderStatuses = List.of(OrderStatus.values());
+
+        return new SellerOrdersResponse(sellerOrderDto, orderStatuses);
+    }
+
+    public ResponseEntity<?> changeOrderStatus(Long orderId, String status) {
+        var email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        OrderStatus newStatus;
+        try {
+            newStatus = OrderStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Seller seller = sellerRepo.findByEmail(email).orElse(null);
+        Order order = orderRepo.findById(orderId).orElse(null);
+
+        if (seller == null || order == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (!order.getSeller().getId().equals(seller.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        if (!order.getStatus().canChangeTo(newStatus)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.RETURNED) {
+            Product product = productRepo.findById(order.getProduct().getId()).orElse(null);
+            if (product == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
+            productRepo.save(product);
+        }
+
+        if (newStatus == OrderStatus.DELIVERED) {
+            order.setDeliveryDate(Date.valueOf(LocalDate.now()));
+        }
+
+        if (newStatus == OrderStatus.COMPLETED) {
+            saveOrderInOutbox(order);
+        }
+
+        order.setStatus(newStatus);
+        orderRepo.save(order);
+
+        return ResponseEntity.ok().build();
     }
 }
