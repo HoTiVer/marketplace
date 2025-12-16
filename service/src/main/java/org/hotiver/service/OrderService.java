@@ -106,6 +106,10 @@ public class OrderService {
     }
 
     private void saveOrderInOutbox(Order order) {
+        if (order.getProduct().getId() == 0L) {
+            return;
+        }
+
         OrderCreatedEvent orderCreatedEvent = OrderCreatedEvent.builder()
                 .orderId(order.getId())
                 .productId(order.getProduct().getId())
