@@ -45,30 +45,53 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <div>
                         <p 
                             class="product-link font-semibold text-blue-600 hover:underline cursor-pointer"
-                            data-id="${item.productId}"
-                            >
+                            data-id="${item.productId}">
                             ${item.productName}
                         </p>
                         <p class="text-gray-600">$${item.price.toFixed(2)}</p>
                     </div>
+
                     <div class="flex items-center gap-2">
-                        <button class="minus bg-gray-300 px-2 rounded">-</button>
-                        <span class="w-8 text-center">${item.quantity}</span>
-                        <button class="plus bg-gray-300 px-2 rounded">+</button>
+                        <input
+                            type="number"
+                            min="1"
+                            class="quantity-input w-16 border rounded text-center p-1"
+                            value="${item.quantity}"
+                            data-id="${item.productId}"
+                        />
                     </div>
-                    <button class="delete bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition">🗑</button>
+
+                    <button class="delete bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition">
+                        🗑
+                    </button>
                 `;
 
-                row.querySelector(".product-link").onclick = (e) => {
-                    e.stopPropagation();
+                row.querySelector(".product-link").onclick = () => {
                     window.location.href = `/product/${item.productId}`;
                 };
 
+                const qtyInput = row.querySelector(".quantity-input");
 
-                row.querySelector(".plus").onclick =
-                    () => updateCount(item.productId, item.quantity + 1);
-                row.querySelector(".minus").onclick =
-                    () => item.quantity > 1 && updateCount(item.productId, item.quantity - 1);
+                const saveQuantity = async () => {
+                    let value = Number(qtyInput.value);
+
+                    if (!value || value < 1) {
+                        qtyInput.value = item.quantity;
+                        return;
+                    }
+
+                    if (value === item.quantity) return;
+
+                    await updateCount(item.productId, value);
+                };
+
+                qtyInput.addEventListener("blur", saveQuantity);
+                qtyInput.addEventListener("keydown", e => {
+                    if (e.key === "Enter") {
+                        qtyInput.blur();
+                    }
+                });
+
                 row.querySelector(".delete").onclick =
                     () => deleteItem(item.productId);
 
@@ -86,7 +109,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function updateCount(productId, count) {
-        await fetchWithAuth(`/api/cart/${productId}?count=${count}`, { method: "PATCH" });
+        await fetchWithAuth(`/api/cart/${productId}?count=${count}`, {
+            method: "PATCH"
+        });
         await loadCart();
     }
 
@@ -148,7 +173,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 try {
                     const data = await res.json();
-                    if (data.message) errorMessage = data.message;
+                    if (data.message) {
+                        errorMessage = data.message;
+                    }
                 } catch {
                     errorMessage = await res.text();
                 }
