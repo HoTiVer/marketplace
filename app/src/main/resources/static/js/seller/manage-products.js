@@ -45,24 +45,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         for (const prod of products) {
             const card = document.createElement("div");
-            card.className = "bg-white rounded-2xl shadow-lg p-6 flex flex-col justify-between hover:shadow-xl transition";
+            card.className = "bg-white rounded-2xl shadow-lg p-6 flex flex-col justify-between hover:shadow-xl transition cursor-pointer";
 
             card.innerHTML = `
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 mb-2">${prod.name}</h2>
-                    <p class="text-gray-600 mb-2">Category: ${prod.categoryName}</p>
-                    <p class="text-lg text-blue-700 font-semibold mb-4">$${prod.price.toFixed(2)}</p>
-                    <p class="text-gray-700 text-sm mb-4 line-clamp-3">${prod.description}</p>
-                    <p class="text-gray-600 font-medium">Quantity: ${prod.quantity}</p>
-                </div>
-                <div class="flex justify-between items-center mt-2">
-                    <button class="editBtn bg-yellow-500 text-white px-3 py-2 rounded-lg hover:bg-yellow-600 transition">Edit</button>
-                    <button class="deleteBtn bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition">Delete</button>
-                </div>
-            `;
+        <div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">${prod.name}</h2>
+            <p class="text-gray-600 mb-2">Category: ${prod.categoryName}</p>
+            <p class="text-lg text-blue-700 font-semibold mb-4">$${prod.price.toFixed(2)}</p>
+            <p class="text-gray-700 text-sm mb-4 line-clamp-3">${prod.description}</p>
+            <p class="text-gray-600 font-medium">Quantity: ${prod.quantity}</p>
+        </div>
+        <div class="flex justify-between items-center mt-2">
+            <button class="editBtn bg-yellow-500 text-white px-3 py-2 rounded-lg hover:bg-yellow-600 transition">Edit</button>
+            <button class="deleteBtn bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition">Delete</button>
+        </div>
+    `;
+
+            card.onclick = (e) => {
+                if (!e.target.classList.contains("editBtn") && !e.target.classList.contains("deleteBtn")) {
+                    window.location.href = `/product/${prod.id}`;
+                }
+            };
 
             card.querySelector(".editBtn").onclick = () => openModal(prod);
-            card.querySelector(".deleteBtn").onclick = async () => {
+            card.querySelector(".deleteBtn").onclick = async (e) => {
+                e.stopPropagation(); // предотвращаем переход по клику
                 if (!confirm(`Delete "${prod.name}"?`)) return;
                 const resp = await fetchWithAuth(`/api/product/${prod.id}`, { method: "DELETE" });
                 if (resp.ok) loadProducts();
