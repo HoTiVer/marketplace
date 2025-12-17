@@ -28,20 +28,42 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function renderProducts(containerId, products) {
         const container = document.getElementById(containerId);
+        container.innerHTML = "";
+
         products.forEach(p => {
             const card = document.createElement("div");
-            card.className = "bg-white rounded-xl shadow p-4 flex flex-col gap-2 hover:shadow-lg transition";
-            card.innerHTML = `
-                <h3 class="font-semibold text-lg">${p.productName}</h3>
-                <p class="text-blue-600 font-bold">$${p.price.toFixed(2)}</p>
-                <button class="mt-auto bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition">
-                    View
-                </button>
+            card.className =
+                "bg-white rounded-xl shadow p-4 flex flex-col gap-3 hover:shadow-lg transition";
 
-            `;
+            const imgSrc = p.mainImageUrl || "/images/default-product.png";
+
+            card.innerHTML = `
+            <img 
+                src="${imgSrc}"
+                alt="${p.productName}"
+                class="w-full h-40 object-cover rounded-lg"
+            >
+
+            <h3 class="font-semibold text-lg line-clamp-2">
+                ${p.productName}
+            </h3>
+
+            <p class="text-blue-600 font-bold text-lg">
+                $${p.price.toFixed(2)}
+            </p>
+
+            <button
+                type="button"
+                class="mt-auto bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition"
+            >
+                View
+            </button>
+        `;
+
             card.querySelector("button").onclick = () => {
                 window.location.href = `/product/${p.productId}`;
             };
+
             container.appendChild(card);
         });
     }
