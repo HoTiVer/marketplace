@@ -66,6 +66,9 @@ spring:
         max.in.flight.requests.per.connection: 5
     admin:
       auto-create: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
 
 jwt:
   secret: ${JWT_SECRET}

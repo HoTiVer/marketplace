@@ -226,7 +226,7 @@ public class ProductService {
             product.setCharacteristic(productAddDto.getCharacteristic());
         }
 
-        if (!image.isEmpty()) {
+        if (image != null) {
             String url;
             try {
                 url = imageService.saveProductImage(product.getId(), image);
