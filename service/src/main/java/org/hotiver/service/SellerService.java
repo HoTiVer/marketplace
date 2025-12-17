@@ -58,21 +58,8 @@ public class SellerService {
         if (opSeller.isEmpty()){
             return ResponseEntity.notFound().build();
         }
-        List<ListProductDto> returnProducts = new ArrayList<>();
-        List<Product> sellerProducts = productRepo.findAllVisibleBySellerId(opSeller.get().getId());
-
-        for (var product : sellerProducts) {
-
-            ListProductDto listProductDto = new ListProductDto(
-                    product.getId(),
-                    product.getName(),
-                    product.getPrice(),
-                    null);
-
-            returnProducts.add(listProductDto);
-        }
-
-        return ResponseEntity.ok().body(returnProducts);
+        return ResponseEntity.ok()
+                .body(productRepo.findAllVisibleBySellerId(opSeller.get().getId()));
     }
 
     public ResponseEntity<?> sendMessageToSeller(String username, SendMessageDto message) {

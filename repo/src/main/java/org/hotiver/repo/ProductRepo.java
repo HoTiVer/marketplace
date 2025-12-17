@@ -15,8 +15,19 @@ import java.util.List;
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Long> {
 
-    @Query("SELECT p FROM Product p WHERE p.seller.id = :id AND p.isVisible = true")
-    List<Product> findAllVisibleBySellerId(Long id);
+    @Query(value = """
+    SELECT
+        p.id as productId,
+        p.name as productName,
+        p.price as price,
+        CONCAT('/images', pi.url) AS mainImageUrl
+    FROM product p
+    LEFT JOIN product_image pi
+        ON pi.product_id = p.id AND pi.is_main = true
+    WHERE is_visible = true AND p.seller_id = :sellerId
+    ORDER BY p.name
+    """, nativeQuery = true)
+    List<ListProductDto> findAllVisibleBySellerId(@Param("sellerId") Long id);
 
     @Query("""
     SELECT\s
