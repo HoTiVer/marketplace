@@ -88,24 +88,43 @@ function createProductCard(p) {
     div.className =
         "bg-white p-4 rounded-xl shadow hover:shadow-lg transition flex flex-col text-left";
 
+    const imgSrc = p.imageUrl  || "/images/default-product.png";
+
     div.innerHTML = `
-        <h3 class="text-lg font-bold text-gray-900">${p.name}</h3>
+        <img
+            src="${imgSrc}"
+            alt="${p.name}"
+            class="w-full h-40 object-cover rounded-lg mb-3"
+        >
 
-        <p class="text-sm text-gray-500 mt-1">${p.categoryName ?? "No category"}</p>
+        <h3 class="text-lg font-bold text-gray-900 line-clamp-2">
+            ${p.name}
+        </h3>
 
-        <p class="text-blue-600 font-semibold mt-3">$${p.price}</p>
+        <p class="text-sm text-gray-500 mt-1">
+            ${p.categoryName ?? "No category"}
+        </p>
+
+        <p class="text-blue-600 font-semibold mt-3">
+            $${p.price}
+        </p>
 
         <p class="text-gray-700 text-sm mt-3 line-clamp-3">
             ${p.description ?? "No description"}
         </p>
 
-        <a href="/product/${p.id}"
-           class="mt-auto inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition">
-           View
+        <a
+            href="/product/${p.id}"
+            class="mt-auto inline-block text-center px-4 py-2 bg-green-600 text-white rounded-lg
+                   hover:bg-green-700 active:scale-95 transition"
+        >
+            View
         </a>
     `;
+
     return div;
 }
+
 
 function updatePagination({ number, totalPages }) {
     if (totalPages === 0) {

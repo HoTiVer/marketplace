@@ -36,10 +36,10 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
         p.price AS price,
         p.description AS description,
         p.category.name AS categoryName,
-        p.characteristic AS characteristic,
-        p.seller.user.displayName AS sellerDisplayName,
-        p.seller.nickname AS sellerUsername
+        CONCAT('/images', pi.url) AS imageUrl
     FROM Product p
+    LEFT JOIN ProductImage pi
+        ON pi.product.id = p.id AND pi.isMain = true
     WHERE p.category.name = :category AND p.isVisible = true
 """)
     Page<ProductProjection> findByCategory(String category, Pageable pageable);
@@ -51,25 +51,25 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
         p.price AS price,
         p.description AS description,
         c.name AS categoryName,
-        p.characteristic AS characteristic,
-        u.display_name AS sellerDisplayName,
-        s.nickname AS sellerUsername
+        CONCAT('/images', pi.url) AS imageUrl
     FROM product p
     JOIN category c ON p.category_id = c.id
     JOIN seller s ON p.seller_id = s.id
     JOIN public."user" u ON s.id = u.id
+    LEFT JOIN product_image pi
+        ON pi.product_id = p.id AND pi.is_main = true
     WHERE p.is_visible = true
-          AND (
-                LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
-                OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
-                OR EXISTS (
-                    SELECT 1
-                    FROM jsonb_each_text(p.characteristic) AS kv
-                    WHERE kv.value ILIKE CONCAT('%', :searchTerm, '%')
-                )
-              )
-""", nativeQuery = true)
-    List<ProductSearchDto> findByKeyWord(@Param("searchTerm") String searchTerm);
+      AND (
+            LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+            OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+            OR EXISTS (
+                SELECT 1
+                FROM jsonb_each_text(p.characteristic) AS kv
+                WHERE kv.value ILIKE CONCAT('%', :searchTerm, '%')
+            )
+      )
+    """, nativeQuery = true)
+    Page<ProductProjection> findByKeyWord(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     @Query(value = """
           SELECT

@@ -19,7 +19,7 @@ public class ProductSearchController {
     }
 
     @GetMapping("/product")
-    public ResponseEntity<Page<ProductGetDto>> productSearchByKeyWords(
+    public ResponseEntity<Page<ProductProjection>> productSearchByKeyWords(
             @RequestParam String searchTerm,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

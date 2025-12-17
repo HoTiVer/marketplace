@@ -25,4 +25,6 @@ public class ProductSearchDto {
     private String sellerDisplayName;
 
     private String sellerUsername;
+
+    private String imageUrl;
 }

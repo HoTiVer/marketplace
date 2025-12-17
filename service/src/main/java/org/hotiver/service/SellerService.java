@@ -51,7 +51,6 @@ public class SellerService {
         return ResponseEntity.ok().body(sellerProfileDto);
     }
 
-    //TODO MAKE WITHOUT LOOP
     public ResponseEntity<List<ListProductDto>> getSellerProducts(String username) {
         Optional<Seller> opSeller = sellerRepo.findByNickname(username);
 

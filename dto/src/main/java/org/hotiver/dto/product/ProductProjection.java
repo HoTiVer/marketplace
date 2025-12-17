@@ -8,7 +8,5 @@ public interface ProductProjection {
     Double getPrice();
     String getDescription();
     String getCategoryName();
-    Map<String, Object> getCharacteristic();
-    String getSellerDisplayName();
-    String getSellerUsername();
+    String getImageUrl();
 }
