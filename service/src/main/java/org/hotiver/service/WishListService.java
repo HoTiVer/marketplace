@@ -46,7 +46,8 @@ public class WishListService {
             listProductDto = new ListProductDto(
                     product.getId(),
                     product.getName(),
-                    product.getPrice()
+                    product.getPrice(),
+                    null
             );
             wishListProducts.add(listProductDto);
         }

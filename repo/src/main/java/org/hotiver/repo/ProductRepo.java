@@ -64,8 +64,11 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
           SELECT
                 p.id as productId,
                 p.name as productName,
-                p.price as price
+                p.price as price,
+                CONCAT('/images', pi.url) AS mainImageUrl
           FROM product p
+          LEFT JOIN product_image pi
+            ON pi.product_id = p.id AND pi.is_main = true
           WHERE is_visible = true
           ORDER BY random()
           LIMIT :limit
@@ -78,8 +81,11 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
           SELECT
                 p.id as productId,
                 p.name as productName,
-                p.price as price
+                p.price as price,
+                CONCAT('/images', pi.url) AS mainImageUrl
           FROM product p
+          LEFT JOIN product_image pi
+            ON pi.product_id = p.id AND pi.is_main = true
           WHERE is_visible = true
           ORDER BY p.publishing_date DESC
           LIMIT :limit
@@ -92,8 +98,11 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
           SELECT
                 p.id as productId,
                 p.name as productName,
-                p.price as price
+                p.price as price,
+                CONCAT('/images', pi.url) AS mainImageUrl
           FROM product p
+          LEFT JOIN product_image pi
+            ON pi.product_id = p.id AND pi.is_main = true
           WHERE is_visible = true
           ORDER BY p.sales_count DESC
           LIMIT :limit

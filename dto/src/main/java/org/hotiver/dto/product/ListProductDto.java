@@ -13,4 +13,5 @@ public class ListProductDto {
     Long productId;
     String productName;
     Double price;
+    String mainImageUrl;
 }

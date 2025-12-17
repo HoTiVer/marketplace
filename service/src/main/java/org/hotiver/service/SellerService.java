@@ -51,6 +51,7 @@ public class SellerService {
         return ResponseEntity.ok().body(sellerProfileDto);
     }
 
+    //TODO MAKE WITHOUT LOOP
     public ResponseEntity<List<ListProductDto>> getSellerProducts(String username) {
         Optional<Seller> opSeller = sellerRepo.findByNickname(username);
 
@@ -61,10 +62,12 @@ public class SellerService {
         List<Product> sellerProducts = productRepo.findAllVisibleBySellerId(opSeller.get().getId());
 
         for (var product : sellerProducts) {
+
             ListProductDto listProductDto = new ListProductDto(
                     product.getId(),
                     product.getName(),
-                    product.getPrice());
+                    product.getPrice(),
+                    null);
 
             returnProducts.add(listProductDto);
         }
