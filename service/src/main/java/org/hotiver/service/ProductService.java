@@ -226,6 +226,23 @@ public class ProductService {
             product.setCharacteristic(productAddDto.getCharacteristic());
         }
 
+        if (!image.isEmpty()) {
+            String url;
+            try {
+                url = imageService.saveProductImage(product.getId(), image);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            ProductImage productImage = ProductImage.builder()
+                    .url(url)
+                    .isMain(false)
+                    .product(product)
+                    .build();
+
+            product.addProductImage(productImage);
+        }
+
         productRepo.save(product);
         return ResponseEntity.ok().build();
     }
