@@ -227,6 +227,10 @@ public class ProductService {
         }
 
         if (image != null) {
+            if (product.getImages().size() == 10) {
+                return ResponseEntity.badRequest().build();
+            }
+
             String url;
             try {
                 url = imageService.saveProductImage(product.getId(), image);
