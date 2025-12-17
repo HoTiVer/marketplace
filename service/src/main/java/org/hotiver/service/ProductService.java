@@ -3,6 +3,7 @@ package org.hotiver.service;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.hotiver.domain.Entity.*;
+import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.ProductImageDto;
@@ -239,6 +240,43 @@ public class ProductService {
                 .getCurrentSellerProducts(seller.getId());
 
         return ResponseEntity.ok().body(productGetDto);
+    }
+
+    public ResponseEntity<CurrentSellerProductDto> getCurrentSellerProductById(
+            Long productId) {
+
+        Optional<Product> product = productRepo.findById(productId);
+
+        if (product.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        if (!product.get().getIsVisible())
+            return ResponseEntity.notFound().build();
+
+        Product existingProduct = product.get();
+
+        CurrentSellerProductDto returnProduct = CurrentSellerProductDto.builder()
+                .id(existingProduct.getId())
+                .name(existingProduct.getName())
+                .price(existingProduct.getPrice())
+                .categoryName(existingProduct.getCategory().getName())
+                .description(existingProduct.getDescription())
+                .characteristic(existingProduct.getCharacteristic())
+                .quantity(existingProduct.getStockQuantity())
+                .build();
+
+        List<ProductImageDto> images = new ArrayList<>();
+
+        for (var image : existingProduct.getImages()) {
+            images.add(new ProductImageDto(
+                    image.getId(),
+                    "/images" + image.getUrl(),
+                    image.getIsMain()
+            ));
+        }
+        returnProduct.setImages(images);
+
+        return ResponseEntity.ok().body(returnProduct);
     }
 
     public ResponseEntity<?> deleteProductImage(Long productId, Long imageId) {

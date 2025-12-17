@@ -103,19 +103,38 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             @Param("limit") Integer limitForPopularProducts);
 
     @Query("""
-    SELECT\s
+    SELECT
         p.id AS id,
         p.name AS name,
         p.price AS price,
         p.description AS description,
         p.category.name AS categoryName,
-        p.characteristic AS characteristic,
-        p.seller.user.displayName AS sellerDisplayName,
-        p.seller.nickname AS sellerUsername,
-        p.stockQuantity as quantity
+        p.stockQuantity AS quantity,
+        CONCAT('/images', pi.url) AS mainImageUrl
     FROM Product p
-    WHERE p.seller.id = :id AND p.isVisible = true
+    LEFT JOIN ProductImage pi
+        ON pi.product = p AND pi.isMain = true
+    WHERE p.seller.id = :id
+      AND p.isVisible = true
     ORDER BY p.name
 """)
-    List<SellerProductProjection> getCurrentSellerProducts(Long id);
+    List<SellerProductProjection> getCurrentSellerProducts(@Param("id") Long id);
+
+    @Query("""
+    SELECT
+        p.id AS id,
+        p.name AS name,
+        p.price AS price,
+        p.description AS description,
+        p.category.name AS categoryName,
+        p.stockQuantity AS quantity,
+        CONCAT('/images/', COALESCE(pi.url, 'default.png')) AS mainImageUrl
+    FROM Product p
+    LEFT JOIN ProductImage pi
+        ON pi.product = p AND pi.isMain = true
+    WHERE p.seller.id = :sellerId
+      AND p.id = :productId
+      AND p.isVisible = true
+""")
+    SellerProductProjection getCurrentSellerProductById(Long sellerId, Long productId);
 }

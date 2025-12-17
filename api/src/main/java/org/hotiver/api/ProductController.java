@@ -1,5 +1,6 @@
 package org.hotiver.api;
 
+import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.seller.SellerProductProjection;
@@ -74,6 +75,13 @@ public class ProductController {
     public ResponseEntity<List<SellerProductProjection>> getCurrentSellerProducts(Authentication auth) {
         String username = auth.getName();
         return productService.getCurrentSellerProducts(username);
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @GetMapping("/seller/products/{id}")
+    public ResponseEntity<CurrentSellerProductDto> getCurrentSellerProductById(
+            @PathVariable Long id) {
+        return productService.getCurrentSellerProductById(id);
     }
 
 

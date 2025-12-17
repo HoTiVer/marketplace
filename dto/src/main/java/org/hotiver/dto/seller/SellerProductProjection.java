@@ -12,4 +12,5 @@ public interface SellerProductProjection {
     String getSellerDisplayName();
     String getSellerUsername();
     Integer getQuantity();
+    String getMainImageUrl();
 }
