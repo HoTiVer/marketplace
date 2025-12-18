@@ -8,3 +8,5 @@ CREATE TABLE product_image (
             REFERENCES product(id)
             ON DELETE CASCADE
 );
+
+CREATE SEQUENCE IF NOT EXISTS sequence_product_image START WITH 1 INCREMENT BY 5;
