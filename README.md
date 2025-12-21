@@ -109,6 +109,8 @@ App runs at:
 
 ⚠️ Important note:
 
+Password format is a first letter of login(email) + @123
+
 Docker-based build and deployment are currently under development and have
 not been fully tested yet. At the current stage, it is **not recommended**
 to build or run the project using Docker Compose.
