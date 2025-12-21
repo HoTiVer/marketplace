@@ -69,6 +69,8 @@ Spring Data JPA for ORM & query abstraction
 
 - Redis
 
+- Apache Kafka
+
 - .env configuration file
 
 ### 🔐 Environment Variables
@@ -92,6 +94,9 @@ EMAIL_PASSWORD=your_app_password
 
 GOOGLE_CLIENT_ID=google_client_id_here
 GOOGLE_CLIENT_SECRET=google_client_secret_here
+
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092,localhost:9094
+UPLOAD_DIR=rootDirectoryForFiles
 ```
 ### ▶️ Running the Application
 
@@ -100,3 +105,16 @@ GOOGLE_CLIENT_SECRET=google_client_secret_here
 App runs at:
 
 👉 http://localhost:8080
+
+
+⚠️ Important note:
+
+Docker-based build and deployment are currently under development and have
+not been fully tested yet. At the current stage, it is **not recommended**
+to build or run the project using Docker Compose.
+
+The application is intended to be launched locally via the IDE with all
+required services (PostgreSQL, Redis, Kafka) running separately.
+
+All necessary Kafka, database, and Redis configurations are provided through
+environment variables
