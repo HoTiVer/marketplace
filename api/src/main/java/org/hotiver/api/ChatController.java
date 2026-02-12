@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/v1/chat")
 public class ChatController {
 
     private final ChatService chatService;
@@ -18,17 +19,17 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @GetMapping("/cabinet/message")
+    @GetMapping("/message")
     public List<UserChatsDto> getUserChats(){
         return chatService.getUserChats();
     }
 
-    @GetMapping("/cabinet/message/{id}")
+    @GetMapping("/message/{id}")
     public ResponseEntity<ChatDto> getChat(@PathVariable Long id){
         return chatService.getChat(id);
     }
 
-    @PostMapping("/cabinet/message/{id}")
+    @PostMapping("/message/{id}")
     public ResponseEntity<?> sendMessage(@PathVariable Long id, @RequestBody SendMessageDto sendMessageDto) {
         return chatService.sendMessage(id, sendMessageDto);
     }

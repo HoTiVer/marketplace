@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 
-@RequestMapping("/cabinet")
 @RestController
+@RequestMapping("/api/v1/cabinet")
 public class UserController {
 
     private final UserService userService;;
