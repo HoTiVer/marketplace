@@ -1,7 +1,4 @@
-package org.hotiver.common;
-
-import java.util.ArrayList;
-import java.util.List;
+package org.hotiver.common.Enum;
 
 public enum OrderStatus {
     CREATED,

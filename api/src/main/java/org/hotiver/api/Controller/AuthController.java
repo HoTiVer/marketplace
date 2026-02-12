@@ -1,13 +1,14 @@
-package org.hotiver.api;
+package org.hotiver.api.Controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
-import org.hotiver.dto.auth.AuthDto;
+import org.hotiver.dto.auth.AuthResponse;
+import org.hotiver.dto.auth.LoginRequest;
+import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.user.CodeVerifyDto;
-import org.hotiver.dto.user.UserAuthDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.service.AuthService;
 import org.springframework.http.ResponseEntity;
@@ -36,8 +37,8 @@ public class AuthController {
             }
     )
     @PostMapping("/register")
-    public ResponseEntity<AuthDto> register(@RequestBody UserAuthDto userDto){
-        return authService.register(userDto);
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest registerRequest){
+        return authService.register(registerRequest);
     }
 
     @Operation(
@@ -53,8 +54,8 @@ public class AuthController {
             }
     )
     @PostMapping("/login")
-    public ResponseEntity<AuthDto> login(@Valid @RequestBody UserAuthDto userAuthDto){
-        return authService.login(userAuthDto);
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest){
+        return authService.login(loginRequest);
     }
 
     @PostMapping("/login/verify")

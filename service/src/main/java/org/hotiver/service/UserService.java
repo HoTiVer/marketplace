@@ -1,9 +1,8 @@
 package org.hotiver.service;
 
-import Utils.EmailUtils;
-import Utils.HashUtils;
+import org.hotiver.common.Utils.HashUtils;
 import jakarta.transaction.Transactional;
-import org.hotiver.common.SellerRegisterRequestStatus;
+import org.hotiver.common.Enum.SellerRegisterRequestStatus;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
@@ -19,7 +18,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.text.DateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -151,15 +149,10 @@ public class UserService {
 
         if (newEmail != null && !user.getEmail().equals(newEmail)){
 
-            if (EmailUtils.isValidEmail(newEmail)) {
-                String code = String.format("%06d", new Random().nextInt(999999));
-                String key = "verification:" + HashUtils.hashKeySha256(newEmail);
-                redisService.saveValue(key, code, 10);
-                emailService.send(newEmail, "Validation code", code);
-            }
-            else {
-                return ResponseEntity.badRequest().build();
-            }
+            String code = String.format("%06d", new Random().nextInt(999999));
+            String key = "verification:" + HashUtils.hashKeySha256(newEmail);
+            redisService.saveValue(key, code, 10);
+            emailService.send(newEmail, "Validation code", code);
         }
         else {
             return ResponseEntity.badRequest().build();

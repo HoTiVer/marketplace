@@ -1,17 +1,18 @@
 package org.hotiver.service;
 
-import Utils.EmailUtils;
-import Utils.HashUtils;
+import org.hotiver.common.Utils.HashUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hotiver.common.Utils.PasswordUtils;
+import org.hotiver.common.Utils.RedisKeyUtils;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
-import org.hotiver.dto.auth.AuthDto;
+import org.hotiver.dto.auth.AuthResponse;
+import org.hotiver.dto.auth.LoginRequest;
+import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.jwt.JwtTokensDto;
 import org.hotiver.dto.user.CodeVerifyDto;
-import org.hotiver.dto.user.UserAuthDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
@@ -57,149 +58,74 @@ public class AuthService {
     }
 
     @Transactional
-    public ResponseEntity<AuthDto> register(UserAuthDto userAuthDto) {
-        if (userAuthDto == null) {
+    public ResponseEntity<AuthResponse> register(RegisterRequest registerRequest) {
+        if (userRepo.existsUserByEmail(registerRequest.getEmail())){
             return ResponseEntity.badRequest()
-                    .body(AuthDto.builder()
-                            .isSuccess(false)
-                            .message("Request body is missing")
-                            .build());
-        }
-        String email = userAuthDto.getEmail();
-        String password = userAuthDto.getPassword();
-        String displayName = userAuthDto.getDisplayName();
-
-        if (email == null || email.trim().isEmpty() ||
-                password == null || password.trim().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(AuthDto.builder()
-                            .isSuccess(false)
-                            .message("Email or Password are required")
-                            .build());
+                    .build();
         }
 
-        if (displayName == null || displayName.trim().isEmpty()) {
-            displayName = email;
-        }
-
-        if (!EmailUtils.isValidEmail(email)) {
-            return ResponseEntity.badRequest()
-                    .body(AuthDto.builder()
-                            .isSuccess(false)
-                            .message("Invalid email format")
-                            .build());
-        }
-
-        if (userRepo.existsUserByEmail(email)){
-            return ResponseEntity.badRequest()
-                    .body(AuthDto.builder()
-                            .isSuccess(false)
-                            .message("User already exists")
-                            .build());
-        }
-
-        User user = createNewDefaultUser(email, password, displayName);
+        User user = createNewDefaultUser(
+                registerRequest.getEmail(),
+                registerRequest.getPassword(),
+                registerRequest.getDisplayName());
 
         try {
             userRepo.save(user);
 
-            SecurityUser securityUser = new SecurityUser(user);
+            JwtTokensDto jwtTokensDto = generateJwtTokens(user);
 
-            JwtTokensDto jwtTokensDto = generateJwtTokens(securityUser);
-
-            String key = generateRedisRefreshTokenKey(user.getId());
+            String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
             redisService.saveValue(key, jwtTokensDto.getRefreshToken(), timeToSaveJwtRefresh);
 
             return ResponseEntity.ok()
-                    .body(AuthDto.builder()
-                            .isSuccess(true)
-                            .message("Registered")
+                    .body(AuthResponse.builder()
                             .refreshToken(jwtTokensDto.getRefreshToken())
                             .accessToken(jwtTokensDto.getAccessToken())
                             .build());
-
         }
         catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(AuthDto.builder()
-                            .isSuccess(false)
-                            .message("Unexpected error occurred")
-                            .build());
+                    .build();
         }
     }
 
-    public ResponseEntity<AuthDto> login(UserAuthDto userAuthDto) {
-        if (userAuthDto.getEmail() == null || userAuthDto.getEmail().trim().isEmpty() ||
-                userAuthDto.getPassword() == null || userAuthDto.getPassword().trim().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(AuthDto.builder()
-                            .isSuccess(false)
-                            .message("Email and Password are required")
-                            .build());
-        }
-
-        String email = userAuthDto.getEmail();
-        String password = userAuthDto.getPassword();
-
-        if (!EmailUtils.isValidEmail(email)) {
-            return ResponseEntity.badRequest()
-                    .body(AuthDto.builder()
-                            .isSuccess(false)
-                            .message("Invalid email format")
-                            .build());
-        }
-
-        Optional<User> user = userRepo.findByEmail(email);
+    public ResponseEntity<AuthResponse> login(LoginRequest loginRequest) {
+        Optional<User> user = userRepo.findByEmail(loginRequest.getEmail());
         if (user.isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(AuthDto.builder()
-                            .isSuccess(false)
-                            .message("User not found")
-                            .build());
+                    .build();
         }
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-        if (!passwordEncoder.matches(password, user.get().getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.get().getPassword())) {
             return ResponseEntity.badRequest()
-                    .body(AuthDto.builder()
-                            .isSuccess(false)
-                            .message("Invalid password")
-                            .build());
+                    .build();
         }
 
         if (user.get().getIsTwoFactorEnable()){
-            sendVerificationCode(email);
+            sendVerificationCode(loginRequest.getEmail());
             return ResponseEntity.ok()
-                    .body(AuthDto.builder()
-                            .isSuccess(true)
-                            .message("Redirecting")
-                            .redirectUrl("/auth/login/verify")
-                            .build());
+                    .build();
         }
 
-        SecurityUser securityUser = new SecurityUser(user.get());
+        JwtTokensDto jwtTokensDto = generateJwtTokens(user.get());
 
-        String refreshToken = jwtService.generateRefreshToken(securityUser);
-        String accessToken = jwtService.generateAccessToken(securityUser);
-
-        String refreshTokenKey = generateRedisRefreshTokenKey(user.get().getId());
+        String refreshTokenKey = RedisKeyUtils.generateRedisRefreshTokenKey(user.get().getId());
         redisService.saveValue(refreshTokenKey,
-                refreshToken,
+                jwtTokensDto.getRefreshToken(),
                 timeToSaveJwtRefresh);
 
         return ResponseEntity.ok()
-                .body(AuthDto.builder()
-                        .isSuccess(true)
-                        .message("Logged in successfully")
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
+                .body(AuthResponse.builder()
+                        .accessToken(jwtTokensDto.getAccessToken())
+                        .refreshToken(jwtTokensDto.getRefreshToken())
                         .build());
     }
 
     @Transactional
-    public ResponseEntity<AuthDto> verifyCode(CodeVerifyDto codeVerifyDto) {
-        String key = generateRedisTwoFactorKey(codeVerifyDto.getEmail());
+    public ResponseEntity<AuthResponse> verifyCode(CodeVerifyDto codeVerifyDto) {
+        String key = RedisKeyUtils.generateRedisTwoFactorKey(codeVerifyDto.getEmail());
         String storedCode = redisService.getValue(key);
 
         if (storedCode == null) {
@@ -213,22 +139,15 @@ public class AuthService {
             if (opUser.isEmpty())
                 return ResponseEntity.badRequest().build();
 
-            SecurityUser securityUser = new SecurityUser(opUser.get());
-            String refreshToken = jwtService.generateRefreshToken(securityUser);
-            String accessToken = jwtService.generateAccessToken(securityUser);
 
-            String refreshTokenKey = generateRedisRefreshTokenKey(opUser.get().getId());
+            JwtTokensDto jwtTokensDto = generateJwtTokens(opUser.get());
 
-            redisService.saveValue(refreshTokenKey, refreshToken,
+            String refreshTokenKey = RedisKeyUtils.generateRedisRefreshTokenKey(opUser.get().getId());
+            redisService.saveValue(refreshTokenKey, jwtTokensDto.getRefreshToken(),
                     TimeUnit.MILLISECONDS.toMinutes(timeToSaveJwtRefresh));
 
             return ResponseEntity.ok()
-                    .body(AuthDto.builder()
-                            .isSuccess(true)
-                            .message("Logged in successfully")
-                            .refreshToken(refreshToken)
-                            .accessToken(accessToken)
-                            .build());
+                    .build();
         }
 
         return ResponseEntity.badRequest().build();
@@ -253,7 +172,7 @@ public class AuthService {
         }
 
         String storedRefresh = redisService
-                .getValue(generateRedisRefreshTokenKey(user.get().getId()));
+                .getValue(RedisKeyUtils.generateRedisRefreshTokenKey(user.get().getId()));
         if (storedRefresh == null || !storedRefresh.equals(refreshToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("Message","Refresh token mismatch"));
@@ -272,7 +191,7 @@ public class AuthService {
 
         User user = userRepo.findByEmail(email).orElseThrow();
 
-        String key = generateRedisRefreshTokenKey(user.getId());
+        String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
         redisService.deleteValue(key);
 
         return ResponseEntity.ok().build();
@@ -283,8 +202,8 @@ public class AuthService {
         Optional<User> opUser = userRepo.findByEmail(email);
         User user;
         if (opUser.isEmpty()){
-            String password = generate13SymbolsPassword();
-            var response = register(new UserAuthDto(email, password));
+            String password = PasswordUtils.generatePassword(13);
+            var response = register(new RegisterRequest(email, password, email));
 
             return new JwtTokensDto(response.getBody().getRefreshToken(),
                     response.getBody().getAccessToken());
@@ -293,10 +212,9 @@ public class AuthService {
             user = opUser.get();
         }
 
-        SecurityUser securityUser = new SecurityUser(user);
-        var tokens = generateJwtTokens(securityUser);
+        var tokens = generateJwtTokens(user);
 
-        String key = generateRedisRefreshTokenKey(user.getId());
+        String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
         redisService.saveValue(key, tokens.getRefreshToken(), timeToSaveJwtRefresh);
 
         return tokens;
@@ -353,57 +271,17 @@ public class AuthService {
                 .build();
     }
 
-    private JwtTokensDto generateJwtTokens(SecurityUser securityUser) {
+    private JwtTokensDto generateJwtTokens(User user) {
+        SecurityUser securityUser = new SecurityUser(user);
         String refreshToken = jwtService.generateRefreshToken(securityUser);
         String accessToken = jwtService.generateAccessToken(securityUser);
         return new JwtTokensDto(refreshToken, accessToken);
     }
 
     private void sendVerificationCode(String email) {
-        String code = generate6DigitCode();
-        String key = generateRedisTwoFactorKey(email);
+        String code = String.format("%06d", new Random().nextInt(999999));
+        String key = RedisKeyUtils.generateRedisTwoFactorKey(email);
         redisService.saveValue(key, code, 10);
         emailService.send(email, "Verify Code", "Your Code: " + code);
-    }
-
-    private String generateRedisRefreshTokenKey(Long userId) {
-        return "refresh:" + HashUtils.hashKeySha256(userId.toString());
-    }
-
-    private String generateRedisTwoFactorKey(String email) {
-        return "2fa:" + HashUtils.hashKeySha256(email);
-    }
-
-    private String generate6DigitCode() {
-        return String.format("%06d", new Random().nextInt(999999));
-    }
-
-    private String generate13SymbolsPassword() {
-        final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        final String lower = "abcdefghijklmnopqrstuvwxyz";
-        final String digits = "0123456789";
-        final String special = "!@#$%^&*()-_=+[]{}";
-        final String allChars = upper + lower + digits + special;
-
-        SecureRandom random = new SecureRandom();
-        List<Character> passwordChars = new ArrayList<>();
-
-        passwordChars.add(upper.charAt(random.nextInt(upper.length())));
-        passwordChars.add(lower.charAt(random.nextInt(lower.length())));
-        passwordChars.add(digits.charAt(random.nextInt(digits.length())));
-        passwordChars.add(special.charAt(random.nextInt(special.length())));
-
-        for (int i = passwordChars.size(); i < 13; i++) {
-            passwordChars.add(allChars.charAt(random.nextInt(allChars.length())));
-        }
-
-        Collections.shuffle(passwordChars, random);
-
-        StringBuilder password = new StringBuilder();
-        for (char c : passwordChars) {
-            password.append(c);
-        }
-
-        return password.toString();
     }
 }

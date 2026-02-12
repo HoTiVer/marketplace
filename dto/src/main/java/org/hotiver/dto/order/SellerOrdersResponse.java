@@ -1,6 +1,6 @@
 package org.hotiver.dto.order;
 
-import org.hotiver.common.OrderStatus;
+import org.hotiver.common.Enum.OrderStatus;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

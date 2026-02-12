@@ -3,10 +3,8 @@ package org.hotiver.dto.order;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.hotiver.common.OrderStatus;
 
 import java.sql.Date;
-import java.util.List;
 
 @AllArgsConstructor
 @Getter

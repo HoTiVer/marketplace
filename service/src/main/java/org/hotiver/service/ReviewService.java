@@ -1,6 +1,6 @@
 package org.hotiver.service;
 
-import org.hotiver.common.OrderStatus;
+import org.hotiver.common.Enum.OrderStatus;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Review;
 import org.hotiver.domain.Entity.Seller;

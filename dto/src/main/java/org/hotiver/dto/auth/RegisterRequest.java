@@ -1,33 +1,28 @@
-package org.hotiver.dto.user;
+package org.hotiver.dto.auth;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class UserAuthDto {
+public class RegisterRequest {
+    @Email
     @NotBlank(message = "Email is required")
+    //TODO @UniqueEmail
     String email;
 
+    //TODO @StrongPassword
     @NotBlank(message = "Password is required")
     String password;
 
+    @NotBlank(message = "Display name is required")
     String displayName;
 
-    public UserAuthDto() {
-
-    }
-
-    public UserAuthDto(String email, String password, String displayName) {
+    public RegisterRequest(String email, String password, String displayName) {
         this.email = email;
         this.password = password;
         this.displayName = displayName;
-    }
-
-    public UserAuthDto(String email, String password) {
-        this.email = email;
-        this.password = password;
     }
 }

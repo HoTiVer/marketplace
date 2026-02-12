@@ -1,4 +1,4 @@
-package org.hotiver.common;
+package org.hotiver.common.Enum;
 
 public enum SellerRegisterRequestStatus {
     ACTIVE,

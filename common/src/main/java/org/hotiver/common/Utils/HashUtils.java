@@ -1,4 +1,4 @@
-package Utils;
+package org.hotiver.common.Utils;
 
 
 import java.security.MessageDigest;

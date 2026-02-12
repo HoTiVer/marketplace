@@ -1,10 +1,9 @@
-package org.hotiver.api;
+package org.hotiver.api.Controller;
 
 import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.seller.SellerProductProjection;
-import org.hotiver.service.ImageService;
 import org.hotiver.service.ProductService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

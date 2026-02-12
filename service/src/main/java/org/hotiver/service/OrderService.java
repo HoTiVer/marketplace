@@ -2,7 +2,7 @@ package org.hotiver.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hotiver.common.OrderStatus;
+import org.hotiver.common.Enum.OrderStatus;
 import org.hotiver.domain.Entity.*;
 import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.order.*;

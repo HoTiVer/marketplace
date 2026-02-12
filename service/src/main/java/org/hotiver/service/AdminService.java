@@ -1,7 +1,7 @@
 package org.hotiver.service;
 
 import jakarta.transaction.Transactional;
-import org.hotiver.common.SellerRegisterRequestStatus;
+import org.hotiver.common.Enum.SellerRegisterRequestStatus;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;

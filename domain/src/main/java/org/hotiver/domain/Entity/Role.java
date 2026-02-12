@@ -2,7 +2,7 @@ package org.hotiver.domain.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hotiver.common.RoleType;
+import org.hotiver.common.Enum.RoleType;
 
 
 @Getter

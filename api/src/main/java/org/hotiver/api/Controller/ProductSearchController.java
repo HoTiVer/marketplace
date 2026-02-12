@@ -1,6 +1,5 @@
-package org.hotiver.api;
+package org.hotiver.api.Controller;
 
-import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.ProductProjection;
 import org.hotiver.service.ProductSearchService;
 import org.springframework.data.domain.Page;

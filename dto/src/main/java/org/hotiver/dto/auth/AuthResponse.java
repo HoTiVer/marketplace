@@ -8,10 +8,7 @@ import lombok.Setter;
 @Builder
 @Getter
 @Setter
-public class AuthDto {
-    private Boolean isSuccess;
-    private String message;
+public class AuthResponse {
     private String accessToken;
     private String refreshToken;
-    private String redirectUrl;
 }

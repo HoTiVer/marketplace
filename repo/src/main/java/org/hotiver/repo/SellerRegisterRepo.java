@@ -1,8 +1,7 @@
 package org.hotiver.repo;
 
-import org.hotiver.common.SellerRegisterRequestStatus;
+import org.hotiver.common.Enum.SellerRegisterRequestStatus;
 import org.hotiver.domain.Entity.SellerRegister;
-import org.hotiver.domain.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

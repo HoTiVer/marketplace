@@ -1,4 +1,4 @@
-package org.hotiver.api;
+package org.hotiver.api.Controller;
 
 import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.order.CreateOrderDto;

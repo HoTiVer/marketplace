@@ -1,11 +1,9 @@
-package org.hotiver.api;
+package org.hotiver.api.Controller;
 
-import org.hotiver.dto.order.UserOrderDto;
+import jakarta.validation.Valid;
 import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.dto.user.*;
-import org.hotiver.service.OrderService;
 import org.hotiver.service.UserService;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +31,7 @@ public class UserController {
     }
 
     @PutMapping("/personal-info/contacts")
-    public ResponseEntity<?> updateUserContacts(@RequestBody UserContactsDto userContactsDto) {
+    public ResponseEntity<?> updateUserContacts(@Valid @RequestBody UserContactsDto userContactsDto) {
         return userService.updateUserContacts(userContactsDto);
     }
 

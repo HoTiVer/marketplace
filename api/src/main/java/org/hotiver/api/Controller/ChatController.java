@@ -1,4 +1,4 @@
-package org.hotiver.api;
+package org.hotiver.api.Controller;
 
 import org.hotiver.dto.chat.ChatDto;
 import org.hotiver.dto.chat.SendMessageDto;

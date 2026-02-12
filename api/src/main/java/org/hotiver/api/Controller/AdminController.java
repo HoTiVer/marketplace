@@ -1,4 +1,4 @@
-package org.hotiver.api;
+package org.hotiver.api.Controller;
 
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.service.AdminService;

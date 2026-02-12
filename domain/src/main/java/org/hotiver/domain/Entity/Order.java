@@ -2,7 +2,7 @@ package org.hotiver.domain.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hotiver.common.OrderStatus;
+import org.hotiver.common.Enum.OrderStatus;
 
 import java.sql.Date;
 

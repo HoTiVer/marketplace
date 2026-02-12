@@ -1,9 +1,8 @@
-package org.hotiver.api;
+package org.hotiver.api.Controller;
 
 import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.service.CategoryService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
