@@ -26,37 +26,7 @@ public class CategoryService {
     }
 
     public List<CategoryDto> getCategories() {
-
-        if (redisService.hasKey(categoryKey)) {
-            String categoryJson = redisService.getValue(categoryKey);
-            try {
-                return objectMapper
-                        .readValue(categoryJson, new TypeReference<List<CategoryDto>>() {});
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        List<Category> categories = categoryRepo.findAllSortedByName();
-        List<CategoryDto> returnCategory = new ArrayList<>();
-
-        for (var category : categories) {
-            CategoryDto categoryDto = new CategoryDto();
-            categoryDto.setName(category.getName());
-            categoryDto.setId(category.getId());
-            returnCategory.add(categoryDto);
-
-        }
-
-        try {
-            String categoriesJson = objectMapper.writeValueAsString(returnCategory);
-            int minutes = 10;
-            redisService.saveValue(categoryKey, categoriesJson, minutes);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        return returnCategory;
+        return categoryRepo.findAllSortedByName();
     }
 
     public ResponseEntity<?> addCategory(CategoryDto categoryDto) {

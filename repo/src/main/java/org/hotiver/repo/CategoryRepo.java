@@ -11,8 +11,14 @@ import java.util.Optional;
 
 public interface CategoryRepo extends JpaRepository<Category, Long> {
 
-    @Query("SELECT c FROM category c WHERE c.name != 'empty' ORDER BY c.name ASC")
-    List<Category> findAllSortedByName();
+    @Query(value = """
+        SELECT
+                c.id as id,
+                c.name as name
+        FROM category c
+        WHERE c.name != 'empty'
+        ORDER BY c.name ASC""", nativeQuery = true)
+    List<CategoryDto> findAllSortedByName();
 
     Optional<Category> findByName(String categoryName);
 
