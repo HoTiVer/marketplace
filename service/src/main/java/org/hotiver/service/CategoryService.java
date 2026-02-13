@@ -1,15 +1,12 @@
 package org.hotiver.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.repo.CategoryRepo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+
 import java.util.List;
 
 @Service
@@ -17,7 +14,6 @@ public class CategoryService {
 
     private final CategoryRepo categoryRepo;
     private final RedisService redisService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final String categoryKey = "categories";
 
     public CategoryService(CategoryRepo categoryRepo, RedisService redisService) {

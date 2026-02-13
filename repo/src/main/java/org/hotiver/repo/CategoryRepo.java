@@ -17,7 +17,7 @@ public interface CategoryRepo extends JpaRepository<Category, Long> {
                 c.name as name
         FROM category c
         WHERE c.name != 'empty'
-        ORDER BY c.name ASC""", nativeQuery = true)
+        ORDER BY c.name""", nativeQuery = true)
     List<CategoryDto> findAllSortedByName();
 
     Optional<Category> findByName(String categoryName);
