@@ -4,16 +4,18 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
+import org.hotiver.dto.validation.RegisterRequest.DuplicatedEmailConstraint;
+import org.hotiver.dto.validation.RegisterRequest.StrongPassword;
 
 @Getter
 @Setter
 public class RegisterRequest {
     @Email
     @NotBlank(message = "Email is required")
-    //TODO @UniqueEmail
+    @DuplicatedEmailConstraint
     String email;
 
-    //TODO @StrongPassword
+    @StrongPassword
     @NotBlank(message = "Password is required")
     String password;
 

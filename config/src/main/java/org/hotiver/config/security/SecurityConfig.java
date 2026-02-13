@@ -1,11 +1,10 @@
-package org.hotiver.config.configuration;
+package org.hotiver.config.security;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.config.handler.OAuth2FailureHandler;
 import org.hotiver.config.handler.OAuth2SuccessHandler;
 import org.hotiver.config.service.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
@@ -22,12 +21,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -37,6 +30,15 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
+    private static final String[] AUTH_WHITELIST = {
+            "/api/v1/auth/**",
+            "/api/v1/home",
+            "/error",
+            "/favicon.ico",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+    };
 
 
     public SecurityConfig(CustomUserDetailsService userDetailsService, JwtFilter jwtFilter,
@@ -65,11 +67,9 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/home").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/cabinet/**").authenticated()
-                        .requestMatchers("/error", "/favicon.ico").permitAll()
+                        .requestMatchers(AUTH_WHITELIST).permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/cabinet/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

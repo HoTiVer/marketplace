@@ -1,4 +1,4 @@
-package org.hotiver.config.configuration;
+package org.hotiver.config.web;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
