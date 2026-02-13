@@ -74,7 +74,7 @@ CREATE TABLE seller(
 CREATE TABLE register_seller_request(
     id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
-    request_date DATE NOT NULL DEFAULT NOW(),
+    request_date TIMESTAMP NOT NULL DEFAULT NOW(),
     requested_nickname VARCHAR(20) NOT NULL,
     display_name VARCHAR(40) NOT NULL,
     profile_description VARCHAR(400) NOT NULL,

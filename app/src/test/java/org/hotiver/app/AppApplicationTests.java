@@ -10,13 +10,20 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest()
+import java.util.TimeZone;
+
+@SpringBootTest
 @ActiveProfiles("test")
 @Testcontainers
 class AppApplicationTests {
 
+	static {
+		System.setProperty("user.timezone", "UTC");
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+	}
+
 	@Container
-	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
 			.withDatabaseName("testdb")
 			.withUsername("test")
 			.withPassword("test");
@@ -32,5 +39,4 @@ class AppApplicationTests {
 	void contextLoads() {
 
 	}
-
 }
