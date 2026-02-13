@@ -25,13 +25,16 @@ public class AuthController {
     }
 
     @Operation(
-            description = "Any response contains three parameters: success (true or false), message, and token",
+            description = """
+                    Success response should contain two tokens,
+                     if some error has happened then you should expect error json""",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "User registered successfully",
+                    @ApiResponse(responseCode = "200", description = "Registered successfully",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(
-                                            example = "{ \"success\": true, \"message\": \"some msg\",  \"token\": \"token\"}"
+                                            example = "{ \"accessToken\": token," +
+                                                    " \"refreshToken\": \"token\"}"
                                     )
                             ))
             }
@@ -42,13 +45,16 @@ public class AuthController {
     }
 
     @Operation(
-            description = "Any response contains three parameters: success (true or false), message, and token",
+            description = """
+                    Success response should contain two tokens,
+                     if some error has happened then you should expect error json""",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Logged in successfully",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(
-                                            example = "{ \"success\": true, \"message\": \"some msg\",  \"token\": \"token\"}"
+                                            example = "{ \"accessToken\": token," +
+                                                    " \"refreshToken\": \"token\"}"
                                     )
                             ))
             }
