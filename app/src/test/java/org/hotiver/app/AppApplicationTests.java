@@ -1,14 +1,20 @@
 package org.hotiver.app;
 
+import org.hotiver.config.kafka.KafkaProducer;
+import org.hotiver.config.redis.RedisStartupChecker;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.util.TimeZone;
 
@@ -21,6 +27,12 @@ class AppApplicationTests {
 		System.setProperty("user.timezone", "UTC");
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}
+
+	@MockitoBean
+	private RedisStartupChecker redisStartupChecker;
+
+	@MockitoBean
+	private KafkaProducer kafkaProducer;
 
 	@Container
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
