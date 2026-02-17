@@ -1,5 +1,6 @@
 package org.hotiver.service;
 
+import org.hotiver.common.Exception.NoAuthorizationException;
 import org.hotiver.common.Utils.HashUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +11,7 @@ import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
+import org.hotiver.dto.auth.RefreshTokenResponse;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.jwt.JwtTokensDto;
 import org.hotiver.dto.user.CodeVerifyDto;
@@ -153,36 +155,30 @@ public class AuthService {
         return ResponseEntity.badRequest().build();
     }
 
-    public ResponseEntity<?> refresh(String authHeader) {
+    public ResponseEntity<RefreshTokenResponse> refresh(String authHeader) {
         String refreshToken = authHeader.replace("Bearer ", "");
 
         if (!jwtService.isTokenValid(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
+            throw new NoAuthorizationException("Refresh token is invalid");
         }
 
         if (!jwtService.isRefreshToken(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Expected refresh token");
+            throw new NoAuthorizationException("Expected refresh token");
         }
 
         String username = jwtService.extractUsername(refreshToken);
         Optional<User> user = userRepo.findByEmail(username);
 
-        if (user.isEmpty()){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         String storedRefresh = redisService
                 .getValue(RedisKeyUtils.generateRedisRefreshTokenKey(user.get().getId()));
-        if (storedRefresh == null || !storedRefresh.equals(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("Message","Refresh token mismatch"));
+        if (!storedRefresh.equals(refreshToken)) {
+            throw new NoAuthorizationException("Refresh token mismatch");
         }
 
         SecurityUser securityUser = new SecurityUser(user.get());
 
         String newAccessToken = jwtService.generateAccessToken(securityUser);
-
-        return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
+        return ResponseEntity.ok().body(new RefreshTokenResponse(newAccessToken));
     }
 
     public ResponseEntity<?> logout() {

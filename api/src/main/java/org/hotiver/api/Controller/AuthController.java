@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
+import org.hotiver.dto.auth.RefreshTokenResponse;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserInfoDto;
@@ -70,7 +71,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<RefreshTokenResponse> refresh(
+            @RequestHeader("Authorization") String authHeader) {
         return authService.refresh(authHeader);
     }
 

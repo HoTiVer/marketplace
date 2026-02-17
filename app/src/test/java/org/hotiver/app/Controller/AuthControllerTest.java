@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.hotiver.api.Controller.AuthController;
+import org.hotiver.common.Exception.NoAuthorizationException;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.config.handler.OAuth2FailureHandler;
 import org.hotiver.config.handler.OAuth2SuccessHandler;
@@ -14,6 +15,7 @@ import org.hotiver.config.security.SecurityConfig;
 import org.hotiver.config.service.CustomUserDetailsService;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
+import org.hotiver.dto.auth.RefreshTokenResponse;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.validation.RegisterRequest.EmailUniqueChecker;
 import org.hotiver.repo.RoleRepo;
@@ -236,38 +238,58 @@ public class AuthControllerTest {
 
     @Test
     public void success_refresh_test() throws Exception {
-//        String refreshToken = "refreshToken";
-//        Map<String, String> refreshResponse =
-//                new HashMap<>(Map.of("accessToken", "accessToken"));
-//
-//
-//        when(jwtService.isTokenValid(refreshToken)).thenReturn(true);
-//        when(jwtService.isRefreshToken(refreshToken)).thenReturn(true);
-//
-//
-////        when(authService.refresh(any(String.class)))
-////                .thenReturn();
-//
-//
-//        mockMvc.perform(post("/api/v1/auth/refresh"))
-//                .andDo(print())
-//                .andExpect(status().is(200))
-//                .andExpect(jsonPath("$.accessToken")
-//                        .value("accessToken"));
+        String refreshToken = "refreshToken";
+        ResponseEntity<RefreshTokenResponse> refreshTokenResponse = ResponseEntity.ok(
+                new RefreshTokenResponse("accessToken"));
+
+
+        when(jwtService.isTokenValid(refreshToken)).thenReturn(true);
+        when(jwtService.isRefreshToken(refreshToken)).thenReturn(true);
+
+
+        when(authService.refresh(any(String.class)))
+                .thenReturn(refreshTokenResponse);
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .header("Authorization", "Bearer " + refreshToken))
+                .andDo(print())
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$.accessToken")
+                        .value("accessToken"));
     }
+
     @Test
     public void invalid_refresh_token_test() throws Exception {
+        String refreshToken = "refreshToken";
 
+        when(jwtService.isTokenValid(refreshToken)).thenReturn(false);
+
+        when(authService.refresh(any(String.class)))
+                .thenThrow(new NoAuthorizationException("Refresh token is invalid"));
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .header("Authorization", "Bearer " + refreshToken))
+                .andDo(print())
+                .andExpect(status().is(401))
+                .andExpect(jsonPath("$.message")
+                        .value("Refresh token is invalid"));
     }
 
     @Test
-    public void success_logout_test() throws Exception {
+    public void access_token_instead_of_refresh_token_test() throws Exception {
+        String refreshToken = "accessToken";
 
+        when(jwtService.isTokenValid(refreshToken)).thenReturn(true);
+        when(jwtService.isRefreshToken(refreshToken)).thenReturn(false);
+
+        when(authService.refresh(any(String.class)))
+                .thenThrow(new NoAuthorizationException("Expected refresh token"));
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .header("Authorization", "Bearer " + refreshToken))
+                .andDo(print())
+                .andExpect(status().is(401))
+                .andExpect(jsonPath("$.message")
+                        .value("Expected refresh token"));
     }
-
-    @Test
-    public void invalid_logout_test() throws Exception {
-
-    }
-
 }
