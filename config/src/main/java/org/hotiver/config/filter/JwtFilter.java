@@ -30,7 +30,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    public void doFilterInternal(
+    protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
