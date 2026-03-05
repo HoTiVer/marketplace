@@ -1,9 +1,8 @@
 package org.hotiver.app.Controller;
 
 
-
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.api.Controller.AuthController;
 import org.hotiver.common.Exception.NoAuthorizationException;
 import org.hotiver.config.filter.JwtFilter;
@@ -15,17 +14,19 @@ import org.hotiver.dto.validation.RegisterRequest.EmailUniqueChecker;
 import org.hotiver.repo.UserRepo;
 import org.hotiver.service.AuthService;
 import org.hotiver.service.JwtService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -57,6 +58,15 @@ public class AuthControllerTest {
     @MockitoBean
     private EmailUniqueChecker emailUniqueChecker;
 
+    private static AuthResponse authResponse;
+
+    @BeforeAll
+    public static void setup() {
+        authResponse = new AuthResponse(
+                "accessToken",
+                "refreshToken");
+    }
+
     @Test
     public void success_register_test() throws Exception {
         RegisterRequest registerRequest = new RegisterRequest(
@@ -64,15 +74,10 @@ public class AuthControllerTest {
                 "password",
                 "test");
 
-        ResponseEntity<AuthResponse> authResponse = ResponseEntity.ok()
-                .body(new AuthResponse(
-                "accessToken",
-                "refreshToken"));
+        given(emailUniqueChecker.isUnique(any())).willReturn(true);
 
-        when(emailUniqueChecker.isUnique(any())).thenReturn(true);
-
-        when(authService.register(any(RegisterRequest.class)))
-                .thenReturn(authResponse);
+        given(authService.register(any(RegisterRequest.class)))
+                .willReturn(authResponse);
 
         mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -81,6 +86,8 @@ public class AuthControllerTest {
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$.accessToken").value("accessToken"))
                 .andExpect(jsonPath("$.refreshToken").value("refreshToken"));
+
+        verify(authService, times(1)).register(any(RegisterRequest.class));
     }
 
     @Test
@@ -90,21 +97,18 @@ public class AuthControllerTest {
                 "password",
                 "test");
 
-        ResponseEntity<AuthResponse> authResponse = ResponseEntity.status(422)
-                .body(new AuthResponse(
-                        "accessToken",
-                        "refreshToken"));
+        given(emailUniqueChecker.isUnique(any())).willReturn(false);
 
-        when(emailUniqueChecker.isUnique(any())).thenReturn(false);
-
-        when(authService.register(any(RegisterRequest.class)))
-                .thenReturn(authResponse);
+        given(authService.register(any(RegisterRequest.class)))
+                .willReturn(authResponse);
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(registerRequest)))
                 .andDo(print())
-                .andExpect(status().is(422));
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(authService, times(0)).register(any(RegisterRequest.class));
     }
 
     @Test
@@ -114,21 +118,18 @@ public class AuthControllerTest {
                 "password",
                 "test");
 
-        ResponseEntity<AuthResponse> authResponse = ResponseEntity.status(422)
-                .body(new AuthResponse(
-                        "accessToken",
-                        "refreshToken"));
+        given(emailUniqueChecker.isUnique(any())).willReturn(true);
 
-        when(emailUniqueChecker.isUnique(any())).thenReturn(true);
-
-        when(authService.register(any(RegisterRequest.class)))
-                .thenReturn(authResponse);
+        given(authService.register(any(RegisterRequest.class)))
+                .willReturn(authResponse);
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(registerRequest)))
                 .andDo(print())
                 .andExpect(status().is(422));
+
+        verify(authService, times(0)).register(any(RegisterRequest.class));
     }
 
     @Test
@@ -137,13 +138,8 @@ public class AuthControllerTest {
                 "test@example.com",
                 "password");
 
-        ResponseEntity<AuthResponse> authResponse = ResponseEntity.status(200)
-                .body(new AuthResponse(
-                        "accessToken",
-                        "refreshToken"));
-
-        when(authService.login(any(LoginRequest.class)))
-                .thenReturn(authResponse);
+        given(authService.login(any(LoginRequest.class)))
+                .willReturn(authResponse);
 
         mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -154,6 +150,8 @@ public class AuthControllerTest {
                         .value("accessToken"))
                 .andExpect(jsonPath("$.refreshToken")
                         .value("refreshToken"));
+
+        verify(authService, times(1)).login(any(LoginRequest.class));
     }
 
     @Test
@@ -162,17 +160,16 @@ public class AuthControllerTest {
                 "test@example.com",
                 "password");
 
-        ResponseEntity<AuthResponse> authResponse = ResponseEntity.badRequest()
-                .build();
-
-        when(authService.login(any(LoginRequest.class)))
-                .thenReturn(authResponse);
+        given(authService.login(any(LoginRequest.class)))
+                .willThrow(new BadCredentialsException("Invalid credentials"));
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(loginRequest)))
                 .andDo(print())
-                .andExpect(status().is(400));
+                .andExpect(status().is(401));
+
+        verify(authService, times(1)).login(any(LoginRequest.class));
     }
 
     @Test
@@ -181,17 +178,16 @@ public class AuthControllerTest {
                 "test@example.com",
                 "password");
 
-        ResponseEntity<AuthResponse> authResponse = ResponseEntity.badRequest()
-                .build();
-
-        when(authService.login(any(LoginRequest.class)))
-                .thenReturn(authResponse);
+        given(authService.login(any(LoginRequest.class)))
+                .willThrow(new EntityNotFoundException("User not found"));
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(loginRequest)))
                 .andDo(print())
-                .andExpect(status().is(400));
+                .andExpect(status().isNotFound());
+
+        verify(authService, times(1)).login(any(LoginRequest.class));
     }
 
     @Test
@@ -200,24 +196,20 @@ public class AuthControllerTest {
                 "test",
                 "password");
 
-        ResponseEntity<AuthResponse> authResponse = ResponseEntity.status(422)
-                .build();
-
-        when(authService.login(any(LoginRequest.class)))
-                .thenReturn(authResponse);
-
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(loginRequest)))
                 .andDo(print())
                 .andExpect(status().is(422));
+
+        verify(authService, times(0)).login(any(LoginRequest.class));
     }
 
     @Test
     public void success_refresh_test() throws Exception {
         String refreshToken = "refreshToken";
-        ResponseEntity<RefreshTokenResponse> refreshTokenResponse = ResponseEntity.ok(
-                new RefreshTokenResponse("accessToken"));
+        RefreshTokenResponse refreshTokenResponse =
+                new RefreshTokenResponse("accessToken");
 
 
         when(jwtService.isTokenValid(refreshToken)).thenReturn(true);
@@ -233,6 +225,8 @@ public class AuthControllerTest {
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$.accessToken")
                         .value("accessToken"));
+
+        verify(authService, times(1)).refresh(any(String.class));
     }
 
     @Test
@@ -250,6 +244,8 @@ public class AuthControllerTest {
                 .andExpect(status().is(401))
                 .andExpect(jsonPath("$.message")
                         .value("Refresh token is invalid"));
+
+        verify(authService, times(1)).refresh(any(String.class));
     }
 
     @Test
@@ -268,5 +264,7 @@ public class AuthControllerTest {
                 .andExpect(status().is(401))
                 .andExpect(jsonPath("$.message")
                         .value("Expected refresh token"));
+
+        verify(authService, times(1)).refresh(any(String.class));
     }
 }

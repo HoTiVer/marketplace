@@ -12,6 +12,7 @@ import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.service.AuthService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,8 +42,10 @@ public class AuthController {
             }
     )
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest registerRequest){
-        return authService.register(registerRequest);
+    public ResponseEntity<AuthResponse> register(
+            @Valid @RequestBody RegisterRequest registerRequest) {
+
+        return ResponseEntity.ok(authService.register(registerRequest));
     }
 
     @Operation(
@@ -62,27 +65,33 @@ public class AuthController {
     )
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest){
-        return authService.login(loginRequest);
+        return ResponseEntity.ok().body(authService.login(loginRequest));
     }
 
     @PostMapping("/login/verify")
-    public ResponseEntity<?> verifyCode(@RequestBody CodeVerifyDto codeVerifyDto){
-        return authService.verifyCode(codeVerifyDto);
+    public ResponseEntity<AuthResponse> verifyCode(@RequestBody CodeVerifyDto codeVerifyDto){
+        AuthResponse response = authService.verifyCode(codeVerifyDto);
+        if (response != null) {
+            return ResponseEntity.ok().body(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<RefreshTokenResponse> refresh(
             @RequestHeader("Authorization") String authHeader) {
-        return authService.refresh(authHeader);
+        return ResponseEntity.ok().body(authService.refresh(authHeader));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(){
-        return authService.logout();
+        authService.logout();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
     public ResponseEntity<UserInfoDto> getUserInfoForFrontend() {
-        return authService.getUserInfoForFrontend();
+        return ResponseEntity.ok().body(authService.getUserInfoForFrontend());
     }
 }

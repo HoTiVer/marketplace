@@ -1,9 +1,9 @@
 package org.hotiver.service;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.hotiver.common.Exception.EntityAlreadyExistsException;
+import org.hotiver.common.Exception.InvalidCredentialsException;
 import org.hotiver.common.Exception.NoAuthorizationException;
-import org.hotiver.common.Utils.HashUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hotiver.common.Utils.PasswordUtils;
 import org.hotiver.common.Utils.RedisKeyUtils;
 import org.hotiver.domain.Entity.Role;
@@ -18,17 +18,13 @@ import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.security.SecureRandom;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
@@ -44,11 +40,10 @@ public class AuthService {
     private final RedisService redisService;
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
-    private final ObjectMapper mapper;
 
     public AuthService(JwtService jwtService, EmailService emailService,
                        RedisService redisService, UserRepo userRepo,
-                       RoleRepo roleRepo, ObjectMapper mapper) {
+                       RoleRepo roleRepo) {
         timeToSaveJwtRefresh = TimeUnit.MILLISECONDS
                 .toMinutes(jwtService.getJwtRefreshExpiration());
         this.emailService = emailService;
@@ -56,14 +51,14 @@ public class AuthService {
         this.jwtService = jwtService;
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
-        this.mapper = mapper;
     }
 
     @Transactional
-    public ResponseEntity<AuthResponse> register(RegisterRequest registerRequest) {
+    public AuthResponse register(RegisterRequest registerRequest) {
         if (userRepo.existsUserByEmail(registerRequest.getEmail())){
-            return ResponseEntity.badRequest()
-                    .build();
+            throw new EntityAlreadyExistsException("User with email"
+                    + registerRequest.getEmail()
+                    + "already exists");
         }
 
         User user = createNewDefaultUser(
@@ -71,45 +66,36 @@ public class AuthService {
                 registerRequest.getPassword(),
                 registerRequest.getDisplayName());
 
-        try {
-            userRepo.save(user);
 
-            JwtTokensDto jwtTokensDto = generateJwtTokens(user);
+        userRepo.save(user);
 
-            String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
-            redisService.saveValue(key, jwtTokensDto.getRefreshToken(), timeToSaveJwtRefresh);
+        JwtTokensDto jwtTokensDto = generateJwtTokens(user);
 
-            return ResponseEntity.ok()
-                    .body(AuthResponse.builder()
-                            .refreshToken(jwtTokensDto.getRefreshToken())
-                            .accessToken(jwtTokensDto.getAccessToken())
-                            .build());
-        }
-        catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .build();
-        }
+        String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
+        redisService.saveValue(key, jwtTokensDto.getRefreshToken(), timeToSaveJwtRefresh);
+
+        return AuthResponse.builder()
+                .refreshToken(jwtTokensDto.getRefreshToken())
+                .accessToken(jwtTokensDto.getAccessToken())
+                .build();
     }
 
-    public ResponseEntity<AuthResponse> login(LoginRequest loginRequest) {
+    public AuthResponse login(LoginRequest loginRequest) {
         Optional<User> user = userRepo.findByEmail(loginRequest.getEmail());
         if (user.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .build();
+            throw new EntityNotFoundException("User "
+             + loginRequest.getEmail() +  " is not found");
         }
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.get().getPassword())) {
-            return ResponseEntity.badRequest()
-                    .build();
+            throw new InvalidCredentialsException("Invalid credentials");
         }
 
-        if (user.get().getIsTwoFactorEnable()){
-            sendVerificationCode(loginRequest.getEmail());
-            return ResponseEntity.ok()
-                    .build();
-        }
+//        if (user.get().getIsTwoFactorEnable()){
+//            sendVerificationCode(loginRequest.getEmail());
+//        }
 
         JwtTokensDto jwtTokensDto = generateJwtTokens(user.get());
 
@@ -118,20 +104,19 @@ public class AuthService {
                 jwtTokensDto.getRefreshToken(),
                 timeToSaveJwtRefresh);
 
-        return ResponseEntity.ok()
-                .body(AuthResponse.builder()
+        return AuthResponse.builder()
                         .accessToken(jwtTokensDto.getAccessToken())
                         .refreshToken(jwtTokensDto.getRefreshToken())
-                        .build());
+                        .build();
     }
 
     @Transactional
-    public ResponseEntity<AuthResponse> verifyCode(CodeVerifyDto codeVerifyDto) {
+    public AuthResponse verifyCode(CodeVerifyDto codeVerifyDto) {
         String key = RedisKeyUtils.generateRedisTwoFactorKey(codeVerifyDto.getEmail());
         String storedCode = redisService.getValue(key);
 
         if (storedCode == null) {
-            return ResponseEntity.badRequest().build();
+            return null;
         }
 
         if (storedCode.equals(codeVerifyDto.getCode())) {
@@ -139,7 +124,7 @@ public class AuthService {
 
             var opUser = userRepo.findByEmail(codeVerifyDto.getEmail());
             if (opUser.isEmpty())
-                return ResponseEntity.badRequest().build();
+                return null;
 
 
             JwtTokensDto jwtTokensDto = generateJwtTokens(opUser.get());
@@ -148,14 +133,13 @@ public class AuthService {
             redisService.saveValue(refreshTokenKey, jwtTokensDto.getRefreshToken(),
                     TimeUnit.MILLISECONDS.toMinutes(timeToSaveJwtRefresh));
 
-            return ResponseEntity.ok()
-                    .build();
+            return new AuthResponse(refreshTokenKey, jwtTokensDto.getRefreshToken());
         }
 
-        return ResponseEntity.badRequest().build();
+        return null;
     }
 
-    public ResponseEntity<RefreshTokenResponse> refresh(String authHeader) {
+    public RefreshTokenResponse refresh(String authHeader) {
         String refreshToken = authHeader.replace("Bearer ", "");
 
         if (!jwtService.isTokenValid(refreshToken)) {
@@ -178,10 +162,10 @@ public class AuthService {
         SecurityUser securityUser = new SecurityUser(user.get());
 
         String newAccessToken = jwtService.generateAccessToken(securityUser);
-        return ResponseEntity.ok().body(new RefreshTokenResponse(newAccessToken));
+        return new RefreshTokenResponse(newAccessToken);
     }
 
-    public ResponseEntity<?> logout() {
+    public void logout() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
@@ -189,8 +173,6 @@ public class AuthService {
 
         String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
         redisService.deleteValue(key);
-
-        return ResponseEntity.ok().build();
     }
 
     @Transactional
@@ -201,8 +183,8 @@ public class AuthService {
             String password = PasswordUtils.generatePassword(13);
             var response = register(new RegisterRequest(email, password, email));
 
-            return new JwtTokensDto(response.getBody().getRefreshToken(),
-                    response.getBody().getAccessToken());
+            return new JwtTokensDto(response.getRefreshToken(),
+                    response.getAccessToken());
         }
         else {
             user = opUser.get();
@@ -216,24 +198,12 @@ public class AuthService {
         return tokens;
     }
 
-    public ResponseEntity<UserInfoDto> getUserInfoForFrontend() {
+    public UserInfoDto getUserInfoForFrontend() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        String redisKey = "authData:" + user.getId();
-
-
-        if (redisService.hasKey(redisKey)) {
-            try {
-                String cached = redisService.getValue(redisKey);
-                UserInfoDto cachedDto = mapper.readValue(cached, UserInfoDto.class);
-                return ResponseEntity.ok(cachedDto);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-        }
 
         UserInfoDto dto = new UserInfoDto();
         dto.setRoles(
@@ -241,14 +211,7 @@ public class AuthService {
                         .map(role -> role.getName().toString())
                         .toList()
         );
-//        try {
-//            String json = mapper.writeValueAsString(dto);
-//            redisService.saveValue(redisKey, json, 10);
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//        }
-
-        return ResponseEntity.ok(dto);
+        return dto;
     }
 
     private User createNewDefaultUser(String email, String password, String displayName) {
