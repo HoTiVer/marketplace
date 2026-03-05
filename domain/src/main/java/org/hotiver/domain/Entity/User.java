@@ -45,7 +45,7 @@ public class User {
 
     private Date registerDate;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_wishes",
             joinColumns = @JoinColumn(name = "user_id"),

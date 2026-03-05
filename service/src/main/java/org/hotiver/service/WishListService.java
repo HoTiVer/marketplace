@@ -1,18 +1,15 @@
 package org.hotiver.service;
 
-import com.fasterxml.jackson.databind.introspect.TypeResolutionContext;
+import org.hotiver.common.Exception.ResourceNotFoundException;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,44 +24,16 @@ public class WishListService {
         this.productRepo = productRepo;
     }
 
-    public ResponseEntity<List<ListProductDto>> getUserWishList() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+    public List<ListProductDto> getUserWishList() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        User user = userRepo.findByEmail(email).get();
-
-        var userWishList = user.getWishlist();
-
-        if (userWishList.isEmpty()){
-            return ResponseEntity.ok().body(Collections.emptyList());
-        }
-
-        List<ListProductDto> wishListProducts = new ArrayList<>();
-
-        ListProductDto listProductDto;
-        for (var product : userWishList){
-            listProductDto = new ListProductDto(
-                    product.getId(),
-                    product.getName(),
-                    product.getPrice(),
-                    null
-            );
-            wishListProducts.add(listProductDto);
-        }
-
-        return ResponseEntity.ok().body(wishListProducts);
+        return userRepo.findUserProductWishList(email);
     }
 
     public void removeProductFromWishList(Long productId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Optional<User> opUser = userRepo.findByEmail(email);
-        if (opUser.isEmpty()){
-            return;
-        }
-
-        User user = opUser.get();
+        User user = userRepo.findByEmail(email).get();
         Optional<Product> product = productRepo.findById(productId);
 
         if (product.isPresent()) {
@@ -74,19 +43,14 @@ public class WishListService {
     }
 
     public void addProductInWishList(Long productId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Optional<User> opUser = userRepo.findByEmail(email);
-        if (opUser.isEmpty()){
-            return;
-        }
+        User user = userRepo.findByEmail(email).get();
 
-        User user = opUser.get();
         Optional<Product> product = productRepo.findById(productId);
 
         if (product.isEmpty()){
-            return;
+            throw new ResourceNotFoundException("Product not found");
         }
         if (user.getWishlist().contains(product.get())){
             return;

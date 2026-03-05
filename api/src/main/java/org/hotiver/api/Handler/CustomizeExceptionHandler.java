@@ -1,10 +1,7 @@
 package org.hotiver.api.Handler;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.hotiver.common.Exception.EntityAlreadyExistsException;
-import org.hotiver.common.Exception.ErrorResource;
-import org.hotiver.common.Exception.FieldErrorResource;
-import org.hotiver.common.Exception.NoAuthorizationException;
+import org.hotiver.common.Exception.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -20,8 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.http.HttpStatus.*;
 
 @RestControllerAdvice
 public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
@@ -86,6 +82,18 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         return ResponseEntity.status(UNAUTHORIZED).body(
+                new HashMap<String, Object>() {{
+                    put("message", e.getMessage());
+                }}
+        );
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleResourceNotFoundException(
+            ResourceNotFoundException e,
+            WebRequest request
+    ) {
+        return ResponseEntity.status(NOT_FOUND).body(
                 new HashMap<String, Object>() {{
                     put("message", e.getMessage());
                 }}

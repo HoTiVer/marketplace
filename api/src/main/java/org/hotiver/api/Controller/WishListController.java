@@ -3,12 +3,14 @@ package org.hotiver.api.Controller;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.service.WishListService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@PreAuthorize("isAuthenticated()")
 public class WishListController {
 
     private final WishListService wishListService;
@@ -19,7 +21,7 @@ public class WishListController {
 
     @GetMapping("/wishlist")
     public ResponseEntity<List<ListProductDto>> getPersonalWishList(){
-        return wishListService.getUserWishList();
+        return ResponseEntity.ok().body(wishListService.getUserWishList());
     }
 
     @DeleteMapping("/wishlist/{productId}")
