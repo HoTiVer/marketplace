@@ -25,17 +25,21 @@ public class CartController {
     }
 
     @PostMapping("/{productId}")
-    public ResponseEntity<?> addProductToCart(@PathVariable Long productId) {
-        return cartService.addProductToCart(productId);
+    public ResponseEntity addProductToCart(@PathVariable Long productId) {
+        cartService.addProductToCart(productId);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{productId}")
-    public void deleteProductFromCart(@PathVariable Long productId) {
+    public ResponseEntity deleteProductFromCart(@PathVariable Long productId) {
         cartService.deleteProductFromCart(productId);
+        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/{productId}")
-    public void updateProductCount(@PathVariable Long productId, @RequestParam Integer count) {
+    public ResponseEntity updateProductCount(@PathVariable Long productId,
+                                   @RequestParam Integer count) {
         cartService.updateProductCount(productId, count);
+        return ResponseEntity.ok().build();
     }
 }

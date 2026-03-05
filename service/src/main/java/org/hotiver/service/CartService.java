@@ -1,5 +1,6 @@
 package org.hotiver.service;
 
+import org.hotiver.common.Exception.ResourceNotFoundException;
 import org.hotiver.domain.Entity.CartItem;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.User;
@@ -8,11 +9,10 @@ import org.hotiver.dto.cart.CartItemDto;
 import org.hotiver.repo.CartItemRepo;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -31,16 +31,14 @@ public class CartService {
     }
 
     public List<CartItemDto> getUserCart() {
-        var context = SecurityContextHolder.getContext();
-        String email = context.getAuthentication().getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepo.findByEmail(email).get();
 
-        return  cartItemRepo.findByUserId(user.getId());
+        return cartItemRepo.findByUserId(user.getId());
     }
 
-    public ResponseEntity<?> addProductToCart(Long productId) {
-        var context = SecurityContextHolder.getContext();
-        String email = context.getAuthentication().getName();
+    public void addProductToCart(Long productId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Optional<Product> product = productRepo.findById(productId);
         if (product.isPresent()) {
@@ -58,14 +56,14 @@ public class CartService {
 
             user.getCart().add(cartItem);
             userRepo.save(user);
-            return ResponseEntity.ok().build();
         }
-        return ResponseEntity.badRequest().build();
+        else {
+            throw new ResourceNotFoundException("Product not found");
+        }
     }
 
     public void deleteProductFromCart(Long productId) {
-        var context = SecurityContextHolder.getContext();
-        String email = context.getAuthentication().getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Optional<Product> product = productRepo.findById(productId);
         if (product.isPresent()) {
