@@ -1,53 +1,30 @@
 package org.hotiver.app.Controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.hotiver.api.Controller.AuthController;
 import org.hotiver.common.Exception.NoAuthorizationException;
 import org.hotiver.config.filter.JwtFilter;
-import org.hotiver.config.handler.OAuth2FailureHandler;
-import org.hotiver.config.handler.OAuth2SuccessHandler;
-import org.hotiver.config.security.SecurityConfig;
-import org.hotiver.config.service.CustomUserDetailsService;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
 import org.hotiver.dto.auth.RefreshTokenResponse;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.validation.RegisterRequest.EmailUniqueChecker;
-import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
 import org.hotiver.service.AuthService;
-import org.hotiver.service.EmailService;
 import org.hotiver.service.JwtService;
-import org.hotiver.service.RedisService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;

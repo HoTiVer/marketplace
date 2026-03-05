@@ -1,9 +1,10 @@
 package org.hotiver.service;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.hotiver.common.Exception.EntityAlreadyExistsException;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.repo.CategoryRepo;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 
@@ -13,56 +14,45 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepo categoryRepo;
-    private final RedisService redisService;
-    private final String categoryKey = "categories";
 
-    public CategoryService(CategoryRepo categoryRepo, RedisService redisService) {
+    public CategoryService(CategoryRepo categoryRepo) {
         this.categoryRepo = categoryRepo;
-        this.redisService = redisService;
     }
 
     public List<CategoryDto> getCategories() {
         return categoryRepo.findAllSortedByName();
     }
 
-    public ResponseEntity<?> addCategory(CategoryDto categoryDto) {
-        String categoryName = categoryDto.getName();
-        if (categoryName == null) {
-            return ResponseEntity.badRequest().build();
+    public void addCategory(CategoryDto categoryDto) {
+        if (categoryRepo.existsByName(categoryDto.getName())) {
+            throw new EntityAlreadyExistsException("Category with name "
+                    + categoryDto.getName() + " already exists");
         }
 
-        Category category = new Category();
-        category.setName(categoryName);
+        Category category = Category.builder()
+                    .name(categoryDto.getName())
+                    .build();
 
-        try {
-            categoryRepo.save(category);
-            redisService.deleteValue(categoryKey);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        categoryRepo.save(category);
     }
 
     public void deleteCategory(Long id) {
+        if (!categoryRepo.existsById(id)) {
+            throw new EntityNotFoundException("Category with id " + id + " not found");
+        }
         categoryRepo.deleteById(id);
-        redisService.deleteValue(categoryKey);
+
     }
 
-    public ResponseEntity<?> editCategory(Long id, CategoryDto categoryDto) {
+    public void editCategory(Long id, CategoryDto categoryDto) {
         var category = categoryRepo.findById(id);
 
         if (category.isEmpty()){
-            return ResponseEntity.badRequest().build();
+            throw new EntityNotFoundException("Category with id " + id + " not found");
         }
 
         var editedCategory = category.get();
         editedCategory.setName(categoryDto.getName());
-        try {
-            categoryRepo.save(editedCategory);
-            redisService.deleteValue(categoryKey);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        categoryRepo.save(editedCategory);
     }
 }

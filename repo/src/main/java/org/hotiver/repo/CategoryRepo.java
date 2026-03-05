@@ -1,6 +1,7 @@
 package org.hotiver.repo;
 
 
+import jakarta.validation.constraints.NotEmpty;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.dto.category.CategoryDto;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -30,4 +31,6 @@ public interface CategoryRepo extends JpaRepository<Category, Long> {
         WHERE c.name != 'empty'
         """, nativeQuery = true)
     List<CategoryDto> findCategoryAndConvertToDto();
+
+    boolean existsByName(@NotEmpty(message = "category name cannot be empty") String name);
 }

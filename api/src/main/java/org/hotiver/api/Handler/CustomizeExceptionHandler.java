@@ -1,5 +1,7 @@
 package org.hotiver.api.Handler;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.hotiver.common.Exception.EntityAlreadyExistsException;
 import org.hotiver.common.Exception.ErrorResource;
 import org.hotiver.common.Exception.FieldErrorResource;
 import org.hotiver.common.Exception.NoAuthorizationException;
@@ -53,4 +55,28 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
             }}
         );
     }
+
+    // 409
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<Object> handleEntityAlreadyExistsException(
+            EntityAlreadyExistsException e,
+            WebRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new HashMap<String, Object>() {{
+                    put("message", e.getMessage());
+                }}
+        );
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Object> handleEntityNotFoundException(
+            EntityNotFoundException e,
+            WebRequest request){
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                new HashMap<String, Object>() {{
+                    put("message", e.getMessage());
+                }}
+        );
+    }
+
 }
