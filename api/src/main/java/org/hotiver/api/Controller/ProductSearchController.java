@@ -22,7 +22,8 @@ public class ProductSearchController {
             @RequestParam String searchTerm,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return productSearchService.productSearchByKeyWords(searchTerm, page, size);
+        return ResponseEntity.ok().body(
+                productSearchService.productSearchByKeyWords(searchTerm, page, size));
     }
 
     @GetMapping("/product/category/{category}")
@@ -30,6 +31,7 @@ public class ProductSearchController {
             @PathVariable String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return productSearchService.productSearchByCategory(category, page, size);
+        return ResponseEntity.ok().body(
+                productSearchService.productSearchByCategory(category, page, size));
     }
 }

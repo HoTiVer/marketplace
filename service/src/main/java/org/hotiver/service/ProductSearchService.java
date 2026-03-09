@@ -3,6 +3,7 @@ package org.hotiver.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.ProductProjection;
@@ -13,7 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -29,18 +29,17 @@ public class ProductSearchService {
         this.categoryRepo = categoryRepo;
     }
 
-    public ResponseEntity<Page<ProductProjection>> productSearchByKeyWords(
+    public Page<ProductProjection> productSearchByKeyWords(
             String searchTerm,
             int page,
             int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        return ResponseEntity.ok()
-                .body(productRepo.findByKeyWord(searchTerm, pageable));
+        return productRepo.findByKeyWord(searchTerm, pageable);
     }
 
-    public ResponseEntity<Page<ProductProjection>> productSearchByCategory(
+    public Page<ProductProjection> productSearchByCategory(
             String searchingCategory,
             int page,
             int size) {
@@ -50,14 +49,13 @@ public class ProductSearchService {
         if (opCategory.isEmpty()) {
             opCategory = categoryRepo.findByName(searchingCategory);
             if (opCategory.isEmpty()) {
-                return ResponseEntity.notFound().build();
+                throw new EntityNotFoundException("Category not found");
             }
         }
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<ProductProjection> products = productRepo.findByCategory(opCategory.get().getName(), pageable);
 
-        return ResponseEntity.ok().body(products);
+        return productRepo.findByCategory(opCategory.get().getName(), pageable);
     }
 
     private Long parseCategoryId(String category) {
