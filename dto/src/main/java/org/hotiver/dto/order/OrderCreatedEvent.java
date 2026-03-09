@@ -25,6 +25,6 @@ public class OrderCreatedEvent {
     private Long sellerId;
 
     private Integer productQuantity;
-    private Double totalAmount;
+    private BigDecimal totalAmount;
     private Date createdAt;
 }

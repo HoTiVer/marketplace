@@ -50,7 +50,7 @@ CREATE TABLE category(
 CREATE TABLE product(
     id BIGINT,
     name VARCHAR(100),
-    price DOUBLE PRECISION,
+    price NUMERIC(12, 2),
     description VARCHAR(500),
     category_id BIGINT NOT NULL DEFAULT 0,
     characteristic JSONB,
@@ -113,7 +113,7 @@ CREATE TABLE public."order"(
     order_date DATE NOT NULL,
     delivery_date DATE,
     status VARCHAR(50) NOT NULL,
-    total_price DOUBLE PRECISION NOT NULL,
+    total_price NUMERIC(12, 2) NOT NULL,
     delivery_address VARCHAR(255),
     delivery_city VARCHAR(100),
     recipient_name VARCHAR(50),

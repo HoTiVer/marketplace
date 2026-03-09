@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hotiver.common.Enum.OrderStatus;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 
 @Getter
@@ -47,7 +48,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 
     private String deliveryAddress;
     private String deliveryCity;

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
 
@@ -82,7 +83,7 @@ public class OrderService {
                     .orderDate(Date.valueOf(LocalDate.now()))
                     .deliveryDate(null)
                     .status(OrderStatus.CREATED)
-                    .totalPrice(product.getPrice() * quantity)
+                    .totalPrice(product.getPrice().multiply(BigDecimal.valueOf(quantity)))
                     .deliveryCity(createOrderDto.getDeliveryCity())
                     .deliveryAddress(createOrderDto.getDeliveryAddress())
                     .recipientName(createOrderDto.getReceiverName())

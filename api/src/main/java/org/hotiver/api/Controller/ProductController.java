@@ -1,5 +1,6 @@
 package org.hotiver.api.Controller;
 
+import jakarta.validation.Valid;
 import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
@@ -25,62 +26,68 @@ public class ProductController {
     }
 
     @GetMapping("/product/{id}")
-    public ResponseEntity<ProductGetDto> getProductById(@PathVariable Long id){
-        return productService.getProductById(id);
+    public ResponseEntity<ProductGetDto> getProductById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(productService.getProductById(id));
     }
-
 
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping(value = "/product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> addProduct(
-            @RequestPart("data") ProductAddDto productAddDto,
+            @Valid @RequestPart("data") ProductAddDto productAddDto,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        return productService.addProduct(productAddDto, image);
+        productService.addProduct(productAddDto, image);
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasAnyRole('SELLER','ADMIN')")
     @DeleteMapping("/product/{id}")
-    public ResponseEntity<?> deleteProductById(@PathVariable Long id){
-        return productService.deleteProductById(id);
+    public ResponseEntity<?> deleteProductById(@PathVariable Long id) {
+        productService.deleteProductById(id);
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('SELLER')")
     @PutMapping(value = "/product/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateProductById(
+    public ResponseEntity<Void> updateProductById(
             @PathVariable Long id,
-            @RequestPart("data") ProductAddDto dto,
+            @RequestPart("data") @Valid ProductAddDto dto,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        return productService.updateProductById(id, dto, image);
+        productService.updateProductById(id, dto, image);
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('SELLER')")
     @PatchMapping("/product/{productId}/image/{imageId}/main")
-    public ResponseEntity<?> makeProductMainImage(@PathVariable Long productId,
+    public ResponseEntity<Void> makeProductMainImage(@PathVariable Long productId,
                                                   @PathVariable Long imageId) {
-        return productService.makeProductMainImage(productId, imageId);
+        productService.makeProductMainImage(productId, imageId);
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('SELLER')")
     @DeleteMapping("/product/{productId}/image/{imageId}")
-    public ResponseEntity<?> deleteProductImage(@PathVariable Long productId,
+    public ResponseEntity<Void> deleteProductImage(@PathVariable Long productId,
                                                 @PathVariable Long imageId) {
-        return productService.deleteProductImage(productId, imageId);
+        productService.deleteProductImage(productId, imageId);
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/seller/products")
     public ResponseEntity<List<SellerProductProjection>> getCurrentSellerProducts(Authentication auth) {
         String username = auth.getName();
-        return productService.getCurrentSellerProducts(username);
+        return ResponseEntity.ok()
+                .body(productService.getCurrentSellerProducts(username));
     }
 
     @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/seller/products/{id}")
     public ResponseEntity<CurrentSellerProductDto> getCurrentSellerProductById(
             @PathVariable Long id) {
-        return productService.getCurrentSellerProductById(id);
+        return ResponseEntity.ok()
+                .body(productService.getCurrentSellerProductById(id));
     }
 
 

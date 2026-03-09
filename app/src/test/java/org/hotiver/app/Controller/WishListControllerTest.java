@@ -15,6 +15,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,8 +48,10 @@ public class WishListControllerTest {
     @Test
     public void get_user_wishlist_success() throws Exception {
         List<ListProductDto> wishlist = List.of(
-                new ListProductDto(1L, "test1", 52.0, null),
-                new ListProductDto(2L, "test2", 100.0, null));
+                new ListProductDto(1L, "test1",
+                        BigDecimal.valueOf(52.0), null),
+                new ListProductDto(2L, "test2",
+                        BigDecimal.valueOf(100.0), null));
 
         when(wishListService.getUserWishList()).thenReturn(wishlist);
 

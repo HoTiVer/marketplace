@@ -34,7 +34,7 @@ public class Product {
 
     private String name;
 
-    private Double price;
+    private BigDecimal price;
 
     private String description;
 

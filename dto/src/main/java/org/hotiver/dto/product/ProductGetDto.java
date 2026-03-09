@@ -2,6 +2,7 @@ package org.hotiver.dto.product;
 
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +16,7 @@ public class ProductGetDto {
 
     private String name;
 
-    private Double price;
+    private BigDecimal price;
 
     private String description;
 

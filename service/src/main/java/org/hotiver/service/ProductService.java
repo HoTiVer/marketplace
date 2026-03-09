@@ -1,5 +1,6 @@
 package org.hotiver.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.hotiver.domain.Entity.*;
@@ -9,7 +10,7 @@ import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.ProductImageDto;
 import org.hotiver.dto.seller.SellerProductProjection;
 import org.hotiver.repo.*;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -45,22 +46,20 @@ public class ProductService {
         this.productImageRepo = productImageRepo;
     }
 
-    public ResponseEntity<Map<String, Object>> addProduct(ProductAddDto productAddDto,
-                                                          MultipartFile image) {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+    public void addProduct(ProductAddDto productAddDto,
+                           MultipartFile image) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Seller seller = sellerRepo.findByEmail(email).orElseThrow();
         Category category = categoryRepo.findByName(productAddDto.getCategoryName())
-                .orElseThrow();
+                .orElseThrow(()-> new EntityNotFoundException("Category not found"));
 
         Product product = Product.builder()
                 .name(productAddDto.getName())
                 .price(productAddDto.getPrice())
                 .category(category)
                 .description(productAddDto.getDescription())
-                .characteristic(new HashMap<>(productAddDto.getCharacteristic()))
+                .characteristic(new HashMap<>(productAddDto.getCharacteristics()))
                 .seller(seller)
                 .stockQuantity(productAddDto.getQuantity())
                 .salesCount(0)
@@ -71,40 +70,33 @@ public class ProductService {
 
         product = productRepo.save(product);
 
-        try {
-            if (image != null && !image.isEmpty()) {
-                String imageUrl = imageService.saveProductImage(product.getId(), image);
-
-                ProductImage productImage = ProductImage.builder()
-                        .product(product)
-                        .url(imageUrl)
-                        .isMain(true)
-                        .build();
-
-                product.addProductImage(productImage);
-
-                productRepo.save(product);
+        if (image != null && !image.isEmpty()) {
+            String imageUrl;
+            try {
+                imageUrl = imageService.saveProductImage(product.getId(), image);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", "Product created but image upload failed"));
-        }
 
-        return ResponseEntity.ok(Map.of(
-                "message", "Product created",
-                "productId", product.getId()
-        ));
+            ProductImage productImage = ProductImage.builder()
+                    .product(product)
+                    .url(imageUrl)
+                    .isMain(true)
+                    .build();
+
+            product.addProductImage(productImage);
+
+            productRepo.save(product);
+        }
     }
 
 
-    public ResponseEntity<ProductGetDto> getProductById(Long id) {
+    public ProductGetDto getProductById(Long id) {
         Optional<Product> product = productRepo.findById(id);
 
-        if (product.isEmpty()){
-            return ResponseEntity.notFound().build();
+        if (product.isEmpty() || !product.get().getIsVisible()){
+            throw new EntityNotFoundException("Product with id " + id + " not found");
         }
-        if (!product.get().getIsVisible())
-            return ResponseEntity.notFound().build();
 
         Product existingProduct = product.get();
 
@@ -131,35 +123,34 @@ public class ProductService {
 
         returnProduct.setImages(images);
 
-        return ResponseEntity.ok().body(returnProduct);
+        return returnProduct;
     }
 
     @Transactional
-    public ResponseEntity<?> deleteProductById(Long id) {
+    public void deleteProductById(Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         var roles = authentication.getAuthorities();
 
         User user = userRepo.findByEmail(email).get();
 
         Optional<Product> opProduct = productRepo.findById(id);
         if (opProduct.isEmpty()){
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("Product with id " + id + " not found");
         }
         var product = opProduct.get();
 
-        for (var role : roles){
-            if (role.getAuthority().equals("ROLE_ADMIN")){
-                chatService.sendMessage(0L, user.getId(),
-                        "admin deleted your product with id: " + product.getId());
 
+        for (var role : roles) {
+            if (role.getAuthority().equals("ROLE_ADMIN")){
                 productRepo.deleteById(id);
                 try {
                     imageService.deleteAllProductImages(id);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                return ResponseEntity.ok().build();
+                chatService.sendMessage(0L, user.getId(),
+                        "admin deleted your product with id: " + product.getId());
             }
         }
 
@@ -170,65 +161,41 @@ public class ProductService {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return ResponseEntity.ok().build();
         }
-
-        return ResponseEntity.badRequest().build();
     }
 
-    public ResponseEntity<?> updateProductById(Long id,
-                                               ProductAddDto productAddDto,
-                                               MultipartFile image) {
-
+    public void updateProductById(Long id,
+                                  ProductAddDto productAddDto,
+                                  MultipartFile image) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Optional<Product> opProduct = productRepo.findById(id);
         if (opProduct.isEmpty()){
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("Product with id " + id + " not found");
         }
 
         User user = userRepo.findByEmail(email).get();
 
         if (!opProduct.get().getSeller().getId().equals(user.getId())){
-            return ResponseEntity.status(403).build();
+            throw new AccessDeniedException("You are not the seller of this product");
         }
 
-        var product = opProduct.get();
-
-        if (productAddDto.getName() != null) {
-            product.setName(productAddDto.getName());
-        }
-
-        if (productAddDto.getPrice() != null) {
-            product.setPrice(productAddDto.getPrice());
-        }
-
-        if (productAddDto.getDescription() != null) {
-            product.setDescription(productAddDto.getDescription());
-        }
-
-        if (productAddDto.getQuantity() != null) {
-            product.setStockQuantity(productAddDto.getQuantity());
-        }
+        Product product = opProduct.get();
 
         String categoryName = productAddDto.getCategoryName();
         if (categoryName != null) {
             Optional<Category> category = categoryRepo.findByName(categoryName);
 
             if (category.isEmpty())
-                return ResponseEntity.badRequest().build();
-
+                throw new EntityNotFoundException("Category with name " + categoryName + " not found");
 
             product.setCategory(category.get());
         }
 
-        if (productAddDto.getCharacteristic() != null) {
-            product.setCharacteristic(productAddDto.getCharacteristic());
-        }
 
         if (image != null) {
-            if (product.getImages().size() == 10) {
-                return ResponseEntity.badRequest().build();
+            if (product.getImages().size() >= 10) {
+                throw new RuntimeException();
             }
 
             String url;
@@ -248,31 +215,26 @@ public class ProductService {
         }
 
         productRepo.save(product);
-        return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<List<SellerProductProjection>> getCurrentSellerProducts(String username) {
+    public List<SellerProductProjection> getCurrentSellerProducts(String username) {
         if (username == null)
-            return  ResponseEntity.badRequest().build();
+            throw new EntityNotFoundException("Seller do not exist");
 
         Seller seller = sellerRepo.findByEmail(username).get();
 
-        List<SellerProductProjection> productGetDto = productRepo
+        return productRepo
                 .getCurrentSellerProducts(seller.getId());
-
-        return ResponseEntity.ok().body(productGetDto);
     }
 
-    public ResponseEntity<CurrentSellerProductDto> getCurrentSellerProductById(
+    public CurrentSellerProductDto getCurrentSellerProductById(
             Long productId) {
 
         Optional<Product> product = productRepo.findById(productId);
 
-        if (product.isEmpty()){
-            return ResponseEntity.notFound().build();
+        if (product.isEmpty() || !product.get().getIsVisible()){
+            throw new EntityNotFoundException("Product with id " + productId + " not found");
         }
-        if (!product.get().getIsVisible())
-            return ResponseEntity.notFound().build();
 
         Product existingProduct = product.get();
 
@@ -297,22 +259,21 @@ public class ProductService {
         }
         returnProduct.setImages(images);
 
-        return ResponseEntity.ok().body(returnProduct);
+        return returnProduct;
     }
 
-    public ResponseEntity<?> deleteProductImage(Long productId, Long imageId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+    public void deleteProductImage(Long productId, Long imageId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Product product = productRepo.findById(productId).orElse(null);
 
         if (product == null) {
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("Product with id " + productId + " not found");
         }
 
         var user = userRepo.findByEmail(email).orElse(null);
         if (!product.getSeller().getId().equals(user.getId())) {
-            return ResponseEntity.status(403).build();
+            throw new AccessDeniedException("You are not the seller of this product");
         }
 
         var productImages = product.getImages();
@@ -322,10 +283,6 @@ public class ProductService {
                 .filter(image -> image.getId().equals(imageId))
                 .findFirst()
                 .orElse(null);
-
-        if (imageToRemove == null) {
-            return ResponseEntity.badRequest().build();
-        }
 
         try {
             imageService.deleteProductImage(imageToRemove.getUrl());
@@ -337,24 +294,21 @@ public class ProductService {
         productImageRepo.delete(imageToRemove);
 
         productRepo.save(product);
-
-        return ResponseEntity.ok().build();
     }
 
 
-    public ResponseEntity<?> makeProductMainImage(Long productId, Long imageId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+    public void makeProductMainImage(Long productId, Long imageId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Product product = productRepo.findById(productId).orElse(null);
 
         if (product == null) {
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("Product with id " + productId + " not found");
         }
 
         var user = userRepo.findByEmail(email).orElse(null);
         if (!product.getSeller().getId().equals(user.getId())) {
-            return ResponseEntity.status(403).build();
+            throw new AccessDeniedException("You are not the seller of this product");
         }
 
         var productImages = product.getImages();
@@ -375,6 +329,5 @@ public class ProductService {
 
         product.setImages(productImages);
         productRepo.save(product);
-        return ResponseEntity.ok().build();
     }
 }

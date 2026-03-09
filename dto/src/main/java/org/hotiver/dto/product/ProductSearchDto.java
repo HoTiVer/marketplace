@@ -2,6 +2,7 @@ package org.hotiver.dto.product;
 
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -14,7 +15,7 @@ public class ProductSearchDto {
 
     private String name;
 
-    private Double price;
+    private BigDecimal price;
 
     private String description;
 
