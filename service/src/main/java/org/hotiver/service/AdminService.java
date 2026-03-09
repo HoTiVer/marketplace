@@ -1,7 +1,9 @@
 package org.hotiver.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.hotiver.common.Enum.SellerRegisterRequestStatus;
+import org.hotiver.common.Exception.EntityAlreadyExistsException;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
@@ -9,7 +11,6 @@ import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -42,10 +43,10 @@ public class AdminService {
     }
 
     @Transactional
-    public ResponseEntity<?> acceptSellerRegisterRequest(Long id) {
+    public void acceptSellerRegisterRequest(Long id) {
         var sellerRegister = sellerRegisterRepo.findById(id);
         if (sellerRegister.isEmpty()){
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("SellerRegister not found");
         }
 
         Long userId = sellerRegister.get().getUserId();
@@ -55,7 +56,7 @@ public class AdminService {
         String sellerUsername = sellerRegister.get().getRequestedNickname();
 
         if (sellerRepo.existsByNickname(sellerUsername)){
-            return ResponseEntity.badRequest().build();
+            throw new EntityAlreadyExistsException("Seller already exists");
         }
 
         user.setDisplayName(sellerRegister.get().getDisplayName());
@@ -74,17 +75,15 @@ public class AdminService {
         //sellerRegisterRepo.delete(sellerRegister.get());
         sellerRegister.get().setStatus(SellerRegisterRequestStatus.ACCEPTED);
         sellerRegisterRepo.save(sellerRegister.get());
-
-        return ResponseEntity.ok().build();
     }
 
     @Transactional
-    public ResponseEntity<?> declineSellerRegisterRequest(Long id) {
+    public void declineSellerRegisterRequest(Long id) {
 
         Optional<SellerRegister> sellerRegister = sellerRegisterRepo.findById(id);
 
         if (sellerRegister.isEmpty()){
-            return ResponseEntity.notFound().build();
+            throw new EntityNotFoundException("SellerRegister not found");
         }
 
         chatService.sendMessage(0L, sellerRegister.get().getUserId(),
@@ -97,7 +96,5 @@ public class AdminService {
         //sellerRegisterRepo.delete(sellerRegister.get());
         sellerRegister.get().setStatus(SellerRegisterRequestStatus.REJECTED);
         sellerRegisterRepo.save(sellerRegister.get());
-
-        return ResponseEntity.ok().build();
     }
 }

@@ -18,18 +18,20 @@ public class AdminController {
     }
 
     @GetMapping("/request/seller-register")
-    public List<SellerRegister> getSellerRegisterRequests() {
-        return adminService.getSellerRegisterRequests();
+    public ResponseEntity<List<SellerRegister>> getSellerRegisterRequests() {
+        return ResponseEntity.ok().body(adminService.getSellerRegisterRequests());
     }
 
     @PostMapping("/request/seller-register/{id}")
-    public ResponseEntity<?> acceptSellerRegisterRequest(@PathVariable Long id){
-        return adminService.acceptSellerRegisterRequest(id);
+    public ResponseEntity<Void> acceptSellerRegisterRequest(@PathVariable Long id) {
+        adminService.acceptSellerRegisterRequest(id);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/request/seller-register/{id}")
-    public ResponseEntity<?> declineSellerRegisterRequest(@PathVariable Long id){
-        return adminService.declineSellerRegisterRequest(id);
+    public ResponseEntity<Void> declineSellerRegisterRequest(@PathVariable Long id){
+        adminService.declineSellerRegisterRequest(id);
+        return ResponseEntity.ok().build();
     }
 
     //TODO add more endpoints for stats
