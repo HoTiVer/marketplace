@@ -7,7 +7,7 @@ import org.hotiver.domain.Entity.Message;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.chat.ChatDto;
-import org.hotiver.dto.chat.ChatMessageDto;
+import org.hotiver.dto.chat.ChatMessageProjection;
 import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.user.UserChatsDto;
 import org.hotiver.repo.ChatRepo;
@@ -19,7 +19,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -54,53 +53,13 @@ public class ChatService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        Chat chat = chatRepo.findById(id)
+        ChatDto chat = chatRepo.findChatDtoByChatId(id, user.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Chat not found"));
 
-        List<Message> messages = messageRepo.findAllByChatOrderBySentAtAsc(chat);
+        List<ChatMessageProjection> messages = messageRepo.findAllByChatIdOrderBySentAtAsc(id);
 
-        String chatName;
-        boolean isSeller;
-        Long chatNameUserId;
-
-        if (chat.getUser1().getId().equals(user.getId())) {
-            chatNameUserId = chat.getUser2().getId();
-            isSeller = sellerRepo.existsById(chatNameUserId);
-            if (isSeller) {
-                Seller seller = sellerRepo.findById(chatNameUserId)
-                        .orElseThrow(() -> new SellerNotFoundException("Seller not found"));
-                chatName = seller.getNickname();
-            }
-            else
-                chatName = chat.getUser2().getDisplayName();
-        }
-        else {
-            chatNameUserId = chat.getUser1().getId();
-            isSeller = sellerRepo.existsById(chatNameUserId);
-            if (isSeller) {
-                Seller seller = sellerRepo.findById(chatNameUserId)
-                        .orElseThrow(() -> new SellerNotFoundException("Seller not found"));
-                chatName = seller.getNickname();
-            }
-            else
-                chatName = chat.getUser1().getDisplayName();
-        }
-
-        List<ChatMessageDto> messagesDto = messages.stream().map(m -> ChatMessageDto.builder()
-                .id(m.getId())
-                .senderId(m.getSender().getId())
-                .senderName(m.getSender().getDisplayName())
-                .content(m.getContent())
-                .sentAt(m.getSentAt())
-                .build()
-        ).toList();
-
-        return ChatDto.builder()
-                .chatId(chat.getId())
-                .chatName(chatName)
-                .isSeller(isSeller)
-                .messages(messagesDto)
-                .build();
+        chat.setMessages(messages);
+        return chat;
     }
 
     public void sendMessage(Long chatId, SendMessageDto sendMessageDto) {

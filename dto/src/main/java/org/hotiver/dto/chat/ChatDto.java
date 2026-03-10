@@ -15,7 +15,15 @@ public class ChatDto {
     private Long chatId;
     private String chatName;
     private Boolean isSeller;
-    //private List<Long> participantIds;
-    private List<ChatMessageDto> messages;
+    private String sellerUsername;
+    private List<ChatMessageProjection> messages;
+
+    public ChatDto(Long chatId, String chatName,
+                   Boolean isSeller, String sellerUsername) {
+        this.chatId = chatId;
+        this.chatName = chatName;
+        this.isSeller = isSeller;
+        this.sellerUsername = sellerUsername;
+    }
 }
 
