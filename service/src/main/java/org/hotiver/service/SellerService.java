@@ -61,8 +61,8 @@ public class SellerService {
                 .body(productRepo.findAllVisibleBySellerId(opSeller.get().getId()));
     }
 
-    public ResponseEntity<?> sendMessageToSeller(String username, SendMessageDto message) {
-        return chatService.sendMessageToSeller(username, message);
+    public void sendMessageToSeller(String username, SendMessageDto message) {
+        chatService.sendMessageToSeller(username, message);
     }
 }
 

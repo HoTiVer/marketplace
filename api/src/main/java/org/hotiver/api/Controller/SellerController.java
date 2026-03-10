@@ -32,8 +32,9 @@ public class SellerController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/seller/message/{username}")
-    public ResponseEntity<?> sendMessageToSeller(@PathVariable String username,
-                                                 @RequestBody SendMessageDto message){
-        return sellerService.sendMessageToSeller(username, message);
+    public ResponseEntity<Void> sendMessageToSeller(@PathVariable String username,
+                                                 @RequestBody SendMessageDto message) {
+        sellerService.sendMessageToSeller(username, message);
+        return ResponseEntity.ok().build();
     }
 }

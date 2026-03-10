@@ -20,18 +20,18 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @GetMapping("/message")
+    @GetMapping
     public List<UserChatsDto> getUserChats(){
         return chatService.getUserChats();
     }
 
-    @GetMapping("/message/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ChatDto> getChat(@PathVariable Long id){
         ChatDto chatDto = chatService.getChat(id);
         return ResponseEntity.ok(chatDto);
     }
 
-    @PostMapping("/message/{id}")
+    @PostMapping("/{id}/message")
     public ResponseEntity<Void> sendMessage(@PathVariable Long id,
                                             @RequestBody @Valid SendMessageDto sendMessageDto) {
         chatService.sendMessage(id, sendMessageDto);

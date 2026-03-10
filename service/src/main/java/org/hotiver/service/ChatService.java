@@ -45,26 +45,7 @@ public class ChatService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        List<Chat> userChats = chatRepo.findChatsByUserId(user.getId());
-        return getUserChatsDto(userChats, user.getId());
-    }
-
-    //TODO OPTIMIZE
-    private List<UserChatsDto> getUserChatsDto(List<Chat> userChats, Long userId) {
-        List<UserChatsDto> returnedChats = new ArrayList<>();
-
-        for (var chat : userChats) {
-            UserChatsDto userChatsDto = new UserChatsDto();
-            userChatsDto.setChatId(chat.getId());
-            if (Objects.equals(chat.getUser1().getId(), userId)) {
-                userChatsDto.setName(chat.getUser2().getDisplayName());
-            }
-            else {
-                userChatsDto.setName(chat.getUser1().getDisplayName());
-            }
-            returnedChats.add((userChatsDto));
-        }
-        return returnedChats;
+        return chatRepo.findUserChatsDtoByUserId(user.getId());
     }
 
     public ChatDto getChat(Long id) {
