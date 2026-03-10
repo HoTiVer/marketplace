@@ -1,5 +1,6 @@
 package org.hotiver.api.Controller;
 
+import jakarta.validation.Valid;
 import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
@@ -33,7 +34,7 @@ public class SellerController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/seller/message/{username}")
     public ResponseEntity<Void> sendMessageToSeller(@PathVariable String username,
-                                                 @RequestBody SendMessageDto message) {
+                                                 @RequestBody @Valid SendMessageDto message) {
         sellerService.sendMessageToSeller(username, message);
         return ResponseEntity.ok().build();
     }

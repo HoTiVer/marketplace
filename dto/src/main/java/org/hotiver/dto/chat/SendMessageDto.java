@@ -7,6 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SendMessageDto {
-    @NotBlank(message = "Message must contain something")
+    @NotBlank(message = "Message must contains something")
     String content;
 }

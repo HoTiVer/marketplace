@@ -1,7 +1,6 @@
 package org.hotiver.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.hotiver.common.Exception.SellerNotFoundException;
 import org.hotiver.domain.Entity.Chat;
 import org.hotiver.domain.Entity.Message;
 import org.hotiver.domain.Entity.Seller;
@@ -14,14 +13,13 @@ import org.hotiver.repo.ChatRepo;
 import org.hotiver.repo.MessageRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+
 
 @Service
 public class ChatService {
@@ -63,8 +61,7 @@ public class ChatService {
     }
 
     public void sendMessage(Long chatId, SendMessageDto sendMessageDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Chat chat = chatRepo.findById(chatId)
                 .orElseThrow(()-> new EntityNotFoundException("Chat is not found"));
@@ -72,7 +69,7 @@ public class ChatService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        if (chat.getUser1().equals(user) || chat.getUser2().equals(user)){
+        if (chat.getUser1().equals(user) || chat.getUser2().equals(user)) {
 
             Message message = Message.builder()
                     .chat(chat)
@@ -102,14 +99,14 @@ public class ChatService {
             chatRepo.save(chat);
         }
 
-        Message messageObj = Message.builder()
+        Message messageToSave = Message.builder()
                 .chat(chat)
                 .content(message)
                 .sender(sender)
                 .sentAt(LocalDateTime.now())
                 .build();
 
-        messageRepo.save(messageObj);
+        messageRepo.save(messageToSave);
     }
 
     public void sendMessageToSeller(String sellerNickName, SendMessageDto message) {
@@ -117,21 +114,19 @@ public class ChatService {
 
         User sender = userRepo.findByEmail(senderEmail)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        Optional<Seller> seller = sellerRepo.findByNickname(sellerNickName);
 
-        if (seller.isEmpty()) {
-            throw new EntityNotFoundException("Seller is not found");
+        Seller seller = sellerRepo.findByNickname(sellerNickName)
+                .orElseThrow(() -> new EntityNotFoundException("Seller not found"));
+
+        if (sender.getId().equals(seller.getId())) {
+            return;
         }
 
-        if (sender.getId().equals(seller.get().getId())) {
-            throw new RuntimeException();
-        }
-
-        Chat chat = chatRepo.findChatByUsersIds(sender.getId(), seller.get().getId());
+        Chat chat = chatRepo.findChatByUsersIds(sender.getId(), seller.getId());
 
         if (chat == null){
             chat = new Chat();
-            User receiver = userRepo.findById(seller.get().getId())
+            User receiver = userRepo.findById(seller.getId())
                     .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
             chat.setUser1(sender);
@@ -139,13 +134,13 @@ public class ChatService {
             chatRepo.save(chat);
         }
 
-        Message messageObj = Message.builder()
+        Message messageToSave = Message.builder()
                 .chat(chat)
                 .content(message.getContent())
                 .sender(sender)
                 .sentAt(LocalDateTime.now())
                 .build();
 
-        messageRepo.save(messageObj);
+        messageRepo.save(messageToSave);
     }
 }
