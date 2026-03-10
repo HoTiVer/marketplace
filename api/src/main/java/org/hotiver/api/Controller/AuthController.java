@@ -68,15 +68,15 @@ public class AuthController {
         return ResponseEntity.ok().body(authService.login(loginRequest));
     }
 
-    @PostMapping("/login/verify")
-    public ResponseEntity<AuthResponse> verifyCode(@RequestBody CodeVerifyDto codeVerifyDto){
-        AuthResponse response = authService.verifyCode(codeVerifyDto);
-        if (response != null) {
-            return ResponseEntity.ok().body(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
+//    @PostMapping("/login/verify")
+//    public ResponseEntity<AuthResponse> verifyCode(@RequestBody CodeVerifyDto codeVerifyDto){
+//        AuthResponse response = authService.verifyCode(codeVerifyDto);
+//        if (response != null) {
+//            return ResponseEntity.ok().body(response);
+//        } else {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+//        }
+//    }
 
     @PostMapping("/refresh")
     public ResponseEntity<RefreshTokenResponse> refresh(

@@ -1,9 +1,13 @@
 package org.hotiver.api.Controller;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.Valid;
+import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.dto.user.*;
 import org.hotiver.service.UserService;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,38 +35,59 @@ public class UserController {
     }
 
     @PutMapping("/personal-info/contacts")
-    public ResponseEntity<?> updateUserContacts(@Valid @RequestBody UserContactsDto userContactsDto) {
-        return userService.updateUserContacts(userContactsDto);
+    public ResponseEntity<RedirectResponse> updateUserContacts(
+            @Valid @RequestBody UserContactsDto userContactsDto) {
+        userService.updateUserContacts(userContactsDto);
+        return ResponseEntity.ok().body(
+                new RedirectResponse(
+                        "api/v1/cabinet/personal-info/contacts/verify",
+                        "POST"
+                )
+        );
     }
 
     @PostMapping("/personal-info/contacts/verify")
-    public ResponseEntity<?> verifyChangingUserContacts(@RequestBody CodeVerifyDto codeVerifyDto) {
-        return userService.verifyChangingUserContacts(codeVerifyDto);
+    public ResponseEntity<AuthResponse> verifyChangingUserContacts(
+            @RequestBody CodeVerifyDto codeVerifyDto) {
+        AuthResponse authResponse = userService.verifyChangingUserContacts(codeVerifyDto);
+        if(authResponse != null) {
+            return ResponseEntity.ok().body(authResponse);
+        }
+        else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/personal-info/security")
     public ResponseEntity<SecurityInfoDto> getAccountSecurityInfo() {
-        return userService.getSecurityInfo();
+        return ResponseEntity.ok().body(userService.getSecurityInfo());
     }
 
     @PutMapping("/personal-info/security/2fa")
-    public ResponseEntity<?> changeTwoFactorStatus() {
-        return userService.changeTwoFactorStatus();
+    public ResponseEntity<Void> changeTwoFactorStatus() {
+        userService.changeTwoFactorStatus();
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/personal-info/security/password")
-    public ResponseEntity<?> changeUserPassword(@RequestBody PasswordChangeDto passwordChangeDto) {
-        return userService.changeUserPassword(passwordChangeDto);
+    public ResponseEntity<?> changeUserPassword(
+            @RequestBody PasswordChangeDto passwordChangeDto) {
+        userService.changeUserPassword(passwordChangeDto);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/personal-info/security/password/verify")
-    public ResponseEntity<?> verifyChangeUserPassword(@RequestBody PasswordChangeDto passwordChangeDto) {
-        return userService.verifyChangeUserPassword(passwordChangeDto);
+    public ResponseEntity<?> verifyChangeUserPassword(
+            @RequestBody PasswordChangeDto passwordChangeDto) {
+        userService.verifyChangeUserPassword(passwordChangeDto);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/new-seller/register")
-    public ResponseEntity<Map<String, Object>> sendRegisterRequest(
-            @RequestBody SellerRegisterDto sellerRegisterDto) {
-        return userService.sendRegisterRequest(sellerRegisterDto);
+    public ResponseEntity<Void> sendSellerRegisterRequest(
+            @Valid @RequestBody SellerRegisterDto sellerRegisterDto) {
+        userService.sendSellerRegisterRequest(sellerRegisterDto);
+        return ResponseEntity.ok().build();
     }
 }
+record RedirectResponse(String redirectUrl, String method) { }

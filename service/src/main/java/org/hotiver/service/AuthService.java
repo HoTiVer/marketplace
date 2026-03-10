@@ -110,34 +110,34 @@ public class AuthService {
                         .build();
     }
 
-    @Transactional
-    public AuthResponse verifyCode(CodeVerifyDto codeVerifyDto) {
-        String key = RedisKeyUtils.generateRedisTwoFactorKey(codeVerifyDto.getEmail());
-        String storedCode = redisService.getValue(key);
-
-        if (storedCode == null) {
-            return null;
-        }
-
-        if (storedCode.equals(codeVerifyDto.getCode())) {
-            redisService.deleteValue(key);
-
-            var opUser = userRepo.findByEmail(codeVerifyDto.getEmail());
-            if (opUser.isEmpty())
-                return null;
-
-
-            JwtTokensDto jwtTokensDto = generateJwtTokens(opUser.get());
-
-            String refreshTokenKey = RedisKeyUtils.generateRedisRefreshTokenKey(opUser.get().getId());
-            redisService.saveValue(refreshTokenKey, jwtTokensDto.getRefreshToken(),
-                    TimeUnit.MILLISECONDS.toMinutes(timeToSaveJwtRefresh));
-
-            return new AuthResponse(refreshTokenKey, jwtTokensDto.getRefreshToken());
-        }
-
-        return null;
-    }
+//    @Transactional
+//    public AuthResponse verifyCode(CodeVerifyDto codeVerifyDto) {
+//        String key = RedisKeyUtils.generateRedisTwoFactorKey(codeVerifyDto.getEmail());
+//        String storedCode = redisService.getValue(key);
+//
+//        if (storedCode == null) {
+//            return null;
+//        }
+//
+//        if (storedCode.equals(codeVerifyDto.getCode())) {
+//            redisService.deleteValue(key);
+//
+//            var opUser = userRepo.findByEmail(codeVerifyDto.getEmail());
+//            if (opUser.isEmpty())
+//                return null;
+//
+//
+//            JwtTokensDto jwtTokensDto = generateJwtTokens(opUser.get());
+//
+//            String refreshTokenKey = RedisKeyUtils.generateRedisRefreshTokenKey(opUser.get().getId());
+//            redisService.saveValue(refreshTokenKey, jwtTokensDto.getRefreshToken(),
+//                    TimeUnit.MILLISECONDS.toMinutes(timeToSaveJwtRefresh));
+//
+//            return new AuthResponse(refreshTokenKey, jwtTokensDto.getRefreshToken());
+//        }
+//
+//        return null;
+//    }
 
     public RefreshTokenResponse refresh(String authHeader) {
         String refreshToken = authHeader.replace("Bearer ", "");
