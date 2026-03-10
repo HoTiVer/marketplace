@@ -100,4 +100,16 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Object> handleUserNotFoundException(
+            UserNotFoundException e,
+            WebRequest request
+    ) {
+        return ResponseEntity.status(NOT_FOUND).body(
+                new HashMap<String, Object>() {{
+                    put("message", e.getMessage());
+                }}
+        );
+    }
+
 }

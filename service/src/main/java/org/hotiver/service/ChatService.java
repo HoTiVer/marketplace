@@ -1,5 +1,7 @@
 package org.hotiver.service;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.hotiver.common.Exception.SellerNotFoundException;
 import org.hotiver.domain.Entity.Chat;
 import org.hotiver.domain.Entity.Message;
 import org.hotiver.domain.Entity.Seller;
@@ -12,7 +14,6 @@ import org.hotiver.repo.ChatRepo;
 import org.hotiver.repo.MessageRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,16 +40,16 @@ public class ChatService {
     }
 
     public List<UserChatsDto> getUserChats() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        User user = userRepo.findByEmail(email).get();
-        Long userId = user.getId();
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        List<Chat> userChats = chatRepo.findChatsByUserId(userId);
-        return getUserChatsDto(userChats, userId);
+        List<Chat> userChats = chatRepo.findChatsByUserId(user.getId());
+        return getUserChatsDto(userChats, user.getId());
     }
 
+    //TODO OPTIMIZE
     private List<UserChatsDto> getUserChatsDto(List<Chat> userChats, Long userId) {
         List<UserChatsDto> returnedChats = new ArrayList<>();
 
@@ -66,28 +67,28 @@ public class ChatService {
         return returnedChats;
     }
 
-    public ResponseEntity<ChatDto> getChat(Long id) {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = auth.getName();
+    public ChatDto getChat(Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Optional<User> user = userRepo.findByEmail(email);
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        Optional<Chat> chatOptional = chatRepo.findById(id);
-        if (chatOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Chat chat = chatOptional.get();
+        Chat chat = chatRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Chat not found"));
+
         List<Message> messages = messageRepo.findAllByChatOrderBySentAtAsc(chat);
 
         String chatName;
         boolean isSeller;
         Long chatNameUserId;
-        if (chat.getUser1().getId().equals(user.get().getId())) {
+
+        if (chat.getUser1().getId().equals(user.getId())) {
             chatNameUserId = chat.getUser2().getId();
             isSeller = sellerRepo.existsById(chatNameUserId);
             if (isSeller) {
-                Optional<Seller>  sellerOptional = sellerRepo.findById(chatNameUserId);
-                chatName = sellerOptional.get().getNickname();
+                Seller seller = sellerRepo.findById(chatNameUserId)
+                        .orElseThrow(() -> new SellerNotFoundException("Seller not found"));
+                chatName = seller.getNickname();
             }
             else
                 chatName = chat.getUser2().getDisplayName();
@@ -96,8 +97,9 @@ public class ChatService {
             chatNameUserId = chat.getUser1().getId();
             isSeller = sellerRepo.existsById(chatNameUserId);
             if (isSeller) {
-                Optional<Seller>  sellerOptional = sellerRepo.findById(chatNameUserId);
-                chatName = sellerOptional.get().getNickname();
+                Seller seller = sellerRepo.findById(chatNameUserId)
+                        .orElseThrow(() -> new SellerNotFoundException("Seller not found"));
+                chatName = seller.getNickname();
             }
             else
                 chatName = chat.getUser1().getDisplayName();
@@ -112,28 +114,24 @@ public class ChatService {
                 .build()
         ).toList();
 
-        ChatDto chatDto = ChatDto.builder()
+        return ChatDto.builder()
                 .chatId(chat.getId())
                 .chatName(chatName)
                 .isSeller(isSeller)
                 .messages(messagesDto)
                 .build();
-
-        return ResponseEntity.ok(chatDto);
     }
 
-    public ResponseEntity<?> sendMessage(Long chatId, SendMessageDto sendMessageDto) {
+    public void sendMessage(Long chatId, SendMessageDto sendMessageDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
-        Optional<Chat> optionalChat = chatRepo.findById(chatId);
+        Chat chat = chatRepo.findById(chatId)
+                .orElseThrow(()-> new EntityNotFoundException("Chat is not found"));
 
-        if (optionalChat.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        User user = userRepo.findByEmail(email).get();
-        Chat chat = optionalChat.get();
         if (chat.getUser1().equals(user) || chat.getUser2().equals(user)){
 
             Message message = Message.builder()
@@ -144,11 +142,7 @@ public class ChatService {
                     .build();
 
             messageRepo.save(message);
-
-            return ResponseEntity.ok().build();
         }
-
-        return ResponseEntity.badRequest().build();
     }
 
     public void sendMessage(Long senderId, Long receiverId, String message) {
@@ -156,59 +150,62 @@ public class ChatService {
             return;
         }
         Chat chat = chatRepo.findChatByUsersIds(senderId, receiverId);
-        Optional<User> sender = userRepo.findById(senderId);
+        User sender = userRepo.findById(senderId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (chat == null){
             chat = new Chat();
-            var receiver = userRepo.findById(receiverId);
-            chat.setUser1(sender.get());
-            chat.setUser2(receiver.get());
+            User receiver = userRepo.findById(receiverId)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+            chat.setUser1(sender);
+            chat.setUser2(receiver);
             chatRepo.save(chat);
         }
 
         Message messageObj = Message.builder()
                 .chat(chat)
                 .content(message)
-                .sender(sender.get())
+                .sender(sender)
                 .sentAt(LocalDateTime.now())
                 .build();
 
         messageRepo.save(messageObj);
     }
 
-    public ResponseEntity<?> sendMessageToSeller(String sellerNickName, SendMessageDto message) {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        String senderEmail = auth.getName();
-        Optional<User> sender = userRepo.findByEmail(senderEmail);
+    public void sendMessageToSeller(String sellerNickName, SendMessageDto message) {
+        String senderEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User sender = userRepo.findByEmail(senderEmail)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         Optional<Seller> seller = sellerRepo.findByNickname(sellerNickName);
 
-        if (seller.isEmpty() || sender.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+        if (seller.isEmpty()) {
+            throw new EntityNotFoundException("Seller is not found");
         }
 
-        if (sender.get().getId().equals(seller.get().getId())) {
-            return ResponseEntity.badRequest().build();
+        if (sender.getId().equals(seller.get().getId())) {
+            throw new RuntimeException();
         }
 
-        Chat chat = chatRepo.findChatByUsersIds(sender.get().getId(), seller.get().getId());
+        Chat chat = chatRepo.findChatByUsersIds(sender.getId(), seller.get().getId());
 
         if (chat == null){
             chat = new Chat();
-            var receiver = userRepo.findById(seller.get().getId());
-            chat.setUser1(sender.get());
-            chat.setUser2(receiver.get());
+            User receiver = userRepo.findById(seller.get().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+            chat.setUser1(sender);
+            chat.setUser2(receiver);
             chatRepo.save(chat);
         }
 
         Message messageObj = Message.builder()
                 .chat(chat)
                 .content(message.getContent())
-                .sender(sender.get())
+                .sender(sender)
                 .sentAt(LocalDateTime.now())
                 .build();
 
         messageRepo.save(messageObj);
-
-        return ResponseEntity.ok().build();
     }
 }

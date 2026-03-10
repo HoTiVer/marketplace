@@ -1,5 +1,6 @@
 package org.hotiver.api.Controller;
 
+import jakarta.validation.Valid;
 import org.hotiver.dto.chat.ChatDto;
 import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.user.UserChatsDto;
@@ -26,12 +27,15 @@ public class ChatController {
 
     @GetMapping("/message/{id}")
     public ResponseEntity<ChatDto> getChat(@PathVariable Long id){
-        return chatService.getChat(id);
+        ChatDto chatDto = chatService.getChat(id);
+        return ResponseEntity.ok(chatDto);
     }
 
     @PostMapping("/message/{id}")
-    public ResponseEntity<?> sendMessage(@PathVariable Long id, @RequestBody SendMessageDto sendMessageDto) {
-        return chatService.sendMessage(id, sendMessageDto);
+    public ResponseEntity<Void> sendMessage(@PathVariable Long id,
+                                            @RequestBody @Valid SendMessageDto sendMessageDto) {
+        chatService.sendMessage(id, sendMessageDto);
+        return ResponseEntity.ok().build();
     }
 
 }
