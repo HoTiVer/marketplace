@@ -3,7 +3,7 @@ package org.hotiver.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.hotiver.common.Enum.SellerRegisterRequestStatus;
-import org.hotiver.common.Exception.EntityAlreadyExistsException;
+import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;

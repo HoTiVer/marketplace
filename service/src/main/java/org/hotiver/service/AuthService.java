@@ -1,9 +1,9 @@
 package org.hotiver.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.hotiver.common.Exception.EntityAlreadyExistsException;
-import org.hotiver.common.Exception.InvalidCredentialsException;
-import org.hotiver.common.Exception.NoAuthorizationException;
+import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
+import org.hotiver.common.Exception.auth.InvalidCredentialsException;
+import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.common.Utils.PasswordUtils;
 import org.hotiver.common.Utils.RedisKeyUtils;
 import org.hotiver.domain.Entity.Role;
@@ -14,7 +14,6 @@ import org.hotiver.dto.auth.LoginRequest;
 import org.hotiver.dto.auth.RefreshTokenResponse;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.jwt.JwtTokensDto;
-import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;

@@ -4,7 +4,7 @@ package org.hotiver.app.Controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.api.Controller.AuthController;
-import org.hotiver.common.Exception.NoAuthorizationException;
+import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;

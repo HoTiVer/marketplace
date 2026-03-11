@@ -1,6 +1,5 @@
 package org.hotiver.api.Controller;
 
-import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.order.CreateOrderDto;
 import org.hotiver.dto.order.SellerOrdersResponse;
 import org.hotiver.dto.order.UpdateStatusDto;
@@ -23,8 +22,9 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseDto> createOrder(@RequestBody CreateOrderDto createOrderDto) {
-        return orderService.createOrder(createOrderDto);
+    public ResponseEntity<Void> createOrder(@RequestBody CreateOrderDto createOrderDto) {
+        orderService.createOrder(createOrderDto);
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("isAuthenticated() and hasRole('SELLER')")
@@ -38,15 +38,17 @@ public class OrderController {
 
     @PreAuthorize("isAuthenticated() and hasRole('SELLER')")
     @PatchMapping("/seller/manage-orders/{orderId}")
-    public ResponseEntity<?> changeOrderStatus(@PathVariable Long orderId,
-                                               @RequestBody UpdateStatusDto updateStatusDto) {
+    public ResponseEntity<Void> changeOrderStatus(@PathVariable Long orderId,
+                                                  @RequestBody UpdateStatusDto updateStatusDto) {
 
-        return orderService.changeOrderStatus(orderId, updateStatusDto.getStatus());
+        orderService.changeOrderStatus(orderId, updateStatusDto.getStatus());
+        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/orders/{orderId}/cancel")
-    public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
-        return orderService.cancelUserOrder(orderId);
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
+        orderService.cancelUserOrder(orderId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/orders")

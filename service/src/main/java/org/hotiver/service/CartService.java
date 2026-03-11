@@ -1,6 +1,6 @@
 package org.hotiver.service;
 
-import org.hotiver.common.Exception.ResourceNotFoundException;
+import org.hotiver.common.Exception.base.ResourceNotFoundException;
 import org.hotiver.domain.Entity.CartItem;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.User;

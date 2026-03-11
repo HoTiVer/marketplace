@@ -1,4 +1,4 @@
-package org.hotiver.common.Exception;
+package org.hotiver.common.Exception.base;
 
 public class EntityAlreadyExistsException extends RuntimeException {
 

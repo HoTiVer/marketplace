@@ -1,7 +1,7 @@
 package org.hotiver.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.hotiver.common.Exception.EntityAlreadyExistsException;
+import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.repo.CategoryRepo;

@@ -1,4 +1,4 @@
-package org.hotiver.common.Exception;
+package org.hotiver.common.Exception.auth;
 
 public class NoAuthorizationException extends RuntimeException {
     public NoAuthorizationException(String message) {

@@ -1,6 +1,6 @@
 package org.hotiver.service;
 
-import org.hotiver.common.Exception.EntityAlreadyExistsException;
+import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.common.Utils.HashUtils;
 import jakarta.transaction.Transactional;
 import org.hotiver.common.Enum.SellerRegisterRequestStatus;

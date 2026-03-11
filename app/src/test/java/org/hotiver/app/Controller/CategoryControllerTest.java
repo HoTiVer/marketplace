@@ -4,7 +4,7 @@ package org.hotiver.app.Controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.api.Controller.CategoryController;
-import org.hotiver.common.Exception.EntityAlreadyExistsException;
+import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.service.CategoryService;

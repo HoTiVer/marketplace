@@ -3,7 +3,7 @@ package org.hotiver.app.Controller;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.api.Controller.AdminController;
-import org.hotiver.common.Exception.EntityAlreadyExistsException;
+import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.service.AdminService;
@@ -16,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.ArrayList;
 import java.util.List;

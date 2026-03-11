@@ -1,19 +1,16 @@
 package org.hotiver.app.Controller;
 
 import org.hotiver.api.Controller.CartController;
-import org.hotiver.common.Exception.ResourceNotFoundException;
+import org.hotiver.common.Exception.base.ResourceNotFoundException;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.dto.cart.CartItemDto;
 import org.hotiver.service.CartService;
 import org.hotiver.service.JwtService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springdoc.core.discoverer.SpringDocParameterNameDiscoverer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 

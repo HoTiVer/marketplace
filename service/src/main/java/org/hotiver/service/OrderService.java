@@ -2,16 +2,19 @@ package org.hotiver.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Enum.OrderStatus;
+import org.hotiver.common.Exception.auth.ForbiddenOperationException;
+import org.hotiver.common.Exception.base.InvalidStateException;
+import org.hotiver.common.Exception.base.ResourceNotFoundException;
+import org.hotiver.common.Exception.order.CannotBuyOwnProductException;
+import org.hotiver.common.Exception.user.UserNotFoundException;
 import org.hotiver.domain.Entity.*;
-import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.order.*;
 import org.hotiver.repo.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,31 +51,29 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseDto> createOrder(CreateOrderDto createOrderDto) {
+    public void createOrder(CreateOrderDto createOrderDto) {
         var context = SecurityContextHolder.getContext();
         String email = context.getAuthentication().getName();
-        User user = userRepo.findByEmail(email).get();
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Set<CartItem> userCart = new HashSet<>(user.getCart());
 
         if (userCart.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseDto("You must add products in car before buying"));
+            throw new EntityNotFoundException("Cart is empty");
         }
 
         for (CartItem cartItem : userCart) {
-            Product product = productRepo.findById(cartItem.getProduct().getId()).get();
+            Product product = productRepo.findById(cartItem.getProduct().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
             if (product.getSeller().getId().equals(user.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new ResponseDto("You cannot buy your own product"));
+                throw new CannotBuyOwnProductException("You cannot buy your own product");
             }
 
             Integer quantity = cartItem.getQuantity();
             if (quantity > product.getStockQuantity() && quantity > 0) {
-                return ResponseEntity.badRequest()
-                        .body(new ResponseDto("Your order quantity of product "
-                                + product.getName() + " exceeds stock"));
+                throw new EntityNotFoundException("Quantity is greater than stock quantity");
             }
 
             Order order = Order.builder()
@@ -102,8 +103,6 @@ public class OrderService {
         }
 
         userCart.clear();
-
-        return ResponseEntity.ok().build();
     }
 
     private void saveOrderInOutbox(Order order) {
@@ -138,40 +137,33 @@ public class OrderService {
     public Page<UserOrderDto> getUserOrders(int page, int size) {
         var context = SecurityContextHolder.getContext();
         String email = context.getAuthentication().getName();
-        User user = userRepo.findByEmail(email).get();
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<UserOrderDto> userOrderDto = orderRepo.findUserOrders(user.getId(), pageable);
-        return userOrderDto;
+        return orderRepo.findUserOrders(user.getId(), pageable);
     }
 
-    public ResponseEntity<?> cancelUserOrder(Long orderId) {
+    public void cancelUserOrder(Long orderId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepo.findByEmail(email).get();
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Order order = orderRepo.findById(orderId).orElse(null);
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
         OrderStatus newStatus = OrderStatus.CANCELLED;
-
-        if (order == null) {
-            return ResponseEntity.notFound().build();
-        }
 
         if (order.getUser().getId().equals(user.getId())
                 && order.getStatus().canChangeTo(newStatus)) {
                 order.setStatus(newStatus);
                 orderRepo.save(order);
 
-                Product product = productRepo.findById(order.getProduct().getId()).orElse(null);
-                if (product == null) {
-                    return ResponseEntity.badRequest().build();
-                }
+                Product product = productRepo.findById(order.getProduct().getId())
+                                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
                 product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
                 productRepo.save(product);
-
-                return ResponseEntity.ok().build();
         }
-
-        return ResponseEntity.badRequest().build();
     }
 
     public SellerOrdersResponse getSellerOrders(int page, int size) {
@@ -193,36 +185,33 @@ public class OrderService {
         return new SellerOrdersResponse(sellerOrderDto, orderStatuses);
     }
 
-    public ResponseEntity<?> changeOrderStatus(Long orderId, String status) {
+    public void changeOrderStatus(Long orderId, String status) {
         var email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         OrderStatus newStatus;
         try {
             newStatus = OrderStatus.valueOf(status);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            throw new ResourceNotFoundException("Order status not found");
         }
 
-        Seller seller = sellerRepo.findByEmail(email).orElse(null);
-        Order order = orderRepo.findById(orderId).orElse(null);
+        Seller seller = sellerRepo.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Seller not found"));
 
-        if (seller == null || order == null) {
-            return ResponseEntity.notFound().build();
-        }
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
 
         if (!order.getSeller().getId().equals(seller.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            throw new ForbiddenOperationException("You are not allowed to change the order status");
         }
 
         if (!order.getStatus().canChangeTo(newStatus)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            throw new InvalidStateException("Order status can't be changed");
         }
 
         if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.RETURNED) {
-            Product product = productRepo.findById(order.getProduct().getId()).orElse(null);
-            if (product == null) {
-                return ResponseEntity.badRequest().build();
-            }
+            Product product = productRepo.findById(order.getProduct().getId())
+                            .orElseThrow(() -> new EntityNotFoundException("Product not found"));
             product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
             productRepo.save(product);
         }
@@ -237,7 +226,5 @@ public class OrderService {
 
         order.setStatus(newStatus);
         orderRepo.save(order);
-
-        return ResponseEntity.ok().build();
     }
 }

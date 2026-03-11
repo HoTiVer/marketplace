@@ -2,6 +2,13 @@ package org.hotiver.api.Handler;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Exception.*;
+import org.hotiver.common.Exception.auth.ForbiddenOperationException;
+import org.hotiver.common.Exception.auth.NoAuthorizationException;
+import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
+import org.hotiver.common.Exception.base.InvalidStateException;
+import org.hotiver.common.Exception.base.ResourceNotFoundException;
+import org.hotiver.common.Exception.order.CannotBuyOwnProductException;
+import org.hotiver.common.Exception.user.UserNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -112,4 +119,39 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    @ExceptionHandler(CannotBuyOwnProductException.class)
+    public ResponseEntity<Object> handleCannotBuyOwnProductException(
+            CannotBuyOwnProductException e,
+            WebRequest request
+    ) {
+        return ResponseEntity.status(FORBIDDEN).body(
+                new HashMap<String, Object>() {{
+                    put("message", e.getMessage());
+                }}
+        );
+    }
+
+    @ExceptionHandler(ForbiddenOperationException.class)
+    public ResponseEntity<Object> handleForbiddenOperationException(
+            ForbiddenOperationException e,
+            WebRequest request
+    ) {
+        return ResponseEntity.status(FORBIDDEN).body(
+                new HashMap<String, Object>() {{
+                    put("message", e.getMessage());
+                }}
+        );
+    }
+
+    @ExceptionHandler(InvalidStateException.class)
+    public ResponseEntity<Object> handleInvalidStateException(
+            InvalidStateException e,
+            WebRequest request
+    ) {
+        return ResponseEntity.status(CONFLICT).body(
+                new HashMap<String, Object>() {{
+                    put("message", e.getMessage());
+                }}
+        );
+    }
 }
