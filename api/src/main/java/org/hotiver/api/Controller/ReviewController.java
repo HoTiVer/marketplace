@@ -1,5 +1,6 @@
 package org.hotiver.api.Controller;
 
+import jakarta.validation.Valid;
 import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.review.ReviewDto;
 import org.hotiver.dto.review.ReviewPageDto;
@@ -20,14 +21,19 @@ public class ReviewController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/product/{productId}/review")
-    public ResponseEntity<ResponseDto> addReviewToProduct(@RequestBody ReviewDto reviewDto,
+    public ResponseEntity<ResponseDto> addReviewToProduct(@RequestBody @Valid ReviewDto reviewDto,
                                                           @PathVariable Long productId){
 
-        return reviewService.addReviewToProduct(reviewDto, productId);
+        ResponseDto response = reviewService.addReviewToProduct(reviewDto, productId);
+        if (response == null) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto("you should fully buy it before placing comment"));
+        }
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/product/{productId}/review")
-    public ResponseEntity<ReviewPageDto> getProductReview(@PathVariable Long productId){
-        return reviewService.getProductReview(productId);
+    public ResponseEntity<ReviewPageDto> getProductReviews(@PathVariable Long productId){
+        return ResponseEntity.ok(reviewService.getProductReviews(productId));
     }
 }

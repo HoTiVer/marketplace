@@ -1,6 +1,8 @@
 package org.hotiver.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Enum.OrderStatus;
+import org.hotiver.common.Exception.user.UserNotFoundException;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Review;
 import org.hotiver.domain.Entity.Seller;
@@ -10,7 +12,6 @@ import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
 import org.hotiver.dto.review.ReviewPageDto;
 import org.hotiver.repo.*;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -38,35 +39,16 @@ public class ReviewService {
         this.sellerRepo = sellerRepo;
     }
 
-    public ResponseEntity<ResponseDto> addReviewToProduct(ReviewDto reviewDto, Long id) {
+    public ResponseDto addReviewToProduct(ReviewDto reviewDto, Long id) {
         var email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepo.findByEmail(email).get();
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Product product = productRepo.findById(id).orElse(null);
-        if  (product == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        if (reviewDto.getComment() != null) {
-            if (reviewDto.getComment().length() > 500) {
-                return ResponseEntity.badRequest()
-                        .body(new ResponseDto("comment must be less than 500 characters"));
-            }
-        }
-
-        if (reviewDto.getRating() == null) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseDto("rating is required"));
-        }
-
-        if (reviewDto.getRating() < 1 || reviewDto.getRating() > 5) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseDto("rating must be between 1 and 5"));
-        }
+        Product product = productRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
         if (!orderRepo.isUserBoughtProduct(user.getId(), product.getId(), OrderStatus.COMPLETED.toString())) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseDto("you should fully buy it before placing comment"));
+            return null;
         }
 
         Review review = reviewRepo.findReviewByUserIdAndProductId(user.getId(), product.getId());
@@ -78,7 +60,6 @@ public class ReviewService {
             reviewRepo.save(review);
             calculateSellerRating(product.getSeller().getId());
             calculateProductRating(product.getId());
-            return ResponseEntity.ok(new ResponseDto("success"));
         }
 
         review = Review.builder()
@@ -94,8 +75,7 @@ public class ReviewService {
         calculateSellerRating(product.getSeller().getId());
         calculateProductRating(product.getId());
 
-        return ResponseEntity.ok()
-                .body(new ResponseDto("success"));
+        return new ResponseDto("success");
     }
 
     private void calculateSellerRating(Long sellerId) {
@@ -124,12 +104,9 @@ public class ReviewService {
         }
     }
 
-    public ResponseEntity<ReviewPageDto> getProductReview(Long productId) {
-        Product product = productRepo.findById(productId).orElse(null);
-
-        if (product == null) {
-            return ResponseEntity.notFound().build();
-        }
+    public ReviewPageDto getProductReviews(Long productId) {
+        Product product = productRepo.findById(productId)
+                .orElseThrow(()-> new EntityNotFoundException("Product not found"));
 
 
         List<ProductReviewDto> productReviews = reviewRepo.getProductReview(productId);
@@ -144,6 +121,6 @@ public class ReviewService {
                 productAverageRating,
                 productReviews);
 
-        return ResponseEntity.ok(reviewPageDto);
+        return reviewPageDto;
     }
 }
