@@ -23,12 +23,12 @@ public class SellerController {
 
     @GetMapping("/seller/{username}")
     public ResponseEntity<SellerProfileDto> getSellerByUsername(@PathVariable String username){
-        return sellerService.getSellerByUsername(username);
+        return ResponseEntity.ok().body(sellerService.getSellerByUsername(username));
     }
 
     @GetMapping("/seller/{username}/products")
     public ResponseEntity<List<ListProductDto>> getSellerProducts(@PathVariable String username){
-        return sellerService.getSellerProducts(username);
+        return ResponseEntity.ok().body(sellerService.getSellerProducts(username));
     }
 
     @PreAuthorize("isAuthenticated()")
