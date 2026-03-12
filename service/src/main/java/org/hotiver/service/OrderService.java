@@ -65,7 +65,8 @@ public class OrderService {
 
         for (CartItem cartItem : userCart) {
             Product product = productRepo.findById(cartItem.getProduct().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Product "+ cartItem.getProduct().getName() +" not found"));
 
             if (product.getSeller().getId().equals(user.getId())) {
                 throw new CannotBuyOwnProductException("You cannot buy your own product");
@@ -85,10 +86,10 @@ public class OrderService {
                     .deliveryDate(null)
                     .status(OrderStatus.CREATED)
                     .totalPrice(product.getPrice().multiply(BigDecimal.valueOf(quantity)))
-                    .deliveryCity(createOrderDto.getDeliveryCity())
-                    .deliveryAddress(createOrderDto.getDeliveryAddress())
-                    .recipientName(createOrderDto.getReceiverName())
-                    .recipientPhone(createOrderDto.getReceiverPhone())
+                    .deliveryCity(createOrderDto.deliveryCity())
+                    .deliveryAddress(createOrderDto.deliveryAddress())
+                    .recipientName(createOrderDto.receiverName())
+                    .recipientPhone(createOrderDto.receiverPhone())
                     .build();
 
             product.setSalesCount(product.getSalesCount() + 1);
@@ -163,6 +164,9 @@ public class OrderService {
                                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
                 product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
                 productRepo.save(product);
+        }
+        else {
+            throw new ForbiddenOperationException("You cannot cancel status of this order");
         }
     }
 

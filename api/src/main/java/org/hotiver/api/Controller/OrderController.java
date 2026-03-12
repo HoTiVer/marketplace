@@ -1,5 +1,6 @@
 package org.hotiver.api.Controller;
 
+import jakarta.validation.Valid;
 import org.hotiver.dto.order.CreateOrderDto;
 import org.hotiver.dto.order.SellerOrdersResponse;
 import org.hotiver.dto.order.UpdateStatusDto;
@@ -22,7 +23,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> createOrder(@RequestBody CreateOrderDto createOrderDto) {
+    public ResponseEntity<Void> createOrder(@RequestBody @Valid CreateOrderDto createOrderDto) {
         orderService.createOrder(createOrderDto);
         return ResponseEntity.ok().build();
     }
@@ -52,7 +53,7 @@ public class OrderController {
     }
 
     @GetMapping("/orders")
-    public Page<UserOrderDto> getOrdersHistory(
+    public Page<UserOrderDto> getUserOrdersHistory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
