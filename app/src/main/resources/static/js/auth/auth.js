@@ -3,7 +3,7 @@ export async function refreshAccessToken() {
     if (!refreshToken) return null;
 
     try {
-        const res = await fetch("/auth/refresh", {
+        const res = await fetch("/api/v1/auth/refresh", {
             method: "POST",
             headers: { "Authorization": "Bearer " + refreshToken }
         });
@@ -49,7 +49,7 @@ export async function fetchWithAuth(url, options = {}) {
 export async function logout() {
     const token = localStorage.getItem("accessToken");
 
-    await fetch("/auth/logout",{
+    await fetch("/api/v1/auth/logout",{
         method: "POST",
         headers: {"Authorization": "Bearer " + token }
     });
@@ -60,7 +60,7 @@ export async function logout() {
 
 export async function getAuthData(){
     try {
-        let res = await fetchWithAuth("/auth/me");
+        let res = await fetchWithAuth("/api/v1/auth/me");
 
         if (res.status === 401) {
             return null;
@@ -79,7 +79,7 @@ export async function getAuthData(){
 
 export async function loginUser(email, password) {
     try {
-        const response = await fetch("/auth/login", {
+        const response = await fetch("/api/v1/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
@@ -105,7 +105,7 @@ export async function loginUser(email, password) {
 
 export async function registerUser(email, displayName, password) {
     try {
-        const response = await fetch("/auth/register", {
+        const response = await fetch("/api/v1/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, displayName, password})
@@ -113,7 +113,7 @@ export async function registerUser(email, displayName, password) {
 
         const data = await response.json();
 
-        if (data.isSuccess){
+        if (response.ok){
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
         }

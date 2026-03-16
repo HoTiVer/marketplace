@@ -44,9 +44,9 @@ async function loadProducts(pageNumber) {
     let url = "";
 
     if (categoryId) {
-        url = `/api/search/product/category/${categoryId}?page=${pageNumber}&size=8`;
+        url = `/api/v1/search/product/category/${categoryId}?page=${pageNumber}&size=8`;
     } else {
-        url = `/api/search/product?searchTerm=${encodeURIComponent(searchTerm)}&page=${pageNumber}&size=8`;
+        url = `/api/v1/search/product?searchTerm=${encodeURIComponent(searchTerm)}&page=${pageNumber}&size=8`;
     }
 
     const res = await fetchWithAuth(url);

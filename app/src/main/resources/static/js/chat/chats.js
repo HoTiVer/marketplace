@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const chatsContainer = document.getElementById("chatsContainer");
 
     try {
-        const res = await fetchWithAuth("/cabinet/message");
+        const res = await fetchWithAuth("/api/v1/chat");
 
         if (!res.ok) {
             loading.textContent = `Failed to load chats (${res.status})`;
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             div.className = "bg-white rounded-lg shadow p-4 cursor-pointer hover:bg-gray-50 transition";
             div.textContent = chat.name;
             div.onclick = () => {
-                window.location.href = `/chat/${chat.chatId}`;
+                window.location.href = `/api/v1/chat/${chat.chatId}`;
             };
             chatsContainer.appendChild(div);
         });

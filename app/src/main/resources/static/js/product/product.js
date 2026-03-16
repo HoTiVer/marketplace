@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-        const response = await fetchWithAuth(`/api/product/${productId}`);
+        const response = await fetchWithAuth(`/api/v1/product/${productId}`);
         if (!response.ok) {
             loading.textContent = `Failed to load product (${response.status})`;
             return;
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (userData) {
             addToWishlistBtn.onclick = async () => {
                 try {
-                    const res = await fetchWithAuth(`/api/wishlist/${productId}`, { method: "POST" });
+                    const res = await fetchWithAuth(`/api/v1/wishlist/${productId}`, { method: "POST" });
                     if (res.ok) alert(`✅ "${product.name}" added to wishlist!`);
                     else if (res.status === 409) alert("Already in wishlist.");
                     else alert(`Failed to add to wishlist (${res.status})`);
@@ -70,13 +70,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             addToCartBtn.onclick = async () => {
                 try {
-                    let res = await fetchWithAuth(`/api/cart/${productId}?count=1`, { method: "POST" });
+                    let res = await fetchWithAuth(`/api/v1/cart/${productId}?count=1`, { method: "POST" });
                     if (res.ok) {
                         alert(`🛒 "${product.name}" added to cart!`);
                         return;
                     }
                     if (res.status === 409) {
-                        res = await fetchWithAuth(`/api/cart/${productId}?count=1`, { method: "PATCH" });
+                        res = await fetchWithAuth(`/api/v1/cart/${productId}?count=1`, { method: "PATCH" });
                         if (res.ok) alert(`🛒 Quantity of "${product.name}" increased by 1!`);
                         else alert(`Failed to update cart (${res.status})`);
                     } else {

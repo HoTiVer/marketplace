@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
             msgEl.textContent = data.message || "Registration successful!";
             msgEl.className = "text-green-600 text-sm mt-4 text-center";
 
-            const redirectPath = "/";
+            const redirectPath = "/api/v1/";
 
             setTimeout(() => window.location.href = redirectPath, 800);
         } else {

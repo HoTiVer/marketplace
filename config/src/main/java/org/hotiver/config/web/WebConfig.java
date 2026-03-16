@@ -13,12 +13,16 @@ public class WebConfig implements WebMvcConfigurer{
     @Value("${app.upload.dir}")
     private String productImagePath;
 
+    @Value("${frontend.url}")
+    private String origins;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE")
-                .allowedHeaders("*");
+                .allowedOrigins(origins)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 
     @Override

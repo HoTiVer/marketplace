@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const saveBtn = document.getElementById("saveBtn");
     const mainContent = document.getElementById("mainContent");
 
-    //const isAdmin = userData?.roles?.some(r => r.name === "ADMIN") || false;
     const isAdmin = userData.roles?.includes("ADMIN") ?? false;
     if (isAdmin) adminPanel.classList.remove("hidden");
 
@@ -22,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadCategories() {
         try {
-            const res = await fetch("/api/category");
+            const res = await fetch("/api/v1/api/category");
             if (!res.ok) throw new Error("Failed to load categories");
 
             const categories = await res.json();
@@ -58,7 +57,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         delBtn.textContent = "🗑 Delete";
                         delBtn.onclick = async () => {
                             if (confirm(`Delete category "${cat.name}"?`)) {
-                                const delRes = await fetchWithAuth(`/api/category/${cat.id}`, { method: "DELETE" });
+                                const delRes = await fetchWithAuth(`/api/v1/category/${cat.id}`, { method: "DELETE" });
                                 if (delRes.ok) loadCategories();
                                 else alert("Failed to delete");
                             }
@@ -98,8 +97,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const method = editingCategoryId ? "PUT" : "POST";
         const url = editingCategoryId
-            ? `/api/category/${editingCategoryId}`
-            : "/api/category";
+            ? `/api/v1/category/${editingCategoryId}`
+            : "/api/v1/category";
 
         const res = await fetchWithAuth(url, {
             method,

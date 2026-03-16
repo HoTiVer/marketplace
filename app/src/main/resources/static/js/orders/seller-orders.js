@@ -48,7 +48,7 @@ async function loadOrders(pageNumber = 0) {
     summary.textContent = 'Loading orders...';
 
     try {
-        const res = await fetchWithAuth(`/api/order/seller/manage-orders?page=${pageNumber}&size=${size}`);
+        const res = await fetchWithAuth(`/api/v1/order/seller/manage-orders?page=${pageNumber}&size=${size}`);
         if (!res.ok) {
             loading.textContent = `Failed to load orders (${res.status})`;
             return;

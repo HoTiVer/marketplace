@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 `;
 
                 row.querySelector(".product-link").onclick = () => {
-                    window.location.href = `/product/${item.productId}`;
+                    window.location.href = `/api/v1/product/${item.productId}`;
                 };
 
                 const qtyInput = row.querySelector(".quantity-input");
@@ -109,14 +109,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function updateCount(productId, count) {
-        await fetchWithAuth(`/api/cart/${productId}?count=${count}`, {
+        await fetchWithAuth(`/api/v1/cart/${productId}?count=${count}`, {
             method: "PATCH"
         });
         await loadCart();
     }
 
     async function deleteItem(productId) {
-        await fetchWithAuth(`/api/cart/${productId}`, { method: "DELETE" });
+        await fetchWithAuth(`/api/v1/cart/${productId}`, { method: "DELETE" });
         await loadCart();
     }
 
@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         try {
-            const res = await fetchWithAuth("/api/order", {
+            const res = await fetchWithAuth("/api/v1/order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)

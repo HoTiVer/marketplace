@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadRequests() {
         try {
-            const res = await fetchWithAuth("/api/admin/request/seller-register");
+            const res = await fetchWithAuth("/api/v1/admin/request/seller-register");
             if (!res.ok) throw new Error("Failed to load seller requests");
 
             const requests = await res.json();
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     acceptBtn.addEventListener("click", async () => {
                         try {
-                            const postRes = await fetchWithAuth(`/api/admin/request/seller-register/${req.id}`, {
+                            const postRes = await fetchWithAuth(`/api/v1/admin/request/seller-register/${req.id}`, {
                                 method: "POST"
                             });
                             if (postRes.ok) {
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     rejectBtn.addEventListener("click", async () => {
                         if (!confirm("Are you sure you want to reject this request?")) return;
                         try {
-                            const delRes = await fetchWithAuth(`/api/admin/request/seller-register/${req.id}`, {
+                            const delRes = await fetchWithAuth(`/api/v1/admin/request/seller-register/${req.id}`, {
                                 method: "DELETE"
                             });
                             if (delRes.ok) {

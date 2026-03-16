@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadChat() {
         try {
-            const response = await fetchWithAuth(`/cabinet/message/${chatId}`);
+            const response = await fetchWithAuth(`/api/v1/chat/${chatId}`);
             if (!response.ok) {
                 loading.textContent = `Failed to load chat (${response.status})`;
                 return;
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!content) return;
 
         try {
-            const response = await fetchWithAuth(`/cabinet/message/${chatId}`, {
+            const response = await fetchWithAuth(`/api/v1/chat/${chatId}/message`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ content })

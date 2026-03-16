@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadUserInfo() {
         try {
-            const res = await fetchWithAuth("/cabinet/personal-info");
+            const res = await fetchWithAuth("/api/v1/cabinet/personal-info");
             if (!res.ok) throw new Error("Failed to load user data");
 
             const info = await res.json();
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 goToSellerPageBtn.classList.remove("hidden");
                 goToSellerPageBtn.onclick = () => {
-                    window.location.href = `/seller/${nickname}`;
+                    window.location.href = `/api/v1/seller/${nickname}`;
                 };
             } else {
                 sellerNicknameContainer.classList.add("hidden");
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
 
         try {
-            const res = await fetchWithAuth("/cabinet/new-seller/register", {
+            const res = await fetchWithAuth("/api/v1/cabinet/new-seller/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)

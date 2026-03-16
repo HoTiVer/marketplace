@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-        const response = await fetchWithAuth(`/api/seller/${sellerNickname}`);
+        const response = await fetchWithAuth(`/api/v1/seller/${sellerNickname}`);
 
         if (!response.ok) {
             loading.textContent = `Failed to load seller (${response.status})`;
@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("profileDescription").textContent =
             seller.profileDescription || "No description provided.";
 
-        viewProductsBtn.href = `/seller/${sellerNickname}/products`;
+        viewProductsBtn.href = `seller/${sellerNickname}/products`;
 
         const ratingEl = document.getElementById("rating");
         if (!seller.rating || seller.rating === 0) {
@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             try {
                 const res = await fetchWithAuth(
-                    `/api/seller/message/${sellerNickname}`,
+                    `/api/v1/seller/message/${sellerNickname}`,
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },

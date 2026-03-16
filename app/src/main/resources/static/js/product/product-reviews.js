@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function loadProductReviews() {
-        const res = await fetchWithAuth(`/api/product/${productId}/review`);
+        const res = await fetchWithAuth(`/api/v1/product/${productId}/review`);
         const product = await res.json();
 
         productNameEl.textContent = product.productName;
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             comment: commentInput.value
         };
 
-        const res = await fetchWithAuth(`/api/product/${productId}/review`, {
+        const res = await fetchWithAuth(`/api/v1/product/${productId}/review`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(review)

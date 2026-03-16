@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-        const response = await fetchWithAuth(`/api/seller/${sellerNickname}/products`);
+        const response = await fetchWithAuth(`/api/v1/seller/${sellerNickname}/products`);
 
         if (!response.ok) {
             loading.textContent = `❌ Failed to load products (${response.status})`;

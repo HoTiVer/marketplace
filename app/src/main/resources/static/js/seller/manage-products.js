@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     /* ================== LOAD CATEGORIES ================== */
     async function loadCategories() {
-        const res = await fetchWithAuth("/api/category");
+        const res = await fetchWithAuth("/api/v1/category");
         const categories = await res.json();
         categorySelect.innerHTML = `<option value="">Select category...</option>`;
         categories.forEach(cat => {
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     /* ================== LOAD PRODUCTS ================== */
     async function loadProducts() {
-        const res = await fetchWithAuth("/api/seller/products");
+        const res = await fetchWithAuth("/api/v1/seller/products");
         const products = await res.json();
 
         loading.classList.add("hidden");
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             card.onclick = e => {
                 if (!e.target.classList.contains("editBtn") &&
                     !e.target.classList.contains("deleteBtn")) {
-                    window.location.href = `/product/${prod.id}`;
+                    window.location.href = `/api/v1/product/${prod.id}`;
                 }
             };
 
@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             card.querySelector(".deleteBtn").onclick = async e => {
                 e.stopPropagation();
                 if (!confirm(`Delete "${prod.name}"?`)) return;
-                const resp = await fetchWithAuth(`/api/product/${prod.id}`, { method: "DELETE" });
+                const resp = await fetchWithAuth(`/api/v1/product/${prod.id}`, { method: "DELETE" });
                 if (resp.ok) loadProducts();
                 else alert(`Failed (${resp.status})`);
             };
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         imagesGrid.innerHTML = "";
 
         if (product) {
-            const res = await fetchWithAuth(`/api/seller/products/${product.id}`);
+            const res = await fetchWithAuth(`/api/v1/seller/products/${product.id}`);
             editingProduct = await res.json();
 
             productName.value = editingProduct.name;
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!img.isMain) {
                 div.querySelector(".makeMainBtn").onclick = async () => {
                     await fetchWithAuth(
-                        `/api/product/${product.id}/image/${img.id}/main`,
+                        `/api/v1/product/${product.id}/image/${img.id}/main`,
                         { method: "PATCH" }
                     );
                     await reloadEditingProduct(product.id);
@@ -200,7 +200,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 div.querySelector(".deleteImgBtn").onclick = async () => {
                     if (!confirm("Delete this image?")) return;
                     await fetchWithAuth(
-                        `/api/product/${product.id}/image/${img.id}`,
+                        `/api/v1/product/${product.id}/image/${img.id}`,
                         { method: "DELETE" }
                     );
                     await reloadEditingProduct(product.id);
@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function reloadEditingProduct(productId) {
-        const res = await fetchWithAuth(`/api/seller/product/${productId}`);
+        const res = await fetchWithAuth(`/api/v1/seller/product/${productId}`);
         editingProduct = await res.json();
         renderImages(editingProduct);
     }
@@ -244,8 +244,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const url = editingProduct
-            ? `/api/product/${editingProduct.id}`
-            : "/api/product";
+            ? `/api/v1/product/${editingProduct.id}`
+            : "/api/v1/product";
 
         const method = editingProduct ? "PUT" : "POST";
 

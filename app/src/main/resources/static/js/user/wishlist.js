@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         const [userData, response] = await Promise.all([
             getAuthData(),
-            fetchWithAuth("/api/wishlist")
+            fetchWithAuth("/api/v1/wishlist")
         ]);
 
         await renderNavbar(userData);
@@ -61,13 +61,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const removeBtn = card.querySelector(".removeBtn");
 
                 viewBtn.onclick = () => {
-                    window.location.href = `/product/${product.productId}`;
+                    window.location.href = `/api/v1/product/${product.productId}`;
                 };
 
                 addCartBtn.onclick = async () => {
                     try {
 
-                        let res = await fetchWithAuth(`/api/cart/${product.productId}?count=1`, {
+                        let res = await fetchWithAuth(`/api/v1/cart/${product.productId}?count=1`, {
                             method: "POST"
                         });
 
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (!confirm(`Remove "${product.productName}" from wishlist?`)) return;
 
                     try {
-                        const delResponse = await fetchWithAuth(`/api/wishlist/${product.productId}`, {
+                        const delResponse = await fetchWithAuth(`/api/v1/wishlist/${product.productId}`, {
                             method: "DELETE"
                         });
                         if (!delResponse.ok) {

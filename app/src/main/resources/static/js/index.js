@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderNavbar(authData);
 
 
-    const res = await fetchWithAuth("/api/home");
+    const res = await fetchWithAuth("/api/v1/home");
     if (!res.ok) {
         console.error("Failed to load home data:", res.status);
         return;

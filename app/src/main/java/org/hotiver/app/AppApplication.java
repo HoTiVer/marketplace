@@ -31,6 +31,7 @@ public class AppApplication {
 			System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET"));
             System.setProperty("KAFKA_BOOTSTRAP_SERVERS", dotenv.get("KAFKA_BOOTSTRAP_SERVERS"));
             System.setProperty("UPLOAD_DIR", dotenv.get("UPLOAD_DIR"));
+			System.setProperty("FRONTEND_URL", dotenv.get("FRONTEND_URL"));
 		}
 		catch (Exception e){
 			System.out.println(e.getMessage());

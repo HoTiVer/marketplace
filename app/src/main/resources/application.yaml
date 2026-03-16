@@ -78,3 +78,6 @@ jwt:
 app:
   upload:
     dir: ${UPLOAD_DIR}
+
+frontend:
+  url: ${FRONTEND_URL}
