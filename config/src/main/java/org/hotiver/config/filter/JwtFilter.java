@@ -4,15 +4,15 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.hotiver.service.JwtService;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -31,39 +31,41 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        String jwtAccess = extractTokenFromCookies(request);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (jwtAccess == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String jwt = authHeader.substring(7);
-
         try {
+
             boolean isRefreshRequest = request.getRequestURI().equals("/auth/refresh");
 
-            if (isRefreshRequest && !jwtService.isRefreshToken(jwt)) {
+            if (isRefreshRequest && !jwtService.isRefreshToken(jwtAccess)) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Expected refresh token");
                 return;
             }
 
-            if (!isRefreshRequest && !jwtService.isAccessToken(jwt)) {
+            if (!isRefreshRequest && !jwtService.isAccessToken(jwtAccess)) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Expected access token");
                 return;
             }
 
-            String username = jwtService.extractUsername(jwt);
+            String username = jwtService.extractUsername(jwtAccess);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (username != null &&
+                    SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                if (!jwtService.isTokenValid(jwt, userDetails)) {
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(username);
+
+                if (!jwtService.isTokenValid(jwtAccess, userDetails)) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
                     return;
                 }
@@ -75,16 +77,39 @@ public class JwtFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()
                         );
 
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
+
         } catch (ExpiredJwtException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT token is expired");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT token expired");
             return;
+
         } catch (JwtException | IllegalArgumentException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT token is invalid");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
             return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String extractTokenFromCookies(HttpServletRequest request) {
+
+        if (request.getCookies() == null) {
+            return null;
+        }
+
+        for (Cookie cookie : request.getCookies()) {
+
+            if (cookie.getName().equals("accessToken")) {
+                return cookie.getValue();
+            }
+
+        }
+
+        return null;
     }
 }

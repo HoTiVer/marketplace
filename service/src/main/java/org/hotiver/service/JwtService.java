@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 @Service
@@ -115,11 +116,11 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public Long getJwtRefreshExpiration() {
-        return jwtRefreshExpiration;
+    public Long getJwtRefreshExpirationInSeconds() {
+        return TimeUnit.MILLISECONDS.toSeconds(jwtRefreshExpiration);
     }
 
-    public Long getJwtAccessExpiration(){
-        return jwtAccessExpiration;
+    public Long getJwtAccessExpirationInSeconds(){
+        return TimeUnit.MILLISECONDS.toSeconds(jwtAccessExpiration);
     }
 }

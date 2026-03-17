@@ -6,12 +6,14 @@ import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.user.UserChatsDto;
 import org.hotiver.service.ChatService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/chat")
+@PreAuthorize("isAuthenticated()")
 public class ChatController {
 
     private final ChatService chatService;

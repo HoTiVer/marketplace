@@ -1,19 +1,15 @@
 package org.hotiver.api.Controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
-import org.hotiver.dto.auth.RefreshTokenResponse;
 import org.hotiver.dto.auth.RegisterRequest;
-import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.service.AuthService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,46 +22,65 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @Operation(
-            description = """
-                    Success response should contain two tokens,
-                     if some error has happened then you should expect error json""",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Registered successfully",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"accessToken\": token," +
-                                                    " \"refreshToken\": \"token\"}"
-                                    )
-                            ))
-            }
-    )
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(
+    public ResponseEntity<Void> register(
             @Valid @RequestBody RegisterRequest registerRequest) {
 
-        return ResponseEntity.ok(authService.register(registerRequest));
+        AuthResponse authResponse = authService.register(registerRequest);
+
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken",
+                        authResponse.accessToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(authResponse.accessTokenLifeTime())
+                .sameSite("Strict")
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken",
+                        authResponse.refreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(authResponse.refreshTokenLifeTime())
+                .sameSite("Strict")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .build();
     }
 
-    @Operation(
-            description = """
-                    Success response should contain two tokens,
-                     if some error has happened then you should expect error json""",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Logged in successfully",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"accessToken\": token," +
-                                                    " \"refreshToken\": \"token\"}"
-                                    )
-                            ))
-            }
-    )
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest){
-        return ResponseEntity.ok().body(authService.login(loginRequest));
+    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest loginRequest) {
+        AuthResponse authResponse = authService.login(loginRequest);
+
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken",
+                authResponse.accessToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(authResponse.accessTokenLifeTime())
+                .maxAge(30)
+                .sameSite("Strict")
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken",
+                        authResponse.refreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(authResponse.refreshTokenLifeTime())
+                .maxAge(30)
+                .sameSite("Strict")
+                .build();
+
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .build();
     }
 
 //    @PostMapping("/login/verify")
@@ -79,19 +94,78 @@ public class AuthController {
 //    }
 
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshTokenResponse> refresh(
-            @RequestHeader("Authorization") String authHeader) {
-        return ResponseEntity.ok().body(authService.refresh(authHeader));
+    public ResponseEntity<Void> refresh(HttpServletRequest request) {
+        String refreshToken = getCookie(request, "refreshToken");
+
+        if (refreshToken != null) {
+
+            AuthResponse authResponse = authService.refresh(refreshToken);
+
+            ResponseCookie accessToken = ResponseCookie
+                    .from("accessToken", authResponse.accessToken())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(authResponse.accessTokenLifeTime())
+                    .sameSite("Strict")
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, accessToken.toString())
+                    .build();
+        }
+        else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(){
-        authService.logout();
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        String refreshToken = getCookie(request, "refreshToken");
+
+        if (refreshToken != null)
+            authService.logout(refreshToken);
+
+        ResponseCookie deleteAccess = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+
+        ResponseCookie deleteRefresh = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, deleteAccess.toString())
+                .header(HttpHeaders.SET_COOKIE, deleteRefresh.toString())
+                .build();
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<UserInfoDto> getUserInfoForFrontend() {
         return ResponseEntity.ok().body(authService.getUserInfoForFrontend());
     }
+
+    private String getCookie(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies == null) return null;
+
+        for (Cookie cookie : cookies) {
+            if (name.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
+    }
+
 }

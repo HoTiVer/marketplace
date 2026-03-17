@@ -149,7 +149,7 @@ public class UserService {
             SecurityUser securityUser = new SecurityUser(user);
 
             String refreshToken = jwtService.generateRefreshToken(securityUser);
-            Long timeToSave = jwtService.getJwtRefreshExpiration();
+            Long timeToSave = jwtService.getJwtRefreshExpirationInSeconds();
             String accessToken = jwtService.generateAccessToken(securityUser);
 
             String oldEmailKey = "refresh:" + HashUtils.hashKeySha256(user.getId().toString());
@@ -158,7 +158,8 @@ public class UserService {
             redisService.saveValue("refresh:" + HashUtils.hashKeySha256(user.getId().toString()),
                     refreshToken, TimeUnit.MILLISECONDS.toMinutes(timeToSave));
 
-            return new AuthResponse(accessToken, refreshToken);
+            return new AuthResponse(accessToken, refreshToken,
+                    jwtService.getJwtAccessExpirationInSeconds(), jwtService.getJwtRefreshExpirationInSeconds());
         }
         else {
             return null;

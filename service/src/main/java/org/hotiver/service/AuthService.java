@@ -1,6 +1,7 @@
 package org.hotiver.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.common.Exception.auth.InvalidCredentialsException;
 import org.hotiver.common.Exception.auth.NoAuthorizationException;
@@ -11,7 +12,6 @@ import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
-import org.hotiver.dto.auth.RefreshTokenResponse;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.jwt.JwtTokensDto;
 import org.hotiver.dto.user.UserInfoDto;
@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
+@Slf4j
 @Service
 public class AuthService {
 
@@ -44,7 +45,7 @@ public class AuthService {
                        RedisService redisService, UserRepo userRepo,
                        RoleRepo roleRepo) {
         timeToSaveJwtRefresh = TimeUnit.MILLISECONDS
-                .toMinutes(jwtService.getJwtRefreshExpiration());
+                .toMinutes(jwtService.getJwtRefreshExpirationInSeconds());
         this.emailService = emailService;
         this.redisService = redisService;
         this.jwtService = jwtService;
@@ -73,10 +74,12 @@ public class AuthService {
         String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
         redisService.saveValue(key, jwtTokensDto.getRefreshToken(), timeToSaveJwtRefresh);
 
-        return AuthResponse.builder()
-                .refreshToken(jwtTokensDto.getRefreshToken())
-                .accessToken(jwtTokensDto.getAccessToken())
-                .build();
+        return new AuthResponse(
+                jwtTokensDto.getAccessToken(),
+                jwtTokensDto.getRefreshToken(),
+                jwtService.getJwtAccessExpirationInSeconds(),
+                jwtService.getJwtRefreshExpirationInSeconds()
+        );
     }
 
     public AuthResponse login(LoginRequest loginRequest) {
@@ -103,10 +106,12 @@ public class AuthService {
                 jwtTokensDto.getRefreshToken(),
                 timeToSaveJwtRefresh);
 
-        return AuthResponse.builder()
-                        .accessToken(jwtTokensDto.getAccessToken())
-                        .refreshToken(jwtTokensDto.getRefreshToken())
-                        .build();
+        return new AuthResponse(
+                jwtTokensDto.getAccessToken(),
+                jwtTokensDto.getRefreshToken(),
+                jwtService.getJwtAccessExpirationInSeconds(),
+                jwtService.getJwtRefreshExpirationInSeconds()
+        );
     }
 
 //    @Transactional
@@ -138,8 +143,7 @@ public class AuthService {
 //        return null;
 //    }
 
-    public RefreshTokenResponse refresh(String authHeader) {
-        String refreshToken = authHeader.replace("Bearer ", "");
+    public AuthResponse refresh(String refreshToken) {
 
         if (!jwtService.isTokenValid(refreshToken)) {
             throw new NoAuthorizationException("Refresh token is invalid");
@@ -160,18 +164,27 @@ public class AuthService {
 
         SecurityUser securityUser = new SecurityUser(user.get());
 
-        String newAccessToken = jwtService.generateAccessToken(securityUser);
-        return new RefreshTokenResponse(newAccessToken);
+        String accessToken = jwtService.generateAccessToken(securityUser);
+        return new AuthResponse(
+                accessToken,
+                null,
+                jwtService.getJwtAccessExpirationInSeconds(),
+                null
+        );
     }
 
-    public void logout() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+    public void logout(String refreshToken) {
+        String email = jwtService.extractUsername(refreshToken);
 
-        User user = userRepo.findByEmail(email).orElseThrow();
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new NoAuthorizationException("You are not authorized"));
 
         String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
-        redisService.deleteValue(key);
+        try {
+            redisService.deleteValue(key);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Transactional
@@ -182,8 +195,8 @@ public class AuthService {
             String password = PasswordUtils.generatePassword(13);
             var response = register(new RegisterRequest(email, password, email));
 
-            return new JwtTokensDto(response.getRefreshToken(),
-                    response.getAccessToken());
+            return new JwtTokensDto(response.refreshToken(),
+                    response.accessToken());
         }
         else {
             user = opUser.get();

@@ -8,7 +8,6 @@ import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
-import org.hotiver.dto.auth.RefreshTokenResponse;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.validation.RegisterRequest.EmailUniqueChecker;
 import org.hotiver.repo.UserRepo;
