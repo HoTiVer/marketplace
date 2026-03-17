@@ -62,7 +62,6 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(authResponse.accessTokenLifeTime())
-                .maxAge(30)
                 .sameSite("Strict")
                 .build();
 
@@ -72,7 +71,6 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(authResponse.refreshTokenLifeTime())
-                .maxAge(30)
                 .sameSite("Strict")
                 .build();
 

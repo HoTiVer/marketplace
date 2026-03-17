@@ -7,6 +7,7 @@ import org.hotiver.common.Exception.auth.InvalidCredentialsException;
 import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.common.Utils.PasswordUtils;
 import org.hotiver.common.Utils.RedisKeyUtils;
+import org.hotiver.common.Utils.TimeUtils;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
@@ -17,7 +18,6 @@ import org.hotiver.dto.jwt.JwtTokensDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,7 +34,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class AuthService {
 
-    private final Long timeToSaveJwtRefresh;
+    private final Long millisecondsToSaveJwtRefresh;
+    private final Long millisecondsToSaveJwtAccess;
     private final JwtService jwtService;
     private final EmailService emailService;
     private final RedisService redisService;
@@ -44,8 +45,8 @@ public class AuthService {
     public AuthService(JwtService jwtService, EmailService emailService,
                        RedisService redisService, UserRepo userRepo,
                        RoleRepo roleRepo) {
-        timeToSaveJwtRefresh = TimeUnit.MILLISECONDS
-                .toMinutes(jwtService.getJwtRefreshExpirationInSeconds());
+        millisecondsToSaveJwtRefresh = jwtService.getJwtRefreshExpirationMilliseconds();
+        millisecondsToSaveJwtAccess =  jwtService.getJwtAccessExpirationMilliseconds();
         this.emailService = emailService;
         this.redisService = redisService;
         this.jwtService = jwtService;
@@ -72,13 +73,14 @@ public class AuthService {
         JwtTokensDto jwtTokensDto = generateJwtTokens(user);
 
         String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
-        redisService.saveValue(key, jwtTokensDto.getRefreshToken(), timeToSaveJwtRefresh);
+        redisService.saveValue(key, jwtTokensDto.getRefreshToken(),
+                TimeUtils.toMinutes(millisecondsToSaveJwtRefresh));
 
         return new AuthResponse(
                 jwtTokensDto.getAccessToken(),
                 jwtTokensDto.getRefreshToken(),
-                jwtService.getJwtAccessExpirationInSeconds(),
-                jwtService.getJwtRefreshExpirationInSeconds()
+                TimeUtils.toSeconds(millisecondsToSaveJwtAccess),
+                TimeUtils.toSeconds(millisecondsToSaveJwtRefresh)
         );
     }
 
@@ -104,13 +106,13 @@ public class AuthService {
         String refreshTokenKey = RedisKeyUtils.generateRedisRefreshTokenKey(user.get().getId());
         redisService.saveValue(refreshTokenKey,
                 jwtTokensDto.getRefreshToken(),
-                timeToSaveJwtRefresh);
+                TimeUtils.toMinutes(millisecondsToSaveJwtRefresh));
 
         return new AuthResponse(
                 jwtTokensDto.getAccessToken(),
                 jwtTokensDto.getRefreshToken(),
-                jwtService.getJwtAccessExpirationInSeconds(),
-                jwtService.getJwtRefreshExpirationInSeconds()
+                TimeUtils.toSeconds(millisecondsToSaveJwtAccess),
+                TimeUtils.toSeconds(millisecondsToSaveJwtRefresh)
         );
     }
 
@@ -168,7 +170,7 @@ public class AuthService {
         return new AuthResponse(
                 accessToken,
                 null,
-                jwtService.getJwtAccessExpirationInSeconds(),
+                TimeUtils.toSeconds(millisecondsToSaveJwtAccess),
                 null
         );
     }
@@ -205,7 +207,8 @@ public class AuthService {
         var tokens = generateJwtTokens(user);
 
         String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
-        redisService.saveValue(key, tokens.getRefreshToken(), timeToSaveJwtRefresh);
+        redisService.saveValue(key, tokens.getRefreshToken(),
+                TimeUtils.toMinutes(millisecondsToSaveJwtRefresh));
 
         return tokens;
     }

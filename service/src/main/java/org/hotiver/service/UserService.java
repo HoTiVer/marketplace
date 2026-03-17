@@ -149,7 +149,7 @@ public class UserService {
             SecurityUser securityUser = new SecurityUser(user);
 
             String refreshToken = jwtService.generateRefreshToken(securityUser);
-            Long timeToSave = jwtService.getJwtRefreshExpirationInSeconds();
+            Long timeToSave = jwtService.getJwtRefreshExpirationMilliseconds();
             String accessToken = jwtService.generateAccessToken(securityUser);
 
             String oldEmailKey = "refresh:" + HashUtils.hashKeySha256(user.getId().toString());
@@ -159,7 +159,7 @@ public class UserService {
                     refreshToken, TimeUnit.MILLISECONDS.toMinutes(timeToSave));
 
             return new AuthResponse(accessToken, refreshToken,
-                    jwtService.getJwtAccessExpirationInSeconds(), jwtService.getJwtRefreshExpirationInSeconds());
+                    jwtService.getJwtAccessExpirationMilliseconds(), jwtService.getJwtRefreshExpirationMilliseconds());
         }
         else {
             return null;
