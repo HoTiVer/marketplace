@@ -220,8 +220,8 @@ public class AuthService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
 
-        UserInfoDto dto = new UserInfoDto();
-        dto.setRoles(
+        UserInfoDto dto = new UserInfoDto(
+                user.getDisplayName(),
                 user.getRoles().stream()
                         .map(role -> role.getName().toString())
                         .toList()
