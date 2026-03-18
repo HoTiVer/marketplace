@@ -4,10 +4,10 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 public interface ProductProjection {
-    Long getId();
-    String getName();
+    Long getProductId();
+    String getProductName();
     BigDecimal getPrice();
     String getDescription();
     String getCategoryName();
-    String getImageUrl();
+    String getMainImageUrl();
 }

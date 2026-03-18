@@ -31,12 +31,12 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
 
     @Query("""
     SELECT\s
-        p.id AS id,
-        p.name AS name,
+        p.id AS productId,
+        p.name AS productName,
         p.price AS price,
         p.description AS description,
         p.category.name AS categoryName,
-        CONCAT('/images', pi.url) AS imageUrl
+        CONCAT('/images', pi.url) AS mainImageUrl
     FROM Product p
     LEFT JOIN ProductImage pi
         ON pi.product.id = p.id AND pi.isMain = true
@@ -46,12 +46,12 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
 
     @Query(value = """
     SELECT
-        p.id AS id,
-        p.name AS name,
+        p.id AS productId,
+        p.name AS productName,
         p.price AS price,
         p.description AS description,
         c.name AS categoryName,
-        CONCAT('/images', pi.url) AS imageUrl
+        CONCAT('/images', pi.url) AS mainImageUrl
     FROM product p
     JOIN category c ON p.category_id = c.id
     JOIN seller s ON p.seller_id = s.id
