@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 
 @AllArgsConstructor
@@ -17,7 +18,7 @@ public class SellerOrderDto {
     private Date orderDate;
     private Date deliveryDate;
     private String orderStatus;
-    private Double totalPrice;
+    private BigDecimal totalPrice;
     private String deliveryAddress;
     private String deliveryCity;
     private String recipientName;
