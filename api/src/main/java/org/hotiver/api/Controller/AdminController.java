@@ -1,6 +1,7 @@
 package org.hotiver.api.Controller;
 
 import org.hotiver.domain.Entity.SellerRegister;
+import org.hotiver.dto.admin.SellerRegisterResponse;
 import org.hotiver.service.AdminService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class AdminController {
     }
 
     @GetMapping("/request/seller-register")
-    public ResponseEntity<List<SellerRegister>> getSellerRegisterRequests() {
+    public ResponseEntity<List<SellerRegisterResponse>> getSellerRegisterRequests() {
         return ResponseEntity.ok().body(adminService.getSellerRegisterRequests());
     }
 

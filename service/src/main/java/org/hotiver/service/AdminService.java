@@ -7,6 +7,7 @@ import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
+import org.hotiver.dto.admin.SellerRegisterResponse;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
@@ -38,7 +39,7 @@ public class AdminService {
         this.emailService = emailService;
     }
 
-    public List<SellerRegister> getSellerRegisterRequests() {
+    public List<SellerRegisterResponse> getSellerRegisterRequests() {
         return sellerRegisterRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE);
     }
 
