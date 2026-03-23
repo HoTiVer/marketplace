@@ -1,5 +1,10 @@
 package org.hotiver.api.Controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductAddDto;
@@ -31,6 +36,27 @@ public class ProductController {
     }
 
     @PreAuthorize("hasRole('SELLER')")
+    @Operation(summary = "Add product")
+    @Parameters(value = {
+            @Parameter(
+                    name = "data",
+                    description = "Product data (JSON)",
+                    required = true,
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ProductAddDto.class)
+                    )
+            ),
+            @Parameter(
+                    name = "image",
+                    description = "Product image",
+                    required = false,
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                            schema = @Schema(type = "string", format = "binary")
+                    )
+            )
+    })
     @PostMapping(value = "/product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> addProduct(
             @Valid @RequestPart("data") ProductAddDto productAddDto,
@@ -48,6 +74,27 @@ public class ProductController {
     }
 
     @PreAuthorize("hasRole('SELLER')")
+    @Operation(summary = "Update product")
+    @Parameters(value = {
+            @Parameter(
+                    name = "data",
+                    description = "Product data (JSON)",
+                    required = true,
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ProductAddDto.class)
+                    )
+            ),
+            @Parameter(
+                    name = "image",
+                    description = "Product image",
+                    required = false,
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                            schema = @Schema(type = "string", format = "binary")
+                    )
+            )
+    })
     @PutMapping(value = "/product/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateProductById(
             @PathVariable Long id,

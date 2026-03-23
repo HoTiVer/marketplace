@@ -23,7 +23,7 @@ public class ProductAddDto {
     @NotBlank(message = "Category must be assigned")
     private String categoryName;
 
-    @NotNull
+    //@NotNull
     private Map<String, Object> characteristics;
 
     @NotNull(message = "Quantity must be assigned")
