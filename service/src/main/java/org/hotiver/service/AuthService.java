@@ -191,9 +191,9 @@ public class AuthService {
 
     @Transactional
     public AuthResponse authAsOAuth2User(String email) {
-        Optional<User> opUser = userRepo.findByEmail(email);
-        User user;
-        if (opUser.isEmpty()){
+        User user = userRepo.findByEmail(email).orElse(null);
+
+        if (user == null){
             String password = PasswordUtils.generatePassword(13);
             String displayName = email.substring(0, email.indexOf('@'));
             AuthResponse response = register(new RegisterRequest(email, password, displayName));
@@ -204,9 +204,6 @@ public class AuthService {
                     TimeUtils.toSeconds(millisecondsToSaveJwtAccess),
                     TimeUtils.toSeconds(millisecondsToSaveJwtRefresh)
             );
-        }
-        else {
-            user = opUser.get();
         }
 
         JwtTokensDto tokens = generateJwtTokens(user);
