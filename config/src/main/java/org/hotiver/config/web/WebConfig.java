@@ -26,25 +26,6 @@ public class WebConfig implements WebMvcConfigurer{
     }
 
     @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-
-        registry.addViewController("/product/*")
-                .setViewName("forward:/product.html");
-
-        registry.addViewController("/product/*/reviews")
-                .setViewName("forward:/product-reviews.html");
-
-        registry.addViewController("/seller/*")
-                .setViewName("forward:/seller.html");
-
-        registry.addViewController("/seller/*/products")
-                .setViewName("forward:/seller-products.html");
-
-        registry.addViewController("/chat/*")
-                .setViewName("forward:/chat.html");
-    }
-
-    @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/images/products/**")
                 .addResourceLocations("file:" + productImagePath + "/products/");
