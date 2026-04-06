@@ -22,7 +22,7 @@ public class CurrentSellerProductDto {
 
     private String categoryName;
 
-    private Map<String, Object> characteristic;
+    private Map<String, Object> characteristics;
 
     private Integer quantity;
 

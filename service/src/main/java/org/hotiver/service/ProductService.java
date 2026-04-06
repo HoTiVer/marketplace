@@ -3,6 +3,7 @@ package org.hotiver.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.domain.Entity.*;
 import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductAddDto;
@@ -10,16 +11,13 @@ import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.ProductImageDto;
 import org.hotiver.dto.seller.SellerProductProjection;
 import org.hotiver.repo.*;
+import org.hotiver.service.mapper.ProductMapper;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
@@ -33,10 +31,12 @@ public class ProductService {
     private final CategoryRepo categoryRepo;
     private final ImageService imageService;
     private final ProductImageRepo productImageRepo;
+    private final ProductMapper productMapper;
 
     public ProductService(ChatService chatService, SellerRepo sellerRepo,
                           ProductRepo productRepo, UserRepo userRepo,
-                          CategoryRepo categoryRepo, ImageService imageService, ProductImageRepo productImageRepo) {
+                          CategoryRepo categoryRepo, ImageService imageService,
+                          ProductImageRepo productImageRepo, ProductMapper productMapper) {
         this.chatService = chatService;
         this.sellerRepo = sellerRepo;
         this.productRepo = productRepo;
@@ -44,6 +44,7 @@ public class ProductService {
         this.categoryRepo = categoryRepo;
         this.imageService = imageService;
         this.productImageRepo = productImageRepo;
+        this.productMapper = productMapper;
     }
 
     public void addProduct(ProductAddDto productAddDto,
@@ -54,19 +55,7 @@ public class ProductService {
         Category category = categoryRepo.findByName(productAddDto.getCategoryName())
                 .orElseThrow(()-> new EntityNotFoundException("Category not found"));
 
-        Product product = Product.builder()
-                .name(productAddDto.getName())
-                .price(productAddDto.getPrice())
-                .category(category)
-                .description(productAddDto.getDescription())
-                .characteristic(new HashMap<>(productAddDto.getCharacteristics()))
-                .seller(seller)
-                .stockQuantity(productAddDto.getQuantity())
-                .salesCount(0)
-                .publishingDate(Date.valueOf(LocalDate.now()))
-                .rating(BigDecimal.valueOf(0.0))
-                .isVisible(true)
-                .build();
+        Product product = productMapper.productAddDtoToEntity(productAddDto, category, seller);
 
         product = productRepo.save(product);
 
@@ -92,53 +81,27 @@ public class ProductService {
 
 
     public ProductGetDto getProductById(Long id) {
-        Optional<Product> product = productRepo.findById(id);
+        Product product = productRepo.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException("Product with id " +
+                        id + " not found"));
 
-        if (product.isEmpty() || !product.get().getIsVisible()){
-            throw new EntityNotFoundException("Product with id " + id + " not found");
-        }
+        //List<ProductImageDto> images = getProductImages(product);
+        //returnProduct.setImages(images);
 
-        Product existingProduct = product.get();
-
-        ProductGetDto returnProduct = ProductGetDto.builder()
-                .id(existingProduct.getId())
-                .name(existingProduct.getName())
-                .price(existingProduct.getPrice())
-                .categoryName(existingProduct.getCategory().getName())
-                .description(existingProduct.getDescription())
-                .characteristic(existingProduct.getCharacteristic())
-                .sellerUsername(existingProduct.getSeller().getNickname())
-                .sellerDisplayName(existingProduct.getSeller().getUser().getDisplayName())
-                .build();
-
-        List<ProductImageDto> images = new ArrayList<>();
-
-        for (var image : existingProduct.getImages()) {
-            images.add(new ProductImageDto(
-                image.getId(),
-                    "/images" + image.getUrl(),
-                    image.getIsMain()
-            ));
-        }
-
-        returnProduct.setImages(images);
-
-        return returnProduct;
+        return productMapper.entityToProductGetDto(
+                product,
+                product.getCategory(),
+                product.getSeller());
     }
 
     @Transactional
     public void deleteProductById(Long id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        var roles = authentication.getAuthorities();
+        User user = getCurrentUser();
+        var roles = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
 
-        User user = userRepo.findByEmail(email).get();
-
-        Optional<Product> opProduct = productRepo.findById(id);
-        if (opProduct.isEmpty()){
-            throw new EntityNotFoundException("Product with id " + id + " not found");
-        }
-        var product = opProduct.get();
+        Product product = productRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id "
+                        + id + " not found"));
 
 
         for (var role : roles) {
@@ -167,20 +130,15 @@ public class ProductService {
     public void updateProductById(Long id,
                                   ProductAddDto productAddDto,
                                   MultipartFile image) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = getCurrentUser();
 
-        Optional<Product> opProduct = productRepo.findById(id);
-        if (opProduct.isEmpty()){
-            throw new EntityNotFoundException("Product with id " + id + " not found");
-        }
+        Product product = productRepo.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException("Product with id "
+                        + id + " not found"));
 
-        User user = userRepo.findByEmail(email).get();
-
-        if (!opProduct.get().getSeller().getId().equals(user.getId())){
+        if (!product.getSeller().getId().equals(user.getId())){
             throw new AccessDeniedException("You are not the seller of this product");
         }
-
-        Product product = opProduct.get();
 
         String categoryName = productAddDto.getCategoryName();
         if (categoryName != null) {
@@ -191,6 +149,8 @@ public class ProductService {
 
             product.setCategory(category.get());
         }
+
+        productMapper.updateProductFromDto(productAddDto, product);
 
 
         if (image != null) {
@@ -218,67 +178,49 @@ public class ProductService {
     }
 
     public List<SellerProductProjection> getCurrentSellerProducts(String username) {
-        if (username == null)
-            throw new EntityNotFoundException("Seller do not exist");
-
-        Seller seller = sellerRepo.findByEmail(username).get();
+        Seller seller = sellerRepo.findByEmail(username)
+                .orElseThrow(()-> new EntityNotFoundException("Seller does not exist"));
 
         return productRepo
                 .getCurrentSellerProducts(seller.getId());
     }
 
-    public CurrentSellerProductDto getCurrentSellerProductById(
-            Long productId) {
-
-        Optional<Product> product = productRepo.findById(productId);
-
-        if (product.isEmpty() || !product.get().getIsVisible()){
-            throw new EntityNotFoundException("Product with id " + productId + " not found");
-        }
-
-        Product existingProduct = product.get();
+    public CurrentSellerProductDto getCurrentSellerProductById(Long productId) {
+        Product product = productRepo.findById(productId)
+                .orElseThrow(()-> new EntityNotFoundException("Product with id "
+                        + productId + " not found"));
 
         CurrentSellerProductDto returnProduct = CurrentSellerProductDto.builder()
-                .id(existingProduct.getId())
-                .name(existingProduct.getName())
-                .price(existingProduct.getPrice())
-                .categoryName(existingProduct.getCategory().getName())
-                .description(existingProduct.getDescription())
-                .characteristic(existingProduct.getCharacteristic())
-                .quantity(existingProduct.getStockQuantity())
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
+                .categoryName(product.getCategory().getName())
+                .description(product.getDescription())
+                .characteristics(product.getCharacteristic())
+                .quantity(product.getStockQuantity())
                 .build();
 
-        List<ProductImageDto> images = new ArrayList<>();
-
-        for (var image : existingProduct.getImages()) {
-            images.add(new ProductImageDto(
-                    image.getId(),
-                    "/images" + image.getUrl(),
-                    image.getIsMain()
-            ));
-        }
+        List<ProductImageDto> images = getProductImages(product);
         returnProduct.setImages(images);
 
         return returnProduct;
     }
 
     public void deleteProductImage(Long productId, Long imageId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = getCurrentUser();
 
-        Product product = productRepo.findById(productId).orElse(null);
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id "
+                        + productId + " not found"));
 
-        if (product == null) {
-            throw new EntityNotFoundException("Product with id " + productId + " not found");
-        }
 
-        var user = userRepo.findByEmail(email).orElse(null);
         if (!product.getSeller().getId().equals(user.getId())) {
             throw new AccessDeniedException("You are not the seller of this product");
         }
 
-        var productImages = product.getImages();
+        List<ProductImage> productImages = product.getImages();
 
-        var imageToRemove = productImages
+        ProductImage imageToRemove = productImages
                 .stream()
                 .filter(image -> image.getId().equals(imageId))
                 .findFirst()
@@ -298,15 +240,12 @@ public class ProductService {
 
 
     public void makeProductMainImage(Long productId, Long imageId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = getCurrentUser();
 
-        Product product = productRepo.findById(productId).orElse(null);
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id "
+                        + productId + " not found"));
 
-        if (product == null) {
-            throw new EntityNotFoundException("Product with id " + productId + " not found");
-        }
-
-        var user = userRepo.findByEmail(email).orElse(null);
         if (!product.getSeller().getId().equals(user.getId())) {
             throw new AccessDeniedException("You are not the seller of this product");
         }
@@ -329,5 +268,25 @@ public class ProductService {
 
         product.setImages(productImages);
         productRepo.save(product);
+    }
+
+    private List<ProductImageDto> getProductImages(Product product) {
+        List<ProductImageDto> images = new ArrayList<>();
+
+        for (var image : product.getImages()) {
+            images.add(new ProductImageDto(
+                    image.getId(),
+                    "/images" + image.getUrl(),
+                    image.getIsMain()
+            ));
+        }
+        return images;
+    }
+
+    private User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return userRepo.findByEmail(email)
+                .orElseThrow(()-> new NoAuthorizationException("The user is not authorized"));
     }
 }
