@@ -15,9 +15,5 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.getWriter().write("""
-           {"error":"oauth2_login_failed","message":"%s"}
-        """.formatted(exception.getMessage()));
     }
 }

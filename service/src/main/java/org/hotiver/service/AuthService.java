@@ -190,27 +190,37 @@ public class AuthService {
     }
 
     @Transactional
-    public JwtTokensDto authAsOAuth2User(String email) {
+    public AuthResponse authAsOAuth2User(String email) {
         Optional<User> opUser = userRepo.findByEmail(email);
         User user;
         if (opUser.isEmpty()){
             String password = PasswordUtils.generatePassword(13);
-            var response = register(new RegisterRequest(email, password, email));
+            String displayName = email.substring(0, email.indexOf('@'));
+            AuthResponse response = register(new RegisterRequest(email, password, displayName));
 
-            return new JwtTokensDto(response.refreshToken(),
-                    response.accessToken());
+            return new AuthResponse(
+                    response.accessToken(),
+                    response.refreshToken(),
+                    TimeUtils.toSeconds(millisecondsToSaveJwtAccess),
+                    TimeUtils.toSeconds(millisecondsToSaveJwtRefresh)
+            );
         }
         else {
             user = opUser.get();
         }
 
-        var tokens = generateJwtTokens(user);
+        JwtTokensDto tokens = generateJwtTokens(user);
 
         String key = RedisKeyUtils.generateRedisRefreshTokenKey(user.getId());
         redisService.saveValue(key, tokens.getRefreshToken(),
                 TimeUtils.toMinutes(millisecondsToSaveJwtRefresh));
 
-        return tokens;
+        return new AuthResponse(
+                tokens.getAccessToken(),
+                tokens.getRefreshToken(),
+                TimeUtils.toSeconds(millisecondsToSaveJwtAccess),
+                TimeUtils.toSeconds(millisecondsToSaveJwtRefresh)
+        );
     }
 
     public UserInfoDto getUserInfoForFrontend() {
