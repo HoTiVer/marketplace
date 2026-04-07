@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
 import org.hotiver.dto.auth.RegisterRequest;
+import org.hotiver.dto.user.PasswordChangeDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.service.AuthService;
 import org.springframework.http.*;
@@ -151,6 +152,30 @@ public class AuthController {
     public ResponseEntity<UserInfoDto> getUserInfoForFrontend() {
         return ResponseEntity.ok().body(authService.getUserInfoForFrontend());
     }
+
+//    @PutMapping("/security/2fa")
+//    public ResponseEntity<Void> changeTwoFactorStatus() {
+//        userService.changeTwoFactorStatus();
+//        return ResponseEntity.ok().build();
+//    }
+
+    @PutMapping("/security/password")
+    public ResponseEntity<Void> changeUserPassword(
+            @Valid @RequestBody PasswordChangeDto passwordChangeDto) {
+        boolean response = authService.changeUserPassword(passwordChangeDto);
+
+        if (response)
+            return ResponseEntity.ok().build();
+        else
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+//    @PostMapping("/personal-info/security/password/verify")
+//    public ResponseEntity<?> verifyChangeUserPassword(
+//            @RequestBody PasswordChangeDto passwordChangeDto) {
+//        userService.verifyChangeUserPassword(passwordChangeDto);
+//        return ResponseEntity.ok().build();
+//    }
 
     private String getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();

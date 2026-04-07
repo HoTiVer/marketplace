@@ -3,8 +3,8 @@ package org.hotiver.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
-import org.hotiver.common.Exception.auth.InvalidCredentialsException;
 import org.hotiver.common.Exception.auth.NoAuthorizationException;
+import org.hotiver.common.Utils.HashUtils;
 import org.hotiver.common.Utils.PasswordUtils;
 import org.hotiver.common.Utils.RedisKeyUtils;
 import org.hotiver.common.Utils.TimeUtils;
@@ -15,9 +15,12 @@ import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.jwt.JwtTokensDto;
+import org.hotiver.dto.user.PasswordChangeDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
+import org.hotiver.service.security.SecurityService;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -39,17 +41,19 @@ public class AuthService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final RedisService redisService;
+    private final SecurityService securityService;
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
 
     public AuthService(JwtService jwtService, EmailService emailService,
-                       RedisService redisService, UserRepo userRepo,
-                       RoleRepo roleRepo) {
+                       RedisService redisService, SecurityService securityService,
+                       UserRepo userRepo, RoleRepo roleRepo) {
         millisecondsToSaveJwtRefresh = jwtService.getJwtRefreshExpirationMilliseconds();
         millisecondsToSaveJwtAccess =  jwtService.getJwtAccessExpirationMilliseconds();
         this.emailService = emailService;
         this.redisService = redisService;
         this.jwtService = jwtService;
+        this.securityService = securityService;
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
     }
@@ -94,7 +98,7 @@ public class AuthService {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.get().getPassword())) {
-            throw new InvalidCredentialsException("Invalid credentials");
+            throw new BadCredentialsException("Invalid credentials");
         }
 
 //        if (user.get().getIsTwoFactorEnable()){
@@ -235,6 +239,55 @@ public class AuthService {
         );
         return dto;
     }
+
+    public boolean changeUserPassword(PasswordChangeDto passwordChangeDto) {
+        User user = securityService.getCurrentUser();
+
+        if (user.getIsTwoFactorEnable()){
+            String key = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());
+            String code = String.format("%06d", new Random().nextInt(999999));
+
+            emailService.send(user.getEmail(), "Password verify", code);
+            redisService.saveValue(key, code, 10);
+        }
+
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        if (encoder.matches(passwordChangeDto.getOldPassword(), user.getPassword())) {
+            user.setPassword(encoder.encode(passwordChangeDto.getNewPassword()));
+            userRepo.save(user);
+            return true;
+        }
+        return false;
+    }
+
+//    public void verifyChangeUserPassword(PasswordChangeDto passwordChangeDto) {
+//        User user = getCurrentUser();
+//
+//        String code = passwordChangeDto.getCode();
+//        String keyToFind = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());
+//
+//        if (redisService.hasKey(keyToFind)) {
+//            if (redisService.getValue(keyToFind).equals(code)) {
+//
+//                redisService.deleteValue(keyToFind);
+//
+//                PasswordEncoder encoder = new BCryptPasswordEncoder();
+//
+//                user.setPassword(encoder.encode(passwordChangeDto.getPassword()));
+//                userRepo.save(user);
+//            }
+//        }
+//    }
+//
+//    public void changeTwoFactorStatus() {
+//        User user = getCurrentUser();
+//
+//        Boolean twoFactorStatus = user.getIsTwoFactorEnable();
+//        user.setIsTwoFactorEnable(!twoFactorStatus);
+//
+//        userRepo.save(user);
+//    }
 
     private User createNewDefaultUser(String email, String password, String displayName) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();

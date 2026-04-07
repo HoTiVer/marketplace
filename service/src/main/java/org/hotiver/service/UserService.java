@@ -1,5 +1,6 @@
 package org.hotiver.service;
 
+import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.common.Utils.HashUtils;
 import jakarta.transaction.Transactional;
@@ -174,56 +175,12 @@ public class UserService {
                 .build();
     }
 
-    public void changeTwoFactorStatus() {
-        User user = getCurrentUser();
-
-        Boolean twoFactorStatus = user.getIsTwoFactorEnable();
-        user.setIsTwoFactorEnable(!twoFactorStatus);
-
-        userRepo.save(user);
-    }
-
-    public void changeUserPassword(PasswordChangeDto passwordChangeDto) {
-        User user = getCurrentUser();
-
-        if (user.getIsTwoFactorEnable()){
-            String key = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());
-            String code = String.format("%06d", new Random().nextInt(999999));
-
-            emailService.send(user.getEmail(), "Password verify", code);
-            redisService.saveValue(key, code, 10);
-        }
-
-        PasswordEncoder encoder = new BCryptPasswordEncoder();
-
-        user.setPassword(encoder.encode(passwordChangeDto.getPassword()));
-        userRepo.save(user);
-    }
-
-    public void verifyChangeUserPassword(PasswordChangeDto passwordChangeDto) {
-        User user = getCurrentUser();
-
-        String code = passwordChangeDto.getCode();
-        String keyToFind = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());
-
-        if (redisService.hasKey(keyToFind)) {
-            if (redisService.getValue(keyToFind).equals(code)) {
-
-                redisService.deleteValue(keyToFind);
-
-                PasswordEncoder encoder = new BCryptPasswordEncoder();
-
-                user.setPassword(encoder.encode(passwordChangeDto.getPassword()));
-                userRepo.save(user);
-            }
-        }
-    }
-
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
-        return userRepo.findByEmail(email).orElseThrow();
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new NoAuthorizationException("User not found"));
     }
 
 }

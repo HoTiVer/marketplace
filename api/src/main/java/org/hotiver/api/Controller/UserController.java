@@ -63,26 +63,6 @@ public class UserController {
         return ResponseEntity.ok().body(userService.getSecurityInfo());
     }
 
-    @PutMapping("/personal-info/security/2fa")
-    public ResponseEntity<Void> changeTwoFactorStatus() {
-        userService.changeTwoFactorStatus();
-        return ResponseEntity.ok().build();
-    }
-
-    @PutMapping("/personal-info/security/password")
-    public ResponseEntity<?> changeUserPassword(
-            @RequestBody PasswordChangeDto passwordChangeDto) {
-        userService.changeUserPassword(passwordChangeDto);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/personal-info/security/password/verify")
-    public ResponseEntity<?> verifyChangeUserPassword(
-            @RequestBody PasswordChangeDto passwordChangeDto) {
-        userService.verifyChangeUserPassword(passwordChangeDto);
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping("/new-seller/register")
     public ResponseEntity<Void> sendSellerRegisterRequest(
             @Valid @RequestBody SellerRegisterDto sellerRegisterDto) {
