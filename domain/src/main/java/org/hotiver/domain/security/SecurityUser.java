@@ -10,27 +10,37 @@ import java.util.stream.Collectors;
 
 public class SecurityUser implements UserDetails {
 
-    private User user;
+    private final Long id;
+    private final String username;
+    private final String password;
+    private Collection<? extends GrantedAuthority> authorities;
 
     public SecurityUser(User user) {
-        this.user = user;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoles().stream()
+        this.id = user.getId();
+        this.username = user.getEmail();
+        this.password = user.getPassword();
+        this.authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().name()))
                 .collect(Collectors.toList());
     }
 
     @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    @Override
     public String getPassword() {
-        return user.getPassword();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return username;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     @Override
