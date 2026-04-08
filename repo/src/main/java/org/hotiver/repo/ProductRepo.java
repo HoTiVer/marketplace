@@ -20,7 +20,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
         p.id as productId,
         p.name as productName,
         p.price as price,
-        CONCAT('/images', pi.url) AS mainImageUrl
+        pi.url AS mainImageUrl
     FROM product p
     LEFT JOIN product_image pi
         ON pi.product_id = p.id AND pi.is_main = true
@@ -36,7 +36,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
         p.price AS price,
         p.description AS description,
         p.category.name AS categoryName,
-        CONCAT('/images', pi.url) AS mainImageUrl
+        pi.url AS mainImageUrl
     FROM Product p
     LEFT JOIN ProductImage pi
         ON pi.product.id = p.id AND pi.isMain = true
@@ -51,7 +51,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
         p.price AS price,
         p.description AS description,
         c.name AS categoryName,
-        CONCAT('/images', pi.url) AS mainImageUrl
+        pi.url AS mainImageUrl
     FROM product p
     JOIN category c ON p.category_id = c.id
     JOIN seller s ON p.seller_id = s.id
@@ -76,7 +76,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
                 p.id as productId,
                 p.name as productName,
                 p.price as price,
-                CONCAT('/images', pi.url) AS mainImageUrl
+                pi.url AS mainImageUrl
           FROM product p
           LEFT JOIN product_image pi
             ON pi.product_id = p.id AND pi.is_main = true
@@ -93,7 +93,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
                 p.id as productId,
                 p.name as productName,
                 p.price as price,
-                CONCAT('/images', pi.url) AS mainImageUrl
+                pi.url AS mainImageUrl
           FROM product p
           LEFT JOIN product_image pi
             ON pi.product_id = p.id AND pi.is_main = true
@@ -110,7 +110,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
                 p.id as productId,
                 p.name as productName,
                 p.price as price,
-                CONCAT('/images', pi.url) AS mainImageUrl
+                pi.url AS mainImageUrl
           FROM product p
           LEFT JOIN product_image pi
             ON pi.product_id = p.id AND pi.is_main = true
@@ -130,7 +130,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
         p.description AS description,
         p.category.name AS categoryName,
         p.stockQuantity AS quantity,
-        CONCAT('/images', pi.url) AS mainImageUrl
+        pi.url AS mainImageUrl
     FROM Product p
     LEFT JOIN ProductImage pi
         ON pi.product = p AND pi.isMain = true
@@ -148,7 +148,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
         p.description AS description,
         p.category.name AS categoryName,
         p.stockQuantity AS quantity,
-        CONCAT('/images/', COALESCE(pi.url, 'default.png')) AS mainImageUrl
+        COALESCE(pi.url, 'default.png') AS mainImageUrl
     FROM Product p
     LEFT JOIN ProductImage pi
         ON pi.product = p AND pi.isMain = true

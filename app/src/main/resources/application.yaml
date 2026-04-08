@@ -81,3 +81,6 @@ app:
 
 frontend:
   url: ${FRONTEND_URL}
+
+storage:
+  host: ${IMAGE_STORAGE_HOST}

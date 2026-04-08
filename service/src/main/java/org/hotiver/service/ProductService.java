@@ -12,6 +12,7 @@ import org.hotiver.dto.product.ProductImageDto;
 import org.hotiver.dto.seller.SellerProductProjection;
 import org.hotiver.repo.*;
 import org.hotiver.service.mapper.ProductMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,8 @@ public class ProductService {
     private final ImageService imageService;
     private final ProductImageRepo productImageRepo;
     private final ProductMapper productMapper;
+    @Value("${storage.host}")
+    private String storageHost;
 
     public ProductService(ChatService chatService, SellerRepo sellerRepo,
                           ProductRepo productRepo, UserRepo userRepo,
@@ -85,13 +88,15 @@ public class ProductService {
                 .orElseThrow(()-> new EntityNotFoundException("Product with id " +
                         id + " not found"));
 
-        //List<ProductImageDto> images = getProductImages(product);
-        //returnProduct.setImages(images);
-
-        return productMapper.entityToProductGetDto(
+        ProductGetDto returnProduct = productMapper.entityToProductGetDto(
                 product,
                 product.getCategory(),
                 product.getSeller());
+
+        List<ProductImageDto> images = getProductImages(product);
+        returnProduct.setImages(images);
+
+        return returnProduct;
     }
 
     @Transactional
@@ -276,7 +281,7 @@ public class ProductService {
         for (var image : product.getImages()) {
             images.add(new ProductImageDto(
                     image.getId(),
-                    "/images" + image.getUrl(),
+                    storageHost + "/images" + image.getUrl(),
                     image.getIsMain()
             ));
         }

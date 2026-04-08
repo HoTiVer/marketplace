@@ -3,8 +3,10 @@ package org.hotiver.service;
 import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.dto.home.HomePageDto;
 import org.hotiver.dto.product.ListProductDto;
+import org.hotiver.dto.product.ProductImageDto;
 import org.hotiver.repo.CategoryRepo;
 import org.hotiver.repo.ProductRepo;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +19,8 @@ public class HomeService {
     private final Integer limitForFeaturesProducts = 8;
     private final Integer limitForNewProducts = 8;
     private final Integer limitForPopularProducts = 8;
+    @Value("${storage.host}")
+    private String imageStorageHost;
 
     public HomeService(ProductRepo productRepo, CategoryRepo categoryRepo) {
         this.productRepo = productRepo;
@@ -28,13 +32,25 @@ public class HomeService {
 
         List<ListProductDto> featured = productRepo
                 .findRandomVisibleProducts(limitForFeaturesProducts);
+        addHostToImage(featured);
 
         List<ListProductDto> newProducts = productRepo
                 .findNewestVisibleProducts(limitForNewProducts);
+        addHostToImage(newProducts);
 
         List<ListProductDto> popularProducts = productRepo
                 .findPopularVisibleProducts(limitForPopularProducts);
+        addHostToImage(popularProducts);
 
         return new HomePageDto(categories, featured, newProducts, popularProducts);
+    }
+
+    private void addHostToImage(List<ListProductDto> productImages) {
+        var images = productImages;
+        for (ListProductDto productImage : productImages) {
+            productImage.setMainImageUrl(imageStorageHost + "/images"
+                    + productImage.getMainImageUrl());
+        }
+
     }
 }

@@ -32,6 +32,7 @@ public class AppApplication {
             System.setProperty("KAFKA_BOOTSTRAP_SERVERS", dotenv.get("KAFKA_BOOTSTRAP_SERVERS"));
             System.setProperty("UPLOAD_DIR", dotenv.get("UPLOAD_DIR"));
 			System.setProperty("FRONTEND_URL", dotenv.get("FRONTEND_URL"));
+			System.setProperty("IMAGE_STORAGE_HOST", dotenv.get("IMAGE_STORAGE_HOST"));
 		}
 		catch (Exception e){
 			System.out.println(e.getMessage());
