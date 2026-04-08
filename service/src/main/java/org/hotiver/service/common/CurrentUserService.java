@@ -1,4 +1,4 @@
-package org.hotiver.service.security;
+package org.hotiver.service.common;
 
 import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.domain.Entity.User;
@@ -9,11 +9,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SecurityService {
+public class CurrentUserService {
 
     private final UserRepo userRepo;
 
-    public SecurityService(UserRepo userRepo) {
+    public CurrentUserService(UserRepo userRepo) {
         this.userRepo = userRepo;
     }
 

@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.admin;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -12,6 +12,8 @@ import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
+import org.hotiver.service.chat.ChatService;
+import org.hotiver.service.email.EmailService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

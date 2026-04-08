@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.user;
 
 import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
@@ -14,10 +14,11 @@ import org.hotiver.dto.user.*;
 import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
+import org.hotiver.service.auth.JwtService;
+import org.hotiver.service.email.EmailService;
+import org.hotiver.service.redis.RedisService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

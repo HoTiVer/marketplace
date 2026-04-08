@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.redis;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;

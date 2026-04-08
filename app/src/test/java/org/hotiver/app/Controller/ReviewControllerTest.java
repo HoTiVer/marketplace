@@ -1,7 +1,6 @@
 package org.hotiver.app.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dockerjava.api.exception.NotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.api.Controller.ReviewController;
 import org.hotiver.config.filter.JwtFilter;
@@ -9,8 +8,8 @@ import org.hotiver.dto.ResponseDto;
 import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
 import org.hotiver.dto.review.ReviewPageDto;
-import org.hotiver.service.JwtService;
-import org.hotiver.service.ReviewService;
+import org.hotiver.service.auth.JwtService;
+import org.hotiver.service.product.ProductReviewService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -42,7 +40,7 @@ public class ReviewControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private ReviewService reviewService;
+    private ProductReviewService productReviewService;
 
     @MockitoBean
     private JwtService jwtService;
@@ -62,7 +60,7 @@ public class ReviewControllerTest {
     @Test
     public void add_review_success() throws Exception {
 
-        when(reviewService.addReviewToProduct(any(), anyLong()))
+        when(productReviewService.addReviewToProduct(any(), anyLong()))
                 .thenReturn(new ResponseDto("success"));
 
         mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
@@ -75,7 +73,7 @@ public class ReviewControllerTest {
     public void add_review_success_comment_null() throws Exception {
         reviewDto.setComment(null);
 
-        when(reviewService.addReviewToProduct(any(), anyLong()))
+        when(productReviewService.addReviewToProduct(any(), anyLong()))
                 .thenReturn(new ResponseDto("success"));
 
         mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
@@ -140,7 +138,7 @@ public class ReviewControllerTest {
                                         "lol", "test",
                                         5, Date.valueOf(LocalDate.now()))));
 
-        when(reviewService.getProductReviews(anyLong())).thenReturn(review);
+        when(productReviewService.getProductReviews(anyLong())).thenReturn(review);
 
         mockMvc.perform(get("/api/v1/product/{productId}/review", 1)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -154,7 +152,7 @@ public class ReviewControllerTest {
         ReviewPageDto review = new ReviewPageDto(1L, null,
                 null, null);
 
-        when(reviewService.getProductReviews(anyLong())).thenReturn(review);
+        when(productReviewService.getProductReviews(anyLong())).thenReturn(review);
 
         mockMvc.perform(get("/api/v1/product/{productId}/review", 1)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -163,7 +161,7 @@ public class ReviewControllerTest {
 
     @Test
     public void get_all_product_reviews_product_not_exists() throws Exception {
-        when(reviewService.getProductReviews(anyLong()))
+        when(productReviewService.getProductReviews(anyLong()))
                 .thenThrow(new EntityNotFoundException("Not found"));
 
         mockMvc.perform(get("/api/v1/product/{productId}/review", 1)

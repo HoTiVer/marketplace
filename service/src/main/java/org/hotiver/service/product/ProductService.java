@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.product;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -11,6 +11,8 @@ import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.ProductImageDto;
 import org.hotiver.dto.seller.SellerProductProjection;
 import org.hotiver.repo.*;
+import org.hotiver.service.chat.ChatService;
+import org.hotiver.service.storage.ImageService;
 import org.hotiver.service.mapper.ProductMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;

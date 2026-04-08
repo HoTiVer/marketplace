@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.auth;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,9 @@ import org.hotiver.dto.user.PasswordChangeDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
-import org.hotiver.service.security.SecurityService;
+import org.hotiver.service.email.EmailService;
+import org.hotiver.service.redis.RedisService;
+import org.hotiver.service.common.CurrentUserService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -41,19 +43,19 @@ public class AuthService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final RedisService redisService;
-    private final SecurityService securityService;
+    private final CurrentUserService currentUserService;
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
 
     public AuthService(JwtService jwtService, EmailService emailService,
-                       RedisService redisService, SecurityService securityService,
+                       RedisService redisService, CurrentUserService currentUserService,
                        UserRepo userRepo, RoleRepo roleRepo) {
         millisecondsToSaveJwtRefresh = jwtService.getJwtRefreshExpirationMilliseconds();
         millisecondsToSaveJwtAccess =  jwtService.getJwtAccessExpirationMilliseconds();
         this.emailService = emailService;
         this.redisService = redisService;
         this.jwtService = jwtService;
-        this.securityService = securityService;
+        this.currentUserService = currentUserService;
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
     }
@@ -241,7 +243,7 @@ public class AuthService {
     }
 
     public boolean changeUserPassword(PasswordChangeDto passwordChangeDto) {
-        User user = securityService.getCurrentUser();
+        User user = currentUserService.getCurrentUser();
 
         if (user.getIsTwoFactorEnable()){
             String key = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());

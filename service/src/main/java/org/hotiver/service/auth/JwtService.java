@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.auth;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

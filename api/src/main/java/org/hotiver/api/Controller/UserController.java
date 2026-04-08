@@ -1,17 +1,12 @@
 package org.hotiver.api.Controller;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.Valid;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.dto.user.*;
-import org.hotiver.service.UserService;
-import org.springframework.http.HttpMethod;
+import org.hotiver.service.user.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 
 @RestController

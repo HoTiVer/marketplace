@@ -1,9 +1,8 @@
-package org.hotiver.service;
+package org.hotiver.service.homepage;
 
 import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.dto.home.HomePageDto;
 import org.hotiver.dto.product.ListProductDto;
-import org.hotiver.dto.product.ProductImageDto;
 import org.hotiver.repo.CategoryRepo;
 import org.hotiver.repo.ProductRepo;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class HomeService {
+public class HomePageService {
 
     private final ProductRepo productRepo;
     private final CategoryRepo categoryRepo;
@@ -22,7 +21,7 @@ public class HomeService {
     @Value("${storage.host}")
     private String imageStorageHost;
 
-    public HomeService(ProductRepo productRepo, CategoryRepo categoryRepo) {
+    public HomePageService(ProductRepo productRepo, CategoryRepo categoryRepo) {
         this.productRepo = productRepo;
         this.categoryRepo = categoryRepo;
     }

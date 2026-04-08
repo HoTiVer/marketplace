@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import org.hotiver.dto.chat.ChatDto;
 import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.user.UserChatsDto;
-import org.hotiver.service.ChatService;
+import org.hotiver.service.chat.ChatService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

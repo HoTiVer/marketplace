@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
-import org.hotiver.service.SellerService;
+import org.hotiver.service.user.SellerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

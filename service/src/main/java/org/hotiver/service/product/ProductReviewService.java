@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.product;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Enum.OrderStatus;
@@ -22,7 +22,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
-public class ReviewService {
+public class ProductReviewService {
 
     private final UserRepo userRepo;
     private final ReviewRepo reviewRepo;
@@ -30,8 +30,8 @@ public class ReviewService {
     private final OrderRepo orderRepo;
     private final SellerRepo sellerRepo;
 
-    public ReviewService(UserRepo userRepo, ReviewRepo reviewRepo,
-                         ProductRepo productRepo, OrderRepo orderRepo, SellerRepo sellerRepo) {
+    public ProductReviewService(UserRepo userRepo, ReviewRepo reviewRepo,
+                                ProductRepo productRepo, OrderRepo orderRepo, SellerRepo sellerRepo) {
         this.userRepo = userRepo;
         this.reviewRepo = reviewRepo;
         this.productRepo = productRepo;

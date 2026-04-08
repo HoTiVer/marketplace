@@ -1,8 +1,7 @@
 package org.hotiver.api.Controller;
 
-import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.dto.admin.SellerRegisterResponse;
-import org.hotiver.service.AdminService;
+import org.hotiver.service.admin.AdminService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

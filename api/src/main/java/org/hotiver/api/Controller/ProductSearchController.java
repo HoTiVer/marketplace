@@ -1,7 +1,7 @@
 package org.hotiver.api.Controller;
 
 import org.hotiver.dto.product.ProductProjection;
-import org.hotiver.service.ProductSearchService;
+import org.hotiver.service.product.ProductSearchService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

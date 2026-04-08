@@ -1,7 +1,7 @@
 package org.hotiver.api.Controller;
 
 import org.hotiver.dto.cart.CartItemDto;
-import org.hotiver.service.CartService;
+import org.hotiver.service.order.CartService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

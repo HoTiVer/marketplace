@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.product;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.domain.Entity.Category;

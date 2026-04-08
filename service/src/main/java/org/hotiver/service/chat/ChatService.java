@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.chat;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.domain.Entity.Chat;

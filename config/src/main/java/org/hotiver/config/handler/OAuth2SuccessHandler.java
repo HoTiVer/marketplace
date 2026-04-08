@@ -1,33 +1,22 @@
 package org.hotiver.config.handler;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.hotiver.domain.Entity.Role;
-import org.hotiver.domain.Entity.User;
-import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.auth.AuthResponse;
-import org.hotiver.dto.jwt.JwtTokensDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
-import org.hotiver.service.AuthService;
-import org.hotiver.service.JwtService;
+import org.hotiver.service.auth.AuthService;
+import org.hotiver.service.auth.JwtService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.sql.Date;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {

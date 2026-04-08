@@ -2,7 +2,7 @@ package org.hotiver.api.Controller;
 
 import jakarta.validation.Valid;
 import org.hotiver.dto.category.CategoryDto;
-import org.hotiver.service.CategoryService;
+import org.hotiver.service.category.CategoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

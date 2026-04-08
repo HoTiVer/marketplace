@@ -8,7 +8,7 @@ import org.hotiver.dto.auth.LoginRequest;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.user.PasswordChangeDto;
 import org.hotiver.dto.user.UserInfoDto;
-import org.hotiver.service.AuthService;
+import org.hotiver.service.auth.AuthService;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

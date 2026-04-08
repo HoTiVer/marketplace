@@ -1,4 +1,4 @@
-package org.hotiver.service;
+package org.hotiver.service.order;
 
 import org.hotiver.common.Exception.base.ResourceNotFoundException;
 import org.hotiver.domain.Entity.CartItem;
