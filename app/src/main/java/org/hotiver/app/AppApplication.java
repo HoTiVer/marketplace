@@ -33,6 +33,9 @@ public class AppApplication {
             System.setProperty("UPLOAD_DIR", dotenv.get("UPLOAD_DIR"));
 			System.setProperty("FRONTEND_URL", dotenv.get("FRONTEND_URL"));
 			System.setProperty("IMAGE_STORAGE_HOST", dotenv.get("IMAGE_STORAGE_HOST"));
+			System.setProperty("MINIO_USER", dotenv.get("MINIO_USER"));
+			System.setProperty("MINIO_PASSWORD", dotenv.get("MINIO_PASSWORD"));
+			System.setProperty("MINIO_BUCKET", dotenv.get("MINIO_BUCKET"));
 		}
 		catch (Exception e){
 			System.out.println(e.getMessage());

@@ -12,8 +12,8 @@ import org.hotiver.dto.product.ProductImageDto;
 import org.hotiver.dto.seller.SellerProductProjection;
 import org.hotiver.repo.*;
 import org.hotiver.service.chat.ChatService;
-import org.hotiver.service.storage.ImageService;
 import org.hotiver.service.mapper.ProductMapper;
+import org.hotiver.service.storage.ImageStorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,7 +32,7 @@ public class ProductService {
     private final ProductRepo productRepo;
     private final UserRepo userRepo;
     private final CategoryRepo categoryRepo;
-    private final ImageService imageService;
+    private final ImageStorageService imageStorageService;
     private final ProductImageRepo productImageRepo;
     private final ProductMapper productMapper;
     @Value("${storage.host}")
@@ -40,14 +40,14 @@ public class ProductService {
 
     public ProductService(ChatService chatService, SellerRepo sellerRepo,
                           ProductRepo productRepo, UserRepo userRepo,
-                          CategoryRepo categoryRepo, ImageService imageService,
+                          CategoryRepo categoryRepo, ImageStorageService imageStorageService,
                           ProductImageRepo productImageRepo, ProductMapper productMapper) {
         this.chatService = chatService;
         this.sellerRepo = sellerRepo;
         this.productRepo = productRepo;
         this.userRepo = userRepo;
         this.categoryRepo = categoryRepo;
-        this.imageService = imageService;
+        this.imageStorageService = imageStorageService;
         this.productImageRepo = productImageRepo;
         this.productMapper = productMapper;
     }
@@ -67,7 +67,7 @@ public class ProductService {
         if (image != null && !image.isEmpty()) {
             String imageUrl;
             try {
-                imageUrl = imageService.saveProductImage(product.getId(), image);
+                imageUrl = imageStorageService.saveImage("products",product.getId(), image);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -115,7 +115,7 @@ public class ProductService {
             if (role.getAuthority().equals("ROLE_ADMIN")){
                 productRepo.deleteById(id);
                 try {
-                    imageService.deleteAllProductImages(id);
+                    imageStorageService.deleteAllImages("products",id);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -127,7 +127,7 @@ public class ProductService {
         if (Objects.equals(product.getSeller().getId(), user.getId())){
             productRepo.deleteById(id);
             try {
-                imageService.deleteAllProductImages(id);
+                imageStorageService.deleteAllImages("products",id);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -167,7 +167,7 @@ public class ProductService {
 
             String url;
             try {
-                url = imageService.saveProductImage(product.getId(), image);
+                url = imageStorageService.saveImage("products", product.getId(), image);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -234,7 +234,7 @@ public class ProductService {
                 .orElse(null);
 
         try {
-            imageService.deleteProductImage(imageToRemove.getUrl());
+            imageStorageService.deleteImage("products", productId, imageToRemove.getUrl());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

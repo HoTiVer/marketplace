@@ -84,3 +84,9 @@ frontend:
 
 storage:
   host: ${IMAGE_STORAGE_HOST}
+
+minio:
+  endpoint: ${IMAGE_STORAGE_HOST}
+  user: ${MINIO_USER}
+  password: ${MINIO_PASSWORD}
+  bucket: ${MINIO_BUCKET}
