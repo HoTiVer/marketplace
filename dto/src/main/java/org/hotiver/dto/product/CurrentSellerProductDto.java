@@ -13,18 +13,11 @@ import java.util.Map;
 @Builder
 public class CurrentSellerProductDto {
     private Long id;
-
     private String name;
-
     private BigDecimal price;
-
     private String description;
-
     private String categoryName;
-
     private Map<String, Object> characteristics;
-
     private Integer quantity;
-
     private List<ProductImageDto> images;
 }

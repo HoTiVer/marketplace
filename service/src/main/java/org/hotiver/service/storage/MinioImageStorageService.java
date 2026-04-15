@@ -2,6 +2,7 @@ package org.hotiver.service.storage;
 
 import io.minio.*;
 import io.minio.messages.Item;
+import org.hotiver.common.Exception.storage.FileStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,7 +23,7 @@ public class MinioImageStorageService implements ImageStorageService {
 
 
     @Override
-    public String saveImage(String entityType, Long entityId, MultipartFile file) throws IOException {
+    public String saveImage(String entityType, Long entityId, MultipartFile file) throws FileStorageException {
         String fileName = "/" + entityType + "/" + entityId + "/" + file.getOriginalFilename();
 
         try {
@@ -35,14 +36,14 @@ public class MinioImageStorageService implements ImageStorageService {
                             .build()
             );
         } catch (Exception e) {
-            throw new IOException("Failed to upload file", e);
+            throw new FileStorageException("Failed to upload file");
         }
 
         return fileName;
     }
 
     @Override
-    public void deleteImage(String entityType, Long entityId, String fileUrl) throws IOException {
+    public void deleteImage(String entityType, Long entityId, String fileUrl) throws FileStorageException{
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
@@ -51,14 +52,13 @@ public class MinioImageStorageService implements ImageStorageService {
                             .build()
             );
         } catch (Exception e) {
-            throw new IOException("Failed to delete file", e);
+            throw new FileStorageException("Failed to delete file");
         }
     }
 
     @Override
-    public void deleteAllImages(String entityType, Long entityId) throws IOException {
+    public void deleteAllImages(String entityType, Long entityId) throws FileStorageException {
         String prefix = entityType + "/" + entityId + "/";
-
         try {
             Iterable<Result<Item>> objects = minioClient.listObjects(
                     ListObjectsArgs.builder()
@@ -70,7 +70,6 @@ public class MinioImageStorageService implements ImageStorageService {
 
             for (Result<Item> result : objects) {
                 Item item = result.get();
-
                 minioClient.removeObject(
                         RemoveObjectArgs.builder()
                                 .bucket(bucketName)
@@ -80,7 +79,8 @@ public class MinioImageStorageService implements ImageStorageService {
             }
 
         } catch (Exception e) {
-            throw new IOException("Failed to delete all images for " + entityType + " " + entityId, e);
+            throw new FileStorageException("Failed to delete all images for " +
+                    entityType + " " + entityId);
         }
     }
 }

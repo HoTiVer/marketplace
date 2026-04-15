@@ -84,6 +84,8 @@ frontend:
 
 storage:
   host: ${IMAGE_STORAGE_HOST}
+  max-images-count:
+    product: ${MAX_PRODUCT_IMAGES_COUNT}
 
 minio:
   endpoint: ${IMAGE_STORAGE_HOST}

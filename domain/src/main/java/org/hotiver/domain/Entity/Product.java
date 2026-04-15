@@ -60,6 +60,7 @@ public class Product {
 
     private Boolean isVisible;
 
+    @Builder.Default
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images = new ArrayList<>();
 

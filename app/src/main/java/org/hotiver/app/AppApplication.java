@@ -36,6 +36,7 @@ public class AppApplication {
 			System.setProperty("MINIO_USER", dotenv.get("MINIO_USER"));
 			System.setProperty("MINIO_PASSWORD", dotenv.get("MINIO_PASSWORD"));
 			System.setProperty("MINIO_BUCKET", dotenv.get("MINIO_BUCKET"));
+			System.setProperty("MAX_PRODUCT_IMAGES_COUNT", dotenv.get("MAX_PRODUCT_IMAGES_COUNT"));
 		}
 		catch (Exception e){
 			System.out.println(e.getMessage());

@@ -3,24 +3,20 @@ package org.hotiver.service.product;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.hotiver.common.Exception.auth.NoAuthorizationException;
+import org.hotiver.common.Exception.seller.SellerNotFoundException;
 import org.hotiver.domain.Entity.*;
-import org.hotiver.dto.product.CurrentSellerProductDto;
-import org.hotiver.dto.product.ProductAddDto;
-import org.hotiver.dto.product.ProductGetDto;
-import org.hotiver.dto.product.ProductImageDto;
-import org.hotiver.dto.seller.SellerProductProjection;
+import org.hotiver.domain.security.SecurityUser;
+import org.hotiver.dto.product.*;
 import org.hotiver.repo.*;
 import org.hotiver.service.chat.ChatService;
+import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.mapper.ProductMapper;
-import org.hotiver.service.storage.ImageStorageService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+
 import java.util.*;
 
 @Slf4j
@@ -28,116 +24,81 @@ import java.util.*;
 public class ProductService {
 
     private final ChatService chatService;
+    private final ProductImageService productImageService;
+    private final CurrentUserService currentUserService;
     private final SellerRepo sellerRepo;
     private final ProductRepo productRepo;
-    private final UserRepo userRepo;
     private final CategoryRepo categoryRepo;
-    private final ImageStorageService imageStorageService;
-    private final ProductImageRepo productImageRepo;
     private final ProductMapper productMapper;
-    @Value("${storage.host}")
-    private String storageHost;
 
-    public ProductService(ChatService chatService, SellerRepo sellerRepo,
-                          ProductRepo productRepo, UserRepo userRepo,
-                          CategoryRepo categoryRepo, ImageStorageService imageStorageService,
-                          ProductImageRepo productImageRepo, ProductMapper productMapper) {
+    public ProductService(ChatService chatService, ProductImageService productImageService,
+                          CurrentUserService currentUserService, SellerRepo sellerRepo,
+                          ProductRepo productRepo, CategoryRepo categoryRepo,
+                          ProductMapper productMapper) {
         this.chatService = chatService;
+        this.productImageService = productImageService;
+        this.currentUserService = currentUserService;
         this.sellerRepo = sellerRepo;
         this.productRepo = productRepo;
-        this.userRepo = userRepo;
         this.categoryRepo = categoryRepo;
-        this.imageStorageService = imageStorageService;
-        this.productImageRepo = productImageRepo;
         this.productMapper = productMapper;
     }
 
+    @Transactional
     public void addProduct(ProductAddDto productAddDto,
                            MultipartFile image) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Seller seller = sellerRepo.findByEmail(email).orElseThrow();
+        Seller seller = sellerRepo.findByEmail(email)
+                .orElseThrow(() -> new SellerNotFoundException("You are not a seller"));
         Category category = categoryRepo.findByName(productAddDto.getCategoryName())
                 .orElseThrow(()-> new EntityNotFoundException("Category not found"));
 
-        Product product = productMapper.productAddDtoToEntity(productAddDto, category, seller);
+        Product product = productMapper.productAddDtoToEntity(
+                productAddDto,
+                category,
+                seller);
 
         product = productRepo.save(product);
 
-        if (image != null && !image.isEmpty()) {
-            String imageUrl;
-            try {
-                imageUrl = imageStorageService.saveImage("products",product.getId(), image);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            ProductImage productImage = ProductImage.builder()
-                    .product(product)
-                    .url(imageUrl)
-                    .isMain(true)
-                    .build();
-
-            product.addProductImage(productImage);
-
-            productRepo.save(product);
-        }
-    }
-
-
-    public ProductGetDto getProductById(Long id) {
-        Product product = productRepo.findById(id)
-                .orElseThrow(()-> new EntityNotFoundException("Product with id " +
-                        id + " not found"));
-
-        ProductGetDto returnProduct = productMapper.entityToProductGetDto(
-                product,
-                product.getCategory(),
-                product.getSeller());
-
-        List<ProductImageDto> images = getProductImages(product);
-        returnProduct.setImages(images);
-
-        return returnProduct;
+        productImageService.addImageToProduct(product, image);
+        productRepo.save(product);
     }
 
     @Transactional
     public void deleteProductById(Long id) {
-        User user = getCurrentUser();
-        var roles = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+        SecurityUser user = currentUserService.getUserPrincipal();
 
         Product product = productRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product with id "
                         + id + " not found"));
 
-
-        for (var role : roles) {
-            if (role.getAuthority().equals("ROLE_ADMIN")){
-                productRepo.deleteById(id);
-                try {
-                    imageStorageService.deleteAllImages("products",id);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                chatService.sendMessage(0L, user.getId(),
-                        "admin deleted your product with id: " + product.getId());
-            }
-        }
+        deleteProductIfAdmin(user, product);
 
         if (Objects.equals(product.getSeller().getId(), user.getId())){
             productRepo.deleteById(id);
-            try {
-                imageStorageService.deleteAllImages("products",id);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            productImageService.deleteAllImages(product.getId());
+        }
+    }
+
+    private void deleteProductIfAdmin(SecurityUser user, Product product) {
+        for (var role : user.getAuthorities()) {
+            if (role.getAuthority().equals("ROLE_ADMIN")) {
+                productRepo.deleteById(product.getId());
+
+                productImageService.deleteAllImages(product.getId());
+
+                chatService.sendMessage(0L, user.getId(),
+                        "Admin deleted your product: " + product.getName());
             }
         }
     }
 
+    @Transactional
     public void updateProductById(Long id,
                                   ProductAddDto productAddDto,
                                   MultipartFile image) {
-        User user = getCurrentUser();
+        SecurityUser user = currentUserService.getUserPrincipal();
 
         Product product = productRepo.findById(id)
                 .orElseThrow(()-> new EntityNotFoundException("Product with id "
@@ -147,153 +108,23 @@ public class ProductService {
             throw new AccessDeniedException("You are not the seller of this product");
         }
 
-        String categoryName = productAddDto.getCategoryName();
+        setProductCategory(product, productAddDto.getCategoryName());
+        productMapper.updateProductFromDto(productAddDto, product);
+
+        productImageService.addImageToProduct(product, image);
+
+        productRepo.save(product);
+    }
+
+    private void setProductCategory(Product product, String categoryName) {
         if (categoryName != null) {
             Optional<Category> category = categoryRepo.findByName(categoryName);
 
             if (category.isEmpty())
-                throw new EntityNotFoundException("Category with name " + categoryName + " not found");
+                throw new EntityNotFoundException("Category with name " +
+                        categoryName + " not found");
 
             product.setCategory(category.get());
         }
-
-        productMapper.updateProductFromDto(productAddDto, product);
-
-
-        if (image != null) {
-            if (product.getImages().size() >= 10) {
-                throw new RuntimeException();
-            }
-
-            String url;
-            try {
-                url = imageStorageService.saveImage("products", product.getId(), image);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            ProductImage productImage = ProductImage.builder()
-                    .url(url)
-                    .isMain(false)
-                    .product(product)
-                    .build();
-
-            product.addProductImage(productImage);
-        }
-
-        productRepo.save(product);
-    }
-
-    public List<SellerProductProjection> getCurrentSellerProducts(String username) {
-        Seller seller = sellerRepo.findByEmail(username)
-                .orElseThrow(()-> new EntityNotFoundException("Seller does not exist"));
-
-        return productRepo
-                .getCurrentSellerProducts(seller.getId());
-    }
-
-    public CurrentSellerProductDto getCurrentSellerProductById(Long productId) {
-        Product product = productRepo.findById(productId)
-                .orElseThrow(()-> new EntityNotFoundException("Product with id "
-                        + productId + " not found"));
-
-        CurrentSellerProductDto returnProduct = CurrentSellerProductDto.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .price(product.getPrice())
-                .categoryName(product.getCategory().getName())
-                .description(product.getDescription())
-                .characteristics(product.getCharacteristic())
-                .quantity(product.getStockQuantity())
-                .build();
-
-        List<ProductImageDto> images = getProductImages(product);
-        returnProduct.setImages(images);
-
-        return returnProduct;
-    }
-
-    public void deleteProductImage(Long productId, Long imageId) {
-        User user = getCurrentUser();
-
-        Product product = productRepo.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product with id "
-                        + productId + " not found"));
-
-
-        if (!product.getSeller().getId().equals(user.getId())) {
-            throw new AccessDeniedException("You are not the seller of this product");
-        }
-
-        List<ProductImage> productImages = product.getImages();
-
-        ProductImage imageToRemove = productImages
-                .stream()
-                .filter(image -> image.getId().equals(imageId))
-                .findFirst()
-                .orElse(null);
-
-        try {
-            imageStorageService.deleteImage("products", productId, imageToRemove.getUrl());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        product.getImages().remove(imageToRemove);
-        productImageRepo.delete(imageToRemove);
-
-        productRepo.save(product);
-    }
-
-
-    public void makeProductMainImage(Long productId, Long imageId) {
-        User user = getCurrentUser();
-
-        Product product = productRepo.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product with id "
-                        + productId + " not found"));
-
-        if (!product.getSeller().getId().equals(user.getId())) {
-            throw new AccessDeniedException("You are not the seller of this product");
-        }
-
-        var productImages = product.getImages();
-
-        for (var image : productImages) {
-            if (image.getIsMain()) {
-                image.setIsMain(false);
-                break;
-            }
-        }
-
-        for (var image : productImages) {
-            if (image.getId().equals(imageId)) {
-                image.setIsMain(true);
-                break;
-            }
-        }
-
-        product.setImages(productImages);
-        productRepo.save(product);
-    }
-
-    private List<ProductImageDto> getProductImages(Product product) {
-        List<ProductImageDto> images = new ArrayList<>();
-
-        for (var image : product.getImages()) {
-            images.add(new ProductImageDto(
-                    image.getId(),
-                    storageHost + "/images" + image.getUrl(),
-                    image.getIsMain()
-            ));
-        }
-        return images;
-    }
-
-    private User getCurrentUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        return userRepo.findByEmail(email)
-                .orElseThrow(()-> new NoAuthorizationException("The user is not authorized"));
     }
 }

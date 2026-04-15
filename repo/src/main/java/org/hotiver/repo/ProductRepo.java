@@ -2,7 +2,7 @@ package org.hotiver.repo;
 
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.dto.product.*;
-import org.hotiver.dto.seller.SellerProductProjection;
+import org.hotiver.dto.product.SellerInventoryProductDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -124,13 +124,11 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
 
     @Query("""
     SELECT
-        p.id AS id,
-        p.name AS name,
-        p.price AS price,
-        p.description AS description,
-        p.category.name AS categoryName,
-        p.stockQuantity AS quantity,
-        pi.url AS mainImageUrl
+        p.id,
+        p.name,
+        p.price,
+        p.stockQuantity,
+        pi.url
     FROM Product p
     LEFT JOIN ProductImage pi
         ON pi.product = p AND pi.isMain = true
@@ -138,7 +136,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
       AND p.isVisible = true
     ORDER BY p.name
 """)
-    List<SellerProductProjection> getCurrentSellerProducts(@Param("id") Long id);
+    List<SellerInventoryProductDto> getCurrentSellerProducts(@Param("id") Long id);
 
     @Query("""
     SELECT
@@ -156,5 +154,5 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
       AND p.id = :productId
       AND p.isVisible = true
 """)
-    SellerProductProjection getCurrentSellerProductById(Long sellerId, Long productId);
+    SellerInventoryProductDto getCurrentSellerProductById(Long sellerId, Long productId);
 }

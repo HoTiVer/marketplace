@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
+import org.hotiver.service.product.ProductQueryService;
+import org.hotiver.service.product.ProductService;
 import org.hotiver.service.user.SellerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,9 +18,11 @@ import java.util.List;
 public class SellerController {
 
     private final SellerService sellerService;
+    private final ProductQueryService productQueryService;
 
-    public SellerController(SellerService sellerService) {
+    public SellerController(SellerService sellerService, ProductQueryService productQueryService) {
         this.sellerService = sellerService;
+        this.productQueryService = productQueryService;
     }
 
     @GetMapping("/seller/{username}")
@@ -28,7 +32,7 @@ public class SellerController {
 
     @GetMapping("/seller/{username}/products")
     public ResponseEntity<List<ListProductDto>> getSellerProducts(@PathVariable String username){
-        return ResponseEntity.ok().body(sellerService.getSellerProducts(username));
+        return ResponseEntity.ok().body(productQueryService.getSellerProducts(username));
     }
 
     @PreAuthorize("isAuthenticated()")

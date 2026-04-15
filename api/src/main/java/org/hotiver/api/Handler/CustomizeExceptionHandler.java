@@ -8,6 +8,7 @@ import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.common.Exception.base.InvalidStateException;
 import org.hotiver.common.Exception.base.ResourceNotFoundException;
 import org.hotiver.common.Exception.order.CannotBuyOwnProductException;
+import org.hotiver.common.Exception.storage.FileStorageException;
 import org.hotiver.common.Exception.user.UserNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -149,6 +150,18 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         return ResponseEntity.status(CONFLICT).body(
+                new HashMap<String, Object>() {{
+                    put("message", e.getMessage());
+                }}
+        );
+    }
+
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<Object> handleFileStorageException(
+            FileStorageException e,
+            WebRequest request
+    ) {
+        return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(
                 new HashMap<String, Object>() {{
                     put("message", e.getMessage());
                 }}

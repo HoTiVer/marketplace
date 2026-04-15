@@ -9,7 +9,9 @@ import jakarta.validation.Valid;
 import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
-import org.hotiver.dto.seller.SellerProductProjection;
+import org.hotiver.dto.product.SellerInventoryProductDto;
+import org.hotiver.service.product.ProductImageService;
+import org.hotiver.service.product.ProductQueryService;
 import org.hotiver.service.product.ProductService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,14 +27,20 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductImageService productImageService;
+    private final ProductQueryService productQueryService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService,
+                             ProductImageService productImageService,
+                             ProductQueryService productQueryService) {
         this.productService = productService;
+        this.productImageService = productImageService;
+        this.productQueryService = productQueryService;
     }
 
     @GetMapping("/product/{id}")
     public ResponseEntity<ProductGetDto> getProductById(@PathVariable Long id) {
-        return ResponseEntity.ok().body(productService.getProductById(id));
+        return ResponseEntity.ok().body(productQueryService.getProductById(id));
     }
 
     @PreAuthorize("hasRole('SELLER')")
@@ -70,7 +78,7 @@ public class ProductController {
     @DeleteMapping("/product/{id}")
     public ResponseEntity<?> deleteProductById(@PathVariable Long id) {
         productService.deleteProductById(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('SELLER')")
@@ -109,7 +117,7 @@ public class ProductController {
     @PatchMapping("/product/{productId}/image/{imageId}/main")
     public ResponseEntity<Void> makeProductMainImage(@PathVariable Long productId,
                                                   @PathVariable Long imageId) {
-        productService.makeProductMainImage(productId, imageId);
+        productImageService.makeProductMainImage(productId, imageId);
         return ResponseEntity.ok().build();
     }
 
@@ -117,16 +125,16 @@ public class ProductController {
     @DeleteMapping("/product/{productId}/image/{imageId}")
     public ResponseEntity<Void> deleteProductImage(@PathVariable Long productId,
                                                 @PathVariable Long imageId) {
-        productService.deleteProductImage(productId, imageId);
-        return ResponseEntity.ok().build();
+        productImageService.deleteProductImage(productId, imageId);
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/seller/products")
-    public ResponseEntity<List<SellerProductProjection>> getCurrentSellerProducts(Authentication auth) {
+    public ResponseEntity<List<SellerInventoryProductDto>> getCurrentSellerProducts(Authentication auth) {
         String username = auth.getName();
         return ResponseEntity.ok()
-                .body(productService.getCurrentSellerProducts(username));
+                .body(productQueryService.getCurrentSellerProducts(username));
     }
 
     @PreAuthorize("hasRole('SELLER')")
@@ -134,7 +142,7 @@ public class ProductController {
     public ResponseEntity<CurrentSellerProductDto> getCurrentSellerProductById(
             @PathVariable Long id) {
         return ResponseEntity.ok()
-                .body(productService.getCurrentSellerProductById(id));
+                .body(productQueryService.getCurrentSellerProductById(id));
     }
 
 

@@ -39,13 +39,6 @@ public class SellerService {
                 .build();
     }
 
-    public List<ListProductDto> getSellerProducts(String username) {
-        Seller seller = sellerRepo.findByNickname(username)
-                .orElseThrow(()-> new SellerNotFoundException("Seller not found"));
-
-        return productRepo.findAllVisibleBySellerId(seller.getId());
-    }
-
     public void sendMessageToSeller(String username, SendMessageDto message) {
         chatService.sendMessageToSeller(username, message);
     }

@@ -31,4 +31,10 @@ public class ProductImage {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
+
+    public  ProductImage(Product product, String url, Boolean isMain) {
+        this.product = product;
+        this.url = url;
+        this.isMain = isMain;
+    }
 }

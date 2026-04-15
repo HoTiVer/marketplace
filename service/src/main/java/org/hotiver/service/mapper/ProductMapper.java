@@ -3,6 +3,7 @@ package org.hotiver.service.mapper;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Seller;
+import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.mapstruct.Mapper;
@@ -42,10 +43,20 @@ public interface ProductMapper {
     Product productAddDtoToEntity(ProductAddDto productAddDto, Category category, Seller seller);
 
 
-    @Mapping(source = "category.name", target = "categoryName")
-    @Mapping(source = "seller.user.displayName", target = "sellerDisplayName")
-    @Mapping(source = "seller.nickname", target = "sellerUsername")
+    @Mapping(source = "product.category.name", target = "categoryName")
+    @Mapping(source = "product.seller.user.displayName", target = "sellerDisplayName")
+    @Mapping(source = "product.seller.nickname", target = "sellerUsername")
     @Mapping(source = "product.id", target = "id")
     @Mapping(source = "product.name", target = "name")
-    ProductGetDto entityToProductGetDto(Product product, Category category, Seller seller);
+    ProductGetDto entityToProductGetDto(Product product);
+
+
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "price", target = "price")
+    @Mapping(source = "description", target = "description")
+    @Mapping(source = "product.category.name", target = "categoryName")
+    @Mapping(source = "characteristic", target = "characteristics")
+    @Mapping(source = "stockQuantity", target = "quantity")
+    CurrentSellerProductDto entityToCurrentSellerProductDto(Product product);
 }
