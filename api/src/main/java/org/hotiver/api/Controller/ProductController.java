@@ -10,7 +10,6 @@ import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.SellerInventoryProductDto;
-import org.hotiver.service.product.ProductImageService;
 import org.hotiver.service.product.ProductQueryService;
 import org.hotiver.service.product.ProductService;
 import org.springframework.http.MediaType;
@@ -27,14 +26,11 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
-    private final ProductImageService productImageService;
     private final ProductQueryService productQueryService;
 
     public ProductController(ProductService productService,
-                             ProductImageService productImageService,
                              ProductQueryService productQueryService) {
         this.productService = productService;
-        this.productImageService = productImageService;
         this.productQueryService = productQueryService;
     }
 
@@ -111,22 +107,6 @@ public class ProductController {
     ) {
         productService.updateProductById(id, dto, image);
         return ResponseEntity.ok().build();
-    }
-
-    @PreAuthorize("hasRole('SELLER')")
-    @PatchMapping("/product/{productId}/image/{imageId}/main")
-    public ResponseEntity<Void> makeProductMainImage(@PathVariable Long productId,
-                                                  @PathVariable Long imageId) {
-        productImageService.makeProductMainImage(productId, imageId);
-        return ResponseEntity.ok().build();
-    }
-
-    @PreAuthorize("hasRole('SELLER')")
-    @DeleteMapping("/product/{productId}/image/{imageId}")
-    public ResponseEntity<Void> deleteProductImage(@PathVariable Long productId,
-                                                @PathVariable Long imageId) {
-        productImageService.deleteProductImage(productId, imageId);
-        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('SELLER')")
