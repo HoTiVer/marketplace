@@ -29,6 +29,27 @@ public class AuthController {
 
         AuthResponse authResponse = authService.register(registerRequest);
 
+        CookieData cookieData = setSuccessAuthCookie(authResponse);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookieData.accessCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, cookieData.refreshCookie().toString())
+                .build();
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest loginRequest) {
+        AuthResponse authResponse = authService.login(loginRequest);
+
+        CookieData cookieData = setSuccessAuthCookie(authResponse);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookieData.accessCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, cookieData.refreshCookie().toString())
+                .build();
+    }
+
+    private CookieData setSuccessAuthCookie(AuthResponse authResponse) {
         ResponseCookie accessCookie = ResponseCookie.from("accessToken",
                         authResponse.accessToken())
                 .httpOnly(true)
@@ -47,39 +68,7 @@ public class AuthController {
                 .sameSite("Strict")
                 .build();
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .build();
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest loginRequest) {
-        AuthResponse authResponse = authService.login(loginRequest);
-
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken",
-                authResponse.accessToken())
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(authResponse.accessTokenLifeTime())
-                .sameSite("Strict")
-                .build();
-
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken",
-                        authResponse.refreshToken())
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(authResponse.refreshTokenLifeTime())
-                .sameSite("Strict")
-                .build();
-
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .build();
+        return new CookieData(accessCookie, refreshCookie);
     }
 
 //    @PostMapping("/login/verify")
@@ -190,5 +179,9 @@ public class AuthController {
 
         return null;
     }
-
 }
+
+record CookieData (
+        ResponseCookie accessCookie,
+        ResponseCookie refreshCookie
+) { }

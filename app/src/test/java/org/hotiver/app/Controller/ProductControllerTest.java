@@ -7,6 +7,8 @@ import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.service.auth.JwtService;
+import org.hotiver.service.product.ProductImageService;
+import org.hotiver.service.product.ProductQueryService;
 import org.hotiver.service.product.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +47,12 @@ public class ProductControllerTest {
     private ProductService productService;
 
     @MockitoBean
+    private ProductQueryService productQueryService;
+
+    @MockitoBean
+    private ProductImageService productImageService;
+
+    @MockitoBean
     private JwtService jwtService;
 
     @MockitoBean
@@ -72,7 +80,7 @@ public class ProductControllerTest {
                 .price(BigDecimal.valueOf(1.0))
                 .build();
 
-        when(productService.getProductById(any())).thenReturn(productGetDto);
+        when(productQueryService.getProductById(any())).thenReturn(productGetDto);
 
         mockMvc.perform(get("/api/v1/product/{id}", 1)
                 .contentType(MediaType.APPLICATION_JSON))
@@ -82,7 +90,7 @@ public class ProductControllerTest {
 
     @Test
     public void get_product_by_id_product_not_exist() throws Exception {
-        when(productService.getProductById(any())).thenThrow(new EntityNotFoundException());
+        when(productQueryService.getProductById(any())).thenThrow(new EntityNotFoundException());
 
         mockMvc.perform(get("/api/v1/product/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -192,7 +200,7 @@ public class ProductControllerTest {
     public void delete_product_success() throws Exception {
         mockMvc.perform(delete("/api/v1/product/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 
     @Test

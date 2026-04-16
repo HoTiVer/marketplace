@@ -6,6 +6,7 @@ import org.hotiver.api.Controller.AdminController;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.domain.Entity.SellerRegister;
+import org.hotiver.dto.admin.SellerRegisterResponse;
 import org.hotiver.service.admin.AdminService;
 import org.hotiver.service.auth.JwtService;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,13 +44,18 @@ public class AdminControllerTest {
     @MockitoBean
     private JwtFilter jwtFilter;
 
-    private List<SellerRegister> sellerRegisters;
+    private List<SellerRegisterResponse> sellerRegisters;
 
     @BeforeEach
     public void setup() {
-        sellerRegisters = new ArrayList<SellerRegister>();
+        sellerRegisters = new ArrayList<SellerRegisterResponse>();
         sellerRegisters.add(
-                new SellerRegister()
+                new SellerRegisterResponse(
+                        1L,
+                        "requestedNickname",
+                        "displayName",
+                        "profileDescription"
+                )
         );
     }
 

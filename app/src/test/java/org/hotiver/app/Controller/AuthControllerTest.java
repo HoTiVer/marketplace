@@ -3,6 +3,7 @@ package org.hotiver.app.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.Cookie;
 import org.hotiver.api.Controller.AuthController;
 import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.config.filter.JwtFilter;
@@ -28,8 +29,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @WebMvcTest(AuthController.class)
@@ -63,7 +63,9 @@ public class AuthControllerTest {
     public static void setup() {
         authResponse = new AuthResponse(
                 "accessToken",
-                "refreshToken");
+                "refreshToken",
+                10000L,
+                10000L);
     }
 
     @Test
@@ -83,8 +85,8 @@ public class AuthControllerTest {
                 .content(mapper.writeValueAsString(registerRequest)))
                 .andDo(print())
                 .andExpect(status().is(200))
-                .andExpect(jsonPath("$.accessToken").value("accessToken"))
-                .andExpect(jsonPath("$.refreshToken").value("refreshToken"));
+                .andExpect(cookie().value("accessToken", "accessToken"))
+                .andExpect(cookie().value("refreshToken", "refreshToken"));
 
         verify(authService, times(1)).register(any(RegisterRequest.class));
     }
@@ -145,10 +147,8 @@ public class AuthControllerTest {
                 .content(mapper.writeValueAsString(loginRequest)))
                 .andDo(print())
                 .andExpect(status().is(200))
-                .andExpect(jsonPath("$.accessToken")
-                        .value("accessToken"))
-                .andExpect(jsonPath("$.refreshToken")
-                        .value("refreshToken"));
+                .andExpect(cookie().value("accessToken", "accessToken"))
+                .andExpect(cookie().value("refreshToken", "refreshToken"));
 
         verify(authService, times(1)).login(any(LoginRequest.class));
     }
@@ -207,23 +207,19 @@ public class AuthControllerTest {
     @Test
     public void success_refresh_test() throws Exception {
         String refreshToken = "refreshToken";
-        RefreshTokenResponse refreshTokenResponse =
-                new RefreshTokenResponse("accessToken");
-
 
         when(jwtService.isTokenValid(refreshToken)).thenReturn(true);
         when(jwtService.isRefreshToken(refreshToken)).thenReturn(true);
 
 
         when(authService.refresh(any(String.class)))
-                .thenReturn(refreshTokenResponse);
+                .thenReturn(authResponse);
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                        .header("Authorization", "Bearer " + refreshToken))
+                        .cookie(new Cookie("refreshToken", refreshToken)))
                 .andDo(print())
                 .andExpect(status().is(200))
-                .andExpect(jsonPath("$.accessToken")
-                        .value("accessToken"));
+                .andExpect(cookie().value("accessToken", "accessToken"));
 
         verify(authService, times(1)).refresh(any(String.class));
     }
@@ -238,7 +234,7 @@ public class AuthControllerTest {
                 .thenThrow(new NoAuthorizationException("Refresh token is invalid"));
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                        .header("Authorization", "Bearer " + refreshToken))
+                        .cookie(new Cookie("refreshToken", refreshToken)))
                 .andDo(print())
                 .andExpect(status().is(401))
                 .andExpect(jsonPath("$.message")
@@ -258,7 +254,7 @@ public class AuthControllerTest {
                 .thenThrow(new NoAuthorizationException("Expected refresh token"));
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                        .header("Authorization", "Bearer " + refreshToken))
+                        .cookie(new Cookie("refreshToken", refreshToken)))
                 .andDo(print())
                 .andExpect(status().is(401))
                 .andExpect(jsonPath("$.message")

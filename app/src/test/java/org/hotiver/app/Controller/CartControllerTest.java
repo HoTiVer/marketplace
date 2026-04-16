@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class CartControllerTest {
     @Test
     public void get_cart_not_empty() throws Exception {
         List<CartItemDto> list = List.of(
-            new CartItemDto(1L, "test", 0.0, 3)
+            new CartItemDto(1L, "test", BigDecimal.ZERO, 3)
         );
 
         when(cartService.getUserCart()).thenReturn(list);
