@@ -31,7 +31,7 @@ public class WishListService {
     public List<ListProductDto> getUserWishList() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        List<ListProductDto> products = userRepo.findUserProductWishList(email);
+        List<ListProductDto> products = productRepo.findUserProductWishList(email);
 
         productImageService.addHostToImage(products);
 
