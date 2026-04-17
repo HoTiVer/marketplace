@@ -5,6 +5,7 @@ import org.hotiver.dto.home.HomePageDto;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.repo.CategoryRepo;
 import org.hotiver.repo.ProductRepo;
+import org.hotiver.service.product.ProductImageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,15 +16,16 @@ public class HomePageService {
 
     private final ProductRepo productRepo;
     private final CategoryRepo categoryRepo;
+    private final ProductImageService productImageService;
     private final Integer limitForFeaturesProducts = 8;
     private final Integer limitForNewProducts = 8;
     private final Integer limitForPopularProducts = 8;
-    @Value("${storage.host}")
-    private String imageStorageHost;
 
-    public HomePageService(ProductRepo productRepo, CategoryRepo categoryRepo) {
+    public HomePageService(ProductRepo productRepo, CategoryRepo categoryRepo,
+                           ProductImageService productImageService) {
         this.productRepo = productRepo;
         this.categoryRepo = categoryRepo;
+        this.productImageService = productImageService;
     }
 
     public HomePageDto getMainPage() {
@@ -31,25 +33,16 @@ public class HomePageService {
 
         List<ListProductDto> featured = productRepo
                 .findRandomVisibleProducts(limitForFeaturesProducts);
-        addHostToImage(featured);
+        productImageService.addHostToImage(featured);
 
         List<ListProductDto> newProducts = productRepo
                 .findNewestVisibleProducts(limitForNewProducts);
-        addHostToImage(newProducts);
+        productImageService.addHostToImage(newProducts);
 
         List<ListProductDto> popularProducts = productRepo
                 .findPopularVisibleProducts(limitForPopularProducts);
-        addHostToImage(popularProducts);
+        productImageService.addHostToImage(popularProducts);
 
         return new HomePageDto(categories, featured, newProducts, popularProducts);
-    }
-
-    private void addHostToImage(List<ListProductDto> productImages) {
-        var images = productImages;
-        for (ListProductDto productImage : productImages) {
-            productImage.setMainImageUrl(imageStorageHost + "/images"
-                    + productImage.getMainImageUrl());
-        }
-
     }
 }

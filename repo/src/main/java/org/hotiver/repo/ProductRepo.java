@@ -29,28 +29,31 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     """, nativeQuery = true)
     List<ListProductDto> findAllVisibleBySellerId(@Param("sellerId") Long id);
 
-    @Query("""
-    SELECT\s
-        p.id AS productId,
-        p.name AS productName,
-        p.price AS price,
-        p.description AS description,
-        p.category.name AS categoryName,
+    @Query(value = """
+    SELECT
+        p.id as productId,
+        p.name as productName,
+        p.price as price,
         pi.url AS mainImageUrl
+    FROM product p
+    LEFT JOIN product_image pi
+        ON pi.product_id = p.id AND pi.is_main = true
+    JOIN category c ON c.id = p.category_id
+    WHERE c.name = :category AND p.is_visible = true
+    """,
+    countQuery = """
+          SELECT COUNT(*)
     FROM Product p
-    LEFT JOIN ProductImage pi
-        ON pi.product.id = p.id AND pi.isMain = true
-    WHERE p.category.name = :category AND p.isVisible = true
-""")
-    Page<ProductProjection> findByCategory(String category, Pageable pageable);
+    JOIN category c ON c.id = p.category_id
+    WHERE p.is_visible = true AND c.name = :category
+    """, nativeQuery = true)
+    Page<ListProductDto> findByCategory(String category, Pageable pageable);
 
     @Query(value = """
     SELECT
-        p.id AS productId,
-        p.name AS productName,
-        p.price AS price,
-        p.description AS description,
-        c.name AS categoryName,
+        p.id as productId,
+        p.name as productName,
+        p.price as price,
         pi.url AS mainImageUrl
     FROM product p
     JOIN category c ON p.category_id = c.id
@@ -68,8 +71,21 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
                 WHERE kv.value ILIKE CONCAT('%', :searchTerm, '%')
             )
       )
-    """, nativeQuery = true)
-    Page<ProductProjection> findByKeyWord(@Param("searchTerm") String searchTerm, Pageable pageable);
+    """, countQuery = """
+    SELECT COUNT(*)
+    FROM product p
+    WHERE p.is_visible = true
+      AND (
+            LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+            OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+            OR EXISTS (
+                SELECT 1
+                FROM jsonb_each_text(p.characteristic) AS kv
+                WHERE kv.value ILIKE CONCAT('%', :searchTerm, '%')
+            )
+      )
+""", nativeQuery = true)
+    Page<ListProductDto> findByKeyWord(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     @Query(value = """
           SELECT

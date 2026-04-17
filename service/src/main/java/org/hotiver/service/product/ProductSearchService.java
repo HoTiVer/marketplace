@@ -2,7 +2,7 @@ package org.hotiver.service.product;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.domain.Entity.Category;
-import org.hotiver.dto.product.ProductProjection;
+import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.repo.CategoryRepo;
 import org.hotiver.repo.ProductRepo;
 import org.springframework.data.domain.Page;
@@ -17,23 +17,28 @@ public class ProductSearchService {
 
     private final ProductRepo productRepo;
     private final CategoryRepo categoryRepo;
+    private final ProductImageService productImageService;
 
-    public ProductSearchService(ProductRepo productRepo, CategoryRepo categoryRepo) {
+    public ProductSearchService(ProductRepo productRepo, CategoryRepo categoryRepo,
+                                ProductImageService productImageService) {
         this.productRepo = productRepo;
         this.categoryRepo = categoryRepo;
+        this.productImageService = productImageService;
     }
 
-    public Page<ProductProjection> productSearchByKeyWords(
+    public Page<ListProductDto> productSearchByKeyWords(
             String searchTerm,
             int page,
             int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        return productRepo.findByKeyWord(searchTerm, pageable);
+        Page<ListProductDto> products = productRepo.findByKeyWord(searchTerm, pageable);
+        productImageService.addHostToImage(products);
+        return products;
     }
 
-    public Page<ProductProjection> productSearchByCategory(
+    public Page<ListProductDto> productSearchByCategory(
             String searchingCategory,
             int page,
             int size) {
@@ -49,7 +54,12 @@ public class ProductSearchService {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        return productRepo.findByCategory(opCategory.get().getName(), pageable);
+        Page<ListProductDto> products = productRepo.findByCategory(
+                opCategory.get().getName(),
+                pageable);
+
+        productImageService.addHostToImage(products);
+        return products;
     }
 
     private Long parseCategoryId(String category) {

@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.ProductImage;
 import org.hotiver.domain.security.SecurityUser;
+import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.product.ProductImageDto;
 import org.hotiver.dto.product.SellerInventoryProductDto;
 import org.hotiver.repo.ProductImageRepo;
@@ -12,6 +13,7 @@ import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.storage.ImageStorageService;
 import org.hotiver.service.storage.MinioImageStorageService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -149,6 +151,18 @@ public class ProductImageService {
                            + sellerInventoryProduct.getMainImageUrl());
         });
 
+    }
+
+    public void addHostToImage(List<ListProductDto> products) {
+        products.forEach(this::addHost);
+    }
+
+    public void addHostToImage(Page<ListProductDto> products) {
+        products.forEach(this::addHost);
+    }
+
+    private void addHost(ListProductDto product) {
+        product.setMainImageUrl(storageHost + "/images" + product.getMainImageUrl());
     }
 
     private Product getProduct(Long productId) {
