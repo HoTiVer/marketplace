@@ -75,9 +75,6 @@ jwt:
   refresh.expiration: ${JWT_REFRESH_EXPIRATION}
   access.expiration: ${JWT_ACCESS_EXPIRATION}
 
-app:
-  upload:
-    dir: ${UPLOAD_DIR}
 
 frontend:
   url: ${FRONTEND_URL}

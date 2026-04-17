@@ -30,7 +30,6 @@ public class AppApplication {
 			System.setProperty("GOOGLE_CLIENT_ID", dotenv.get("GOOGLE_CLIENT_ID"));
 			System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET"));
             System.setProperty("KAFKA_BOOTSTRAP_SERVERS", dotenv.get("KAFKA_BOOTSTRAP_SERVERS"));
-            System.setProperty("UPLOAD_DIR", dotenv.get("UPLOAD_DIR"));
 			System.setProperty("FRONTEND_URL", dotenv.get("FRONTEND_URL"));
 			System.setProperty("IMAGE_STORAGE_HOST", dotenv.get("IMAGE_STORAGE_HOST"));
 			System.setProperty("MINIO_USER", dotenv.get("MINIO_USER"));

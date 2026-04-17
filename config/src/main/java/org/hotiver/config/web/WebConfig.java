@@ -10,9 +10,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer{
 
-    @Value("${app.upload.dir}")
-    private String productImagePath;
-
     @Value("${frontend.url}")
     private String origins;
 
@@ -24,11 +21,4 @@ public class WebConfig implements WebMvcConfigurer{
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
-
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/images/products/**")
-                .addResourceLocations("file:" + productImagePath + "/products/");
-    }
-
 }
