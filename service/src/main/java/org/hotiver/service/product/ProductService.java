@@ -12,7 +12,6 @@ import org.hotiver.service.chat.ChatService;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.mapper.ProductMapper;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,9 +46,9 @@ public class ProductService {
     @Transactional
     public void addProduct(ProductAddDto productAddDto,
                            MultipartFile image) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        SecurityUser securityUser = currentUserService.getUserPrincipal();
 
-        Seller seller = sellerRepo.findByEmail(email)
+        Seller seller = sellerRepo.findByEmail(securityUser.getUsername())
                 .orElseThrow(() -> new SellerNotFoundException("You are not a seller"));
         Category category = categoryRepo.findByName(productAddDto.getCategoryName())
                 .orElseThrow(()-> new EntityNotFoundException("Category not found"));

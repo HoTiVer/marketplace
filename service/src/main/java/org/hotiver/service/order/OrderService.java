@@ -10,13 +10,14 @@ import org.hotiver.common.Exception.base.ResourceNotFoundException;
 import org.hotiver.common.Exception.order.CannotBuyOwnProductException;
 import org.hotiver.common.Exception.user.UserNotFoundException;
 import org.hotiver.domain.Entity.*;
+import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.order.*;
 import org.hotiver.repo.*;
+import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.redis.RedisOutboxService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,24 +40,25 @@ public class OrderService {
     private final CartItemRepo cartItemRepo;
     private final SellerRepo sellerRepo;
     private final RedisOutboxService redisOutboxService;
+    private final CurrentUserService currentUserService;
 
     public OrderService(ProductRepo productRepo, UserRepo userRepo,
                         OrderRepo orderRepo, CartItemRepo cartItemRepo,
-                        SellerRepo sellerRepo, RedisOutboxService redisOutboxService) {
+                        SellerRepo sellerRepo, RedisOutboxService redisOutboxService,
+                        CurrentUserService currentUserService) {
         this.productRepo = productRepo;
         this.userRepo = userRepo;
         this.orderRepo = orderRepo;
         this.cartItemRepo = cartItemRepo;
         this.sellerRepo = sellerRepo;
         this.redisOutboxService = redisOutboxService;
+        this.currentUserService = currentUserService;
     }
 
+    //TODO too big method
     @Transactional
     public void createOrder(CreateOrderDto createOrderDto) {
-        var context = SecurityContextHolder.getContext();
-        String email = context.getAuthentication().getName();
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = currentUserService.getCurrentUser();
 
         Set<CartItem> userCart = new HashSet<>(user.getCart());
 
@@ -137,19 +139,14 @@ public class OrderService {
     }
 
     public Page<UserOrderDto> getUserOrders(int page, int size) {
-        var context = SecurityContextHolder.getContext();
-        String email = context.getAuthentication().getName();
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        SecurityUser user = currentUserService.getUserPrincipal();
 
         Pageable pageable = PageRequest.of(page, size);
         return orderRepo.findUserOrders(user.getId(), pageable);
     }
 
     public void cancelUserOrder(Long orderId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        SecurityUser user = currentUserService.getUserPrincipal();
 
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
@@ -172,26 +169,24 @@ public class OrderService {
     }
 
     public SellerOrdersResponse getSellerOrders(int page, int size) {
-        var context = SecurityContextHolder.getContext();
-        var email = context.getAuthentication().getName();
+        SecurityUser user = currentUserService.getUserPrincipal();
 
-        Optional<Seller> opSeller = sellerRepo.findByEmail(email);
-        if (opSeller.isEmpty()) {
-            throw new RuntimeException("Seller not found");
-        }
+        Seller seller = sellerRepo.findByEmail(user.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Seller not found"));
 
         Pageable pageable = PageRequest.of(page, size);
 
         Page<SellerOrderDto> sellerOrderDto = orderRepo
-                .findSellerOrders(opSeller.get().getId(), pageable);
+                .findSellerOrders(seller.getId(), pageable);
 
         List<OrderStatus> orderStatuses = List.of(OrderStatus.values());
 
         return new SellerOrdersResponse(sellerOrderDto, orderStatuses);
     }
 
+    //TODO too big method
     public void changeOrderStatus(Long orderId, String status) {
-        var email = SecurityContextHolder.getContext().getAuthentication().getName();
+        SecurityUser user = currentUserService.getUserPrincipal();
 
         OrderStatus newStatus;
         try {
@@ -200,7 +195,7 @@ public class OrderService {
             throw new ResourceNotFoundException("Order status not found");
         }
 
-        Seller seller = sellerRepo.findByEmail(email)
+        Seller seller = sellerRepo.findByEmail(user.getUsername())
                 .orElseThrow(() -> new EntityNotFoundException("Seller not found"));
 
         Order order = orderRepo.findById(orderId)

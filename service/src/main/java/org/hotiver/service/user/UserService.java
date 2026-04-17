@@ -1,10 +1,10 @@
 package org.hotiver.service.user;
 
-import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.common.Utils.HashUtils;
 import jakarta.transaction.Transactional;
 import org.hotiver.common.Enum.SellerRegisterRequestStatus;
+import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
@@ -15,10 +15,9 @@ import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
 import org.hotiver.service.auth.JwtService;
+import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.email.EmailService;
 import org.hotiver.service.redis.RedisService;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -34,16 +33,19 @@ public class UserService {
     private final RedisService redisService;
     private final EmailService emailService;
     private final JwtService jwtService;
+    private final CurrentUserService currentUserService;
 
     public UserService(UserRepo userRepo, SellerRegisterRepo sellerRegisterRepo,
                        SellerRepo sellerRepo, RedisService redisService,
-                       EmailService emailService, JwtService jwtService) {
+                       EmailService emailService, JwtService jwtService,
+                       CurrentUserService currentUserService) {
         this.userRepo = userRepo;
         this.sellerRegisterRepo = sellerRegisterRepo;
         this.sellerRepo = sellerRepo;
         this.redisService = redisService;
         this.emailService = emailService;
         this.jwtService = jwtService;
+        this.currentUserService = currentUserService;
     }
 
     public void sendSellerRegisterRequest(SellerRegisterDto sellerRegisterDto) {
@@ -59,7 +61,7 @@ public class UserService {
                     + " already exists");
         }
 
-        User user = getCurrentUser();
+        SecurityUser user = currentUserService.getUserPrincipal();
         Long userId = user.getId();
 
         if (sellerRepo.existsById(userId)){
@@ -88,7 +90,7 @@ public class UserService {
     }
 
     public PersonalInfoDto getPersonalInfo() {
-        User user = getCurrentUser();
+        User user = currentUserService.getCurrentUser();
 
         PersonalInfoDto personalInfoDto = PersonalInfoDto.builder()
                 .email(user.getEmail())
@@ -98,7 +100,7 @@ public class UserService {
                 .build();
 
         if (sellerRepo.existsById(user.getId())) {
-            var seller = sellerRepo.findByEmail(user.getEmail()).get();
+            Seller seller = sellerRepo.findByEmail(user.getEmail()).orElse(null);
             personalInfoDto.setIsSeller(true);
             personalInfoDto.setSellerNickname(seller.getNickname());
         }
@@ -106,7 +108,7 @@ public class UserService {
     }
 
     public UserContactsDto getUserContacts() {
-        User user = getCurrentUser();
+        User user = currentUserService.getCurrentUser();
 
         UserContactsDto contactsDto = new UserContactsDto();
         contactsDto.setEmail(user.getEmail());
@@ -115,7 +117,7 @@ public class UserService {
     }
 
     public void updateUserContacts(UserContactsDto userContactsDto) {
-        User user = getCurrentUser();
+        User user = currentUserService.getCurrentUser();
         String newEmail = userContactsDto.getEmail();
 
         if (userRepo.existsUserByEmail(newEmail))
@@ -133,7 +135,7 @@ public class UserService {
 
     @Transactional
     public AuthResponse verifyChangingUserContacts(CodeVerifyDto codeVerifyDto) {
-        User user = getCurrentUser();
+        User user = currentUserService.getCurrentUser();
 
         String newEmailKey = "newEmail:" + HashUtils.hashKeySha256(user.getId().toString());
         String newEmail = redisService.getValue(newEmailKey);
@@ -169,19 +171,10 @@ public class UserService {
     }
 
     public SecurityInfoDto getSecurityInfo() {
-        User user = getCurrentUser();
+        User user = currentUserService.getCurrentUser();
 
         return SecurityInfoDto.builder()
                 .isTwoFactorEnable(user.getIsTwoFactorEnable())
                 .build();
     }
-
-    private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        return userRepo.findByEmail(email)
-                .orElseThrow(() -> new NoAuthorizationException("User not found"));
-    }
-
 }

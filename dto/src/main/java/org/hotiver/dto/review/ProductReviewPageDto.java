@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ReviewPageDto {
+public class ProductReviewPageDto {
     Long productId;
     String productName;
     BigDecimal rating;

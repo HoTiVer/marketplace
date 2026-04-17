@@ -6,7 +6,6 @@ import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.repo.CategoryRepo;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.service.product.ProductImageService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

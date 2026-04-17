@@ -3,14 +3,12 @@ package org.hotiver.service.user;
 import org.hotiver.common.Exception.seller.SellerNotFoundException;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.dto.chat.SendMessageDto;
-import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.dto.seller.SellerProfileDto;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.service.chat.ChatService;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 public class SellerService {

@@ -5,6 +5,7 @@ import org.hotiver.domain.Entity.Chat;
 import org.hotiver.domain.Entity.Message;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
+import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.chat.ChatDto;
 import org.hotiver.dto.chat.ChatMessageProjection;
 import org.hotiver.dto.chat.SendMessageDto;
@@ -13,7 +14,7 @@ import org.hotiver.repo.ChatRepo;
 import org.hotiver.repo.MessageRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.hotiver.service.common.CurrentUserService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,28 +29,26 @@ public class ChatService {
     private final ChatRepo chatRepo;
     private final MessageRepo messageRepo;
     private final SellerRepo sellerRepo;
+    private final CurrentUserService currentUserService;
 
-    public ChatService(UserRepo userRepo, ChatRepo chatRepo, MessageRepo messageRepo, SellerRepo sellerRepo) {
+    public ChatService(UserRepo userRepo, ChatRepo chatRepo,
+                       MessageRepo messageRepo, SellerRepo sellerRepo,
+                       CurrentUserService currentUserService) {
         this.userRepo = userRepo;
         this.chatRepo = chatRepo;
         this.messageRepo = messageRepo;
         this.sellerRepo = sellerRepo;
+        this.currentUserService = currentUserService;
     }
 
     public List<UserChatsDto> getUserChats() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        SecurityUser user = currentUserService.getUserPrincipal();
 
         return chatRepo.findUserChatsDtoByUserId(user.getId());
     }
 
     public ChatDto getChat(Long id) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        SecurityUser user = currentUserService.getUserPrincipal();
 
         ChatDto chat = chatRepo.findChatDtoByChatId(id, user.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Chat not found"));
@@ -61,13 +60,11 @@ public class ChatService {
     }
 
     public void sendMessage(Long chatId, SendMessageDto sendMessageDto) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = currentUserService.getCurrentUser();
 
         Chat chat = chatRepo.findById(chatId)
                 .orElseThrow(()-> new EntityNotFoundException("Chat is not found"));
 
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (chat.getUser1().equals(user) || chat.getUser2().equals(user)) {
 
@@ -82,6 +79,7 @@ public class ChatService {
         }
     }
 
+    //TODO too big method
     public void sendMessage(Long senderId, Long receiverId, String message) {
         if (Objects.equals(receiverId, senderId) || message == null){
             return;
@@ -110,10 +108,7 @@ public class ChatService {
     }
 
     public void sendMessageToSeller(String sellerNickName, SendMessageDto message) {
-        String senderEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User sender = userRepo.findByEmail(senderEmail)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        User sender = currentUserService.getCurrentUser();
 
         Seller seller = sellerRepo.findByNickname(sellerNickName)
                 .orElseThrow(() -> new EntityNotFoundException("Seller not found"));

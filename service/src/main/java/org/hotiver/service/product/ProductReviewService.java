@@ -2,17 +2,16 @@ package org.hotiver.service.product;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Enum.OrderStatus;
-import org.hotiver.common.Exception.user.UserNotFoundException;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Review;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
-import org.hotiver.dto.ResponseDto;
+import org.hotiver.dto.review.ProductReviewResponse;
 import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
-import org.hotiver.dto.review.ReviewPageDto;
+import org.hotiver.dto.review.ProductReviewPageDto;
 import org.hotiver.repo.*;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.hotiver.service.common.CurrentUserService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,25 +23,25 @@ import java.util.List;
 @Service
 public class ProductReviewService {
 
-    private final UserRepo userRepo;
     private final ReviewRepo reviewRepo;
     private final ProductRepo productRepo;
     private final OrderRepo orderRepo;
     private final SellerRepo sellerRepo;
+    private final CurrentUserService currentUserService;
 
-    public ProductReviewService(UserRepo userRepo, ReviewRepo reviewRepo,
-                                ProductRepo productRepo, OrderRepo orderRepo, SellerRepo sellerRepo) {
-        this.userRepo = userRepo;
+    public ProductReviewService(ReviewRepo reviewRepo, ProductRepo productRepo,
+                                OrderRepo orderRepo, SellerRepo sellerRepo,
+                                CurrentUserService currentUserService) {
         this.reviewRepo = reviewRepo;
         this.productRepo = productRepo;
         this.orderRepo = orderRepo;
         this.sellerRepo = sellerRepo;
+        this.currentUserService = currentUserService;
     }
 
-    public ResponseDto addReviewToProduct(ReviewDto reviewDto, Long id) {
-        var email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    // TODO Too big method
+    public ProductReviewResponse addReviewToProduct(ReviewDto reviewDto, Long id) {
+        User user = currentUserService.getCurrentUser();
 
         Product product = productRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
@@ -75,7 +74,7 @@ public class ProductReviewService {
         calculateSellerRating(product.getSeller().getId());
         calculateProductRating(product.getId());
 
-        return new ResponseDto("success");
+        return new ProductReviewResponse("success");
     }
 
     private void calculateSellerRating(Long sellerId) {
@@ -104,7 +103,7 @@ public class ProductReviewService {
         }
     }
 
-    public ReviewPageDto getProductReviews(Long productId) {
+    public ProductReviewPageDto getProductReviews(Long productId) {
         Product product = productRepo.findById(productId)
                 .orElseThrow(()-> new EntityNotFoundException("Product not found"));
 
@@ -115,12 +114,10 @@ public class ProductReviewService {
                 .map(r -> r.setScale(1, RoundingMode.HALF_UP))
                 .orElse(null);
 
-        ReviewPageDto reviewPageDto = new ReviewPageDto(
+        return new ProductReviewPageDto(
                 product.getId(),
                 product.getName(),
                 productAverageRating,
                 productReviews);
-
-        return reviewPageDto;
     }
 }

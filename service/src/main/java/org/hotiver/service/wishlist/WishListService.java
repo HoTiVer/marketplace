@@ -1,18 +1,19 @@
 package org.hotiver.service.wishlist;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Exception.base.ResourceNotFoundException;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.User;
+import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.UserRepo;
+import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.product.ProductImageService;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class WishListService {
@@ -20,18 +21,21 @@ public class WishListService {
     private final UserRepo userRepo;
     private final ProductRepo productRepo;
     private final ProductImageService productImageService;
+    private final CurrentUserService currentUserService;
 
     public WishListService(UserRepo userRepo, ProductRepo productRepo,
-                           ProductImageService productImageService) {
+                           ProductImageService productImageService,
+                           CurrentUserService currentUserService) {
         this.userRepo = userRepo;
         this.productRepo = productRepo;
         this.productImageService = productImageService;
+        this.currentUserService = currentUserService;
     }
 
     public List<ListProductDto> getUserWishList() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        SecurityUser user = currentUserService.getUserPrincipal();
 
-        List<ListProductDto> products = productRepo.findUserProductWishList(email);
+        List<ListProductDto> products = productRepo.findUserProductWishList(user.getUsername());
 
         productImageService.addHostToImage(products);
 
@@ -39,35 +43,29 @@ public class WishListService {
     }
 
     public void removeProductFromWishList(Long productId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = currentUserService.getCurrentUser();
 
-        User user = userRepo.findByEmail(email).get();
-        Optional<Product> product = productRepo.findById(productId);
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-        if (product.isPresent()) {
-            user.getWishlist().remove(product.get());
-            userRepo.save(user);
-        }
+        user.getWishlist().remove(product);
+        userRepo.save(user);
     }
 
     public void addProductInWishList(Long productId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = currentUserService.getCurrentUser();
 
-        User user = userRepo.findByEmail(email).get();
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        Optional<Product> product = productRepo.findById(productId);
-
-        if (product.isEmpty()){
-            throw new ResourceNotFoundException("Product not found");
-        }
-        if (user.getWishlist().contains(product.get())){
+        if (user.getWishlist().contains(product)){
             return;
         }
-        if (user.getId().equals(product.get().getSeller().getId())) {
+        if (user.getId().equals(product.getSeller().getId())) {
             return;
         }
-        var products = user.getWishlist();
-        products.add(product.get());
+        Set<Product> products = user.getWishlist();
+        products.add(product);
         user.setWishlist(products);
         userRepo.save(user);
     }

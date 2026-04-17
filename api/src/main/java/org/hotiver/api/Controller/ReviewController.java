@@ -1,9 +1,9 @@
 package org.hotiver.api.Controller;
 
 import jakarta.validation.Valid;
-import org.hotiver.dto.ResponseDto;
+import org.hotiver.dto.review.ProductReviewResponse;
 import org.hotiver.dto.review.ReviewDto;
-import org.hotiver.dto.review.ReviewPageDto;
+import org.hotiver.dto.review.ProductReviewPageDto;
 import org.hotiver.service.product.ProductReviewService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,19 +21,19 @@ public class ReviewController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/product/{productId}/review")
-    public ResponseEntity<ResponseDto> addReviewToProduct(@RequestBody @Valid ReviewDto reviewDto,
-                                                          @PathVariable Long productId){
+    public ResponseEntity<ProductReviewResponse> addReviewToProduct(@RequestBody @Valid ReviewDto reviewDto,
+                                                                    @PathVariable Long productId){
 
-        ResponseDto response = productReviewService.addReviewToProduct(reviewDto, productId);
+        ProductReviewResponse response = productReviewService.addReviewToProduct(reviewDto, productId);
         if (response == null) {
             return ResponseEntity.badRequest()
-                    .body(new ResponseDto("you should fully buy it before placing comment"));
+                    .body(new ProductReviewResponse("you should fully buy it before placing comment"));
         }
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/product/{productId}/review")
-    public ResponseEntity<ReviewPageDto> getProductReviews(@PathVariable Long productId){
+    public ResponseEntity<ProductReviewPageDto> getProductReviews(@PathVariable Long productId){
         return ResponseEntity.ok(productReviewService.getProductReviews(productId));
     }
 }

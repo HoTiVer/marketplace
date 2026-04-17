@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.api.Controller.ReviewController;
 import org.hotiver.config.filter.JwtFilter;
-import org.hotiver.dto.ResponseDto;
+import org.hotiver.dto.review.ProductReviewResponse;
 import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
-import org.hotiver.dto.review.ReviewPageDto;
+import org.hotiver.dto.review.ProductReviewPageDto;
 import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.product.ProductReviewService;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +61,7 @@ public class ReviewControllerTest {
     public void add_review_success() throws Exception {
 
         when(productReviewService.addReviewToProduct(any(), anyLong()))
-                .thenReturn(new ResponseDto("success"));
+                .thenReturn(new ProductReviewResponse("success"));
 
         mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -74,7 +74,7 @@ public class ReviewControllerTest {
         reviewDto.setComment(null);
 
         when(productReviewService.addReviewToProduct(any(), anyLong()))
-                .thenReturn(new ResponseDto("success"));
+                .thenReturn(new ProductReviewResponse("success"));
 
         mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -132,7 +132,7 @@ public class ReviewControllerTest {
 
     @Test
     public void get_all_product_reviews_not_empty() throws Exception {
-        ReviewPageDto review = new ReviewPageDto(1L, "test",
+        ProductReviewPageDto review = new ProductReviewPageDto(1L, "test",
                         BigDecimal.valueOf(4),
                 List.of(new ProductReviewDto(1L, 1L,
                                         "lol", "test",
@@ -149,7 +149,7 @@ public class ReviewControllerTest {
 
     @Test
     public void get_all_product_reviews_empty() throws Exception {
-        ReviewPageDto review = new ReviewPageDto(1L, null,
+        ProductReviewPageDto review = new ProductReviewPageDto(1L, null,
                 null, null);
 
         when(productReviewService.getProductReviews(anyLong())).thenReturn(review);
