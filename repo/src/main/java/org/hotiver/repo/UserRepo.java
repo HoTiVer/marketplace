@@ -17,16 +17,17 @@ public interface UserRepo extends JpaRepository<User, Long> {
 
     boolean existsUserByEmail(String email);
 
-    @Query("""
-            SELECT new org.hotiver.dto.product.ListProductDto(
-            p.id,
-            p.name,
-            p.price,
-            null
-        )
-        FROM User u
-        JOIN u.wishlist p
+    @Query(value = """
+        SELECT
+            p.id as productId,
+            p.name as productName,
+            p.price as price,
+            pi.url as mainImageUrl
+        FROM public."user" u
+        JOIN user_wishes uw ON uw.user_id = u.id
+        JOIN product p ON p.id = uw.product_id
+        LEFT JOIN product_image pi ON pi.product_id = p.id AND pi.is_main = true
         WHERE u.email = :email
-    """)
+    """, nativeQuery = true)
     List<ListProductDto> findUserProductWishList(String email);
 }

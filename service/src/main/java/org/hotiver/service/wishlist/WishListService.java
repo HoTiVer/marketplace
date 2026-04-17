@@ -6,9 +6,11 @@ import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.UserRepo;
+import org.hotiver.service.product.ProductImageService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,16 +19,23 @@ public class WishListService {
 
     private final UserRepo userRepo;
     private final ProductRepo productRepo;
+    private final ProductImageService productImageService;
 
-    public WishListService(UserRepo userRepo, ProductRepo productRepo) {
+    public WishListService(UserRepo userRepo, ProductRepo productRepo,
+                           ProductImageService productImageService) {
         this.userRepo = userRepo;
         this.productRepo = productRepo;
+        this.productImageService = productImageService;
     }
 
     public List<ListProductDto> getUserWishList() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        return userRepo.findUserProductWishList(email);
+        List<ListProductDto> products = userRepo.findUserProductWishList(email);
+
+        productImageService.addHostToImage(products);
+
+        return products;
     }
 
     public void removeProductFromWishList(Long productId) {
