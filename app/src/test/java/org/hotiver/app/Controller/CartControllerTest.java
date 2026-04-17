@@ -42,7 +42,11 @@ public class CartControllerTest {
     @Test
     public void get_cart_not_empty() throws Exception {
         List<CartItemDto> list = List.of(
-            new CartItemDto(1L, "test", BigDecimal.ZERO, 3)
+            new CartItemDto(1L,
+                    "test",
+                    BigDecimal.ZERO,
+                    3,
+                    "url")
         );
 
         when(cartService.getUserCart()).thenReturn(list);

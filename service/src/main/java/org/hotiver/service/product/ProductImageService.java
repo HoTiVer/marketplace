@@ -161,8 +161,15 @@ public class ProductImageService {
         products.forEach(this::addHost);
     }
 
+    public String getImageHostUrl(String productUrl) {
+        if (productUrl == null)
+            return null;
+        else
+            return storageHost + "/images" + productUrl;
+    }
+
     private void addHost(ListProductDto product) {
-        product.setMainImageUrl(storageHost + "/images" + product.getMainImageUrl());
+        product.setMainImageUrl(getImageHostUrl(product.getMainImageUrl()));
     }
 
     private Product getProduct(Long productId) {

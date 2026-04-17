@@ -14,4 +14,5 @@ public class CartItemDto {
     String productName;
     BigDecimal price;
     Integer quantity;
+    String mainImageUrl;
 }

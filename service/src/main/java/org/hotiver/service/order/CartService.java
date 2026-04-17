@@ -1,20 +1,21 @@
 package org.hotiver.service.order;
 
-import org.hotiver.common.Exception.base.ResourceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.domain.Entity.CartItem;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.keys.CartItemId;
+import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.cart.CartItemDto;
 import org.hotiver.repo.CartItemRepo;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.UserRepo;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.hotiver.service.common.CurrentUserService;
+import org.hotiver.service.product.ProductImageService;
 import org.springframework.stereotype.Service;
 
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CartService {
@@ -22,70 +23,74 @@ public class CartService {
     private final UserRepo userRepo;
     private final ProductRepo productRepo;
     private final CartItemRepo cartItemRepo;
+    private final CurrentUserService currentUserService;
+    private final ProductImageService productImageService;
 
     public CartService(UserRepo userRepo, ProductRepo productRepo,
-                       CartItemRepo cartItemRepo) {
+                       CartItemRepo cartItemRepo, CurrentUserService currentUserService,
+                       ProductImageService productImageService) {
         this.userRepo = userRepo;
         this.productRepo = productRepo;
         this.cartItemRepo = cartItemRepo;
+        this.currentUserService = currentUserService;
+        this.productImageService = productImageService;
     }
 
     public List<CartItemDto> getUserCart() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepo.findByEmail(email).get();
+        SecurityUser user = currentUserService.getUserPrincipal();
 
-        return cartItemRepo.findByUserId(user.getId());
+        List<CartItemDto> userCart = cartItemRepo.findByUserId(user.getId());
+
+        userCart.forEach(cartItemDto -> {
+           cartItemDto.setMainImageUrl(
+                   productImageService.getImageHostUrl(cartItemDto.getMainImageUrl()));
+        });
+
+        return userCart;
     }
 
     public void addProductToCart(Long productId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = currentUserService.getCurrentUser();
 
-        Optional<Product> product = productRepo.findById(productId);
-        if (product.isPresent()) {
-            User user = userRepo.findByEmail(email).get();
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-            CartItemId id = new CartItemId(user.getId(), productId);
+        CartItemId id = new CartItemId(user.getId(), productId);
 
-            CartItem cartItem = cartItemRepo.findById(id)
-                    .orElse(CartItem.builder()
-                            .id(id)
-                            .user(user)
-                            .product(product.get())
-                            .quantity(1)
-                            .build());
+        CartItem cartItem = cartItemRepo.findById(id)
+                .orElse(CartItem.builder()
+                        .id(id)
+                        .user(user)
+                        .product(product)
+                        .quantity(1)
+                        .build());
 
-            user.getCart().add(cartItem);
-            userRepo.save(user);
-        }
-        else {
-            throw new ResourceNotFoundException("Product not found");
-        }
+        user.getCart().add(cartItem);
+        userRepo.save(user);
     }
 
     public void deleteProductFromCart(Long productId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        SecurityUser user = currentUserService.getUserPrincipal();
 
-        Optional<Product> product = productRepo.findById(productId);
-        if (product.isPresent()) {
-            User user = userRepo.findByEmail(email).get();
-            CartItemId id = new CartItemId(user.getId(), productId);
-            cartItemRepo.deleteById(id);
-        }
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        CartItemId id = new CartItemId(user.getId(), product.getId());
+        cartItemRepo.deleteById(id);
     }
 
     public void updateProductCount(Long productId, Integer count) {
-        var context = SecurityContextHolder.getContext();
-        String email = context.getAuthentication().getName();
+        SecurityUser user = currentUserService.getUserPrincipal();
 
-        Optional<Product> product = productRepo.findById(productId);
-        if (product.isPresent()) {
-            User user = userRepo.findByEmail(email).get();
-            CartItemId id = new CartItemId(user.getId(), productId);
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-            CartItem cartItem = cartItemRepo.findById(id).get();
-            cartItem.setQuantity(count);
+        CartItemId id = new CartItemId(user.getId(), product.getId());
 
-            cartItemRepo.save(cartItem);
-        }
+        CartItem cartItem = cartItemRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        cartItem.setQuantity(count);
+
+        cartItemRepo.save(cartItem);
     }
 }
