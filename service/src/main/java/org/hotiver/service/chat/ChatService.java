@@ -60,49 +60,37 @@ public class ChatService {
     }
 
     public void sendMessage(Long chatId, SendMessageDto sendMessageDto) {
-        User user = currentUserService.getCurrentUser();
+        User sender = currentUserService.getCurrentUser();
 
         Chat chat = chatRepo.findById(chatId)
                 .orElseThrow(()-> new EntityNotFoundException("Chat is not found"));
 
 
-        if (chat.getUser1().equals(user) || chat.getUser2().equals(user)) {
-
-            Message message = Message.builder()
-                    .chat(chat)
-                    .sender(user)
-                    .sentAt(LocalDateTime.now())
-                    .content(sendMessageDto.getContent())
-                    .build();
+        if (chat.getUser1().equals(sender) || chat.getUser2().equals(sender)) {
+            Message message = createMessage(chat, sendMessageDto.getContent(), sender);
 
             messageRepo.save(message);
         }
     }
 
-    //TODO too big method
     public void sendMessage(Long senderId, Long receiverId, String message) {
         if (Objects.equals(receiverId, senderId) || message == null){
             return;
         }
-        Chat chat = chatRepo.findChatByUsersIds(senderId, receiverId);
-        User sender = userRepo.findById(senderId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        if (chat == null){
-            chat = new Chat();
+        User sender = userRepo.findById(senderId)
+                .orElseThrow(()-> new EntityNotFoundException("Sender is not found"));
+
+        Chat chat = chatRepo.findChatByUsersIds(senderId, receiverId)
+                .orElse(null);
+
+        if (chat == null) {
             User receiver = userRepo.findById(receiverId)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
-            chat.setUser1(sender);
-            chat.setUser2(receiver);
+                    .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
+            chat = createChat(sender, receiver);
             chatRepo.save(chat);
         }
-
-        Message messageToSave = Message.builder()
-                .chat(chat)
-                .content(message)
-                .sender(sender)
-                .sentAt(LocalDateTime.now())
-                .build();
+        Message messageToSave = createMessage(chat, message, sender);
 
         messageRepo.save(messageToSave);
     }
@@ -117,25 +105,33 @@ public class ChatService {
             return;
         }
 
-        Chat chat = chatRepo.findChatByUsersIds(sender.getId(), seller.getId());
+        Chat chat = chatRepo.findChatByUsersIds(sender.getId(), seller.getId())
+                .orElse(null);
 
         if (chat == null){
-            chat = new Chat();
-            User receiver = userRepo.findById(seller.getId())
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-            chat.setUser1(sender);
-            chat.setUser2(receiver);
+            chat = createChat(sender, seller.getUser());
             chatRepo.save(chat);
         }
 
-        Message messageToSave = Message.builder()
+        Message messageToSave = createMessage(chat, message.getContent(), sender);
+        messageRepo.save(messageToSave);
+    }
+
+    private Message createMessage(Chat chat, String messageContent, User sender) {
+        return Message.builder()
                 .chat(chat)
-                .content(message.getContent())
+                .content(messageContent)
                 .sender(sender)
                 .sentAt(LocalDateTime.now())
                 .build();
+    }
 
-        messageRepo.save(messageToSave);
+    private Chat createChat(User sender, User receiver) {
+        Chat chat = new Chat();
+
+        chat.setUser1(sender);
+        chat.setUser2(receiver);
+
+        return chat;
     }
 }

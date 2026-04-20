@@ -2,6 +2,7 @@ package org.hotiver.service.product;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Enum.OrderStatus;
+import org.hotiver.common.Exception.auth.ForbiddenOperationException;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Review;
 import org.hotiver.domain.Entity.Seller;
@@ -39,29 +40,30 @@ public class ProductReviewService {
         this.currentUserService = currentUserService;
     }
 
-    // TODO Too big method
-    public ProductReviewResponse addReviewToProduct(ReviewDto reviewDto, Long id) {
+    public void addReviewToProduct(ReviewDto reviewDto, Long id) {
         User user = currentUserService.getCurrentUser();
 
         Product product = productRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-        if (!orderRepo.isUserBoughtProduct(user.getId(), product.getId(), OrderStatus.COMPLETED.toString())) {
-            return null;
+        if (!orderRepo.isUserBoughtProduct(user.getId(),
+                product.getId(), OrderStatus.COMPLETED.toString())) {
+            throw new ForbiddenOperationException("You should fully buy it before placing comment");
         }
 
         Review review = reviewRepo.findReviewByUserIdAndProductId(user.getId(), product.getId());
-        if (review != null) {
-            review.setComment(reviewDto.getComment());
-            review.setRating(reviewDto.getRating());
-            review.setUpdatedAt(Date.valueOf(LocalDate.now()));
+        if (review != null)
+            updateReview(reviewDto, review, product);
+        else
+            review = createReview(reviewDto, user, product);
 
-            reviewRepo.save(review);
-            calculateSellerRating(product.getSeller().getId());
-            calculateProductRating(product.getId());
-        }
+        reviewRepo.save(review);
+        calculateSellerRating(product.getSeller().getId());
+        calculateProductRating(product.getId());
+    }
 
-        review = Review.builder()
+    private Review createReview(ReviewDto reviewDto, User user, Product product) {
+        return Review.builder()
                 .product(product)
                 .user(user)
                 .rating(reviewDto.getRating())
@@ -69,12 +71,12 @@ public class ProductReviewService {
                 .createdAt(Date.valueOf(LocalDate.now()))
                 .updatedAt(Date.valueOf(LocalDate.now()))
                 .build();
+    }
 
-        reviewRepo.save(review);
-        calculateSellerRating(product.getSeller().getId());
-        calculateProductRating(product.getId());
-
-        return new ProductReviewResponse("success");
+    private void updateReview(ReviewDto reviewDto, Review review, Product product) {
+        review.setComment(reviewDto.getComment());
+        review.setRating(reviewDto.getRating());
+        review.setUpdatedAt(Date.valueOf(LocalDate.now()));
     }
 
     private void calculateSellerRating(Long sellerId) {

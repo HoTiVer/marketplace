@@ -47,27 +47,28 @@ public class AdminService {
 
     @Transactional
     public void acceptSellerRegisterRequest(Long id) {
-        var sellerRegister = sellerRegisterRepo.findById(id);
-        if (sellerRegister.isEmpty()){
-            throw new EntityNotFoundException("SellerRegister not found");
-        }
+        SellerRegister sellerRegister = sellerRegisterRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("SellerRegister not found"));
 
-        Long userId = sellerRegister.get().getUserId();
-        User user = userRepo.findById(userId).get();
+        Long userId = sellerRegister.getUserId();
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         var roles = user.getRoles();
-        roles.add(roleRepo.findById(3L).get());
-        String sellerUsername = sellerRegister.get().getRequestedNickname();
+        roles.add(roleRepo.findById(3L)
+                .orElseThrow(() -> new EntityNotFoundException("Role not found")));
+
+        String sellerUsername = sellerRegister.getRequestedNickname();
 
         if (sellerRepo.existsByNickname(sellerUsername)){
             throw new EntityAlreadyExistsException("Seller already exists");
         }
 
-        user.setDisplayName(sellerRegister.get().getDisplayName());
+        user.setDisplayName(sellerRegister.getDisplayName());
         Seller seller = Seller.builder()
                 .user(user)
                 .rating(BigDecimal.valueOf(0.0))
                 .nickname(sellerUsername)
-                .profileDescription(sellerRegister.get().getProfileDescription())
+                .profileDescription(sellerRegister.getProfileDescription())
                 .build();
 
         sellerRepo.save(seller);
@@ -76,28 +77,25 @@ public class AdminService {
         emailService.send(user.getEmail(), "Seller request", "You are a seller now.");
 
         //sellerRegisterRepo.delete(sellerRegister.get());
-        sellerRegister.get().setStatus(SellerRegisterRequestStatus.ACCEPTED);
-        sellerRegisterRepo.save(sellerRegister.get());
+        sellerRegister.setStatus(SellerRegisterRequestStatus.ACCEPTED);
+        sellerRegisterRepo.save(sellerRegister);
     }
 
     @Transactional
     public void declineSellerRegisterRequest(Long id) {
+        SellerRegister sellerRegister = sellerRegisterRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("SellerRegister not found"));
 
-        Optional<SellerRegister> sellerRegister = sellerRegisterRepo.findById(id);
-
-        if (sellerRegister.isEmpty()){
-            throw new EntityNotFoundException("SellerRegister not found");
-        }
-
-        chatService.sendMessage(0L, sellerRegister.get().getUserId(),
+        chatService.sendMessage(0L, sellerRegister.getUserId(),
                 "You are not allowed to be a seller.");
 
-        User user = userRepo.findById(sellerRegister.get().getUserId()).get();
+        User user = userRepo.findById(sellerRegister.getUserId()).get();
+
         emailService.send(user.getEmail(), "Seller request",
                 "You are not allowed to be a seller.");
 
         //sellerRegisterRepo.delete(sellerRegister.get());
-        sellerRegister.get().setStatus(SellerRegisterRequestStatus.REJECTED);
-        sellerRegisterRepo.save(sellerRegister.get());
+        sellerRegister.setStatus(SellerRegisterRequestStatus.REJECTED);
+        sellerRegisterRepo.save(sellerRegister);
     }
 }

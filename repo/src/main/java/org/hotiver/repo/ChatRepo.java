@@ -55,5 +55,5 @@ public interface ChatRepo extends JpaRepository<Chat, Long> {
     WHERE (c.user1.id = :senderId AND c.user2.id = :receiverId)
        OR (c.user1.id = :receiverId AND c.user2.id = :senderId)
     """)
-    Chat findChatByUsersIds(Long senderId, Long receiverId);
+    Optional<Chat> findChatByUsersIds(Long senderId, Long receiverId);
 }

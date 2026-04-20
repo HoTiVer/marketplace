@@ -60,26 +60,30 @@ public class ReviewControllerTest {
     @Test
     public void add_review_success() throws Exception {
 
-        when(productReviewService.addReviewToProduct(any(), anyLong()))
-                .thenReturn(new ProductReviewResponse("success"));
+        doNothing().when(productReviewService).addReviewToProduct(any(), anyLong());
 
         mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(reviewDto)))
                 .andExpect(status().isOk());
+
+        verify(productReviewService, times(1))
+                .addReviewToProduct(any(), anyLong());
     }
 
     @Test
     public void add_review_success_comment_null() throws Exception {
         reviewDto.setComment(null);
 
-        when(productReviewService.addReviewToProduct(any(), anyLong()))
-                .thenReturn(new ProductReviewResponse("success"));
+        doNothing().when(productReviewService).addReviewToProduct(any(), anyLong());
 
         mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(reviewDto)))
                 .andExpect(status().isOk());
+
+        verify(productReviewService, times(1))
+                .addReviewToProduct(any(), anyLong());
     }
 
     @Test

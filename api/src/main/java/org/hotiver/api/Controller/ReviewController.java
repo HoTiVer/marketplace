@@ -24,11 +24,7 @@ public class ReviewController {
     public ResponseEntity<ProductReviewResponse> addReviewToProduct(@RequestBody @Valid ReviewDto reviewDto,
                                                                     @PathVariable Long productId){
 
-        ProductReviewResponse response = productReviewService.addReviewToProduct(reviewDto, productId);
-        if (response == null) {
-            return ResponseEntity.badRequest()
-                    .body(new ProductReviewResponse("you should fully buy it before placing comment"));
-        }
+        productReviewService.addReviewToProduct(reviewDto, productId);
         return ResponseEntity.ok().build();
     }
 
