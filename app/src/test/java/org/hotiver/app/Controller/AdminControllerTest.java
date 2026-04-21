@@ -5,10 +5,10 @@ import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.api.Controller.AdminController;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.config.filter.JwtFilter;
-import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.dto.admin.SellerRegisterResponse;
 import org.hotiver.service.admin.AdminService;
 import org.hotiver.service.auth.JwtService;
+import org.hotiver.service.user.SellerRegisterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +39,9 @@ public class AdminControllerTest {
     private AdminService adminService;
 
     @MockitoBean
+    private SellerRegisterService sellerRegisterService;
+
+    @MockitoBean
     private JwtService jwtService;
 
     @MockitoBean
@@ -62,7 +65,7 @@ public class AdminControllerTest {
     @Test
     public void get_seller_register_requests_not_empty() throws Exception {
         doReturn(sellerRegisters)
-                .when(adminService)
+                .when(sellerRegisterService)
                 .getSellerRegisterRequests();
 
         mockMvc.perform(get("/api/v1/admin/request/seller-register")
@@ -76,7 +79,7 @@ public class AdminControllerTest {
         sellerRegisters = new ArrayList<>();
 
         doReturn(sellerRegisters)
-                .when(adminService)
+                .when(sellerRegisterService)
                 .getSellerRegisterRequests();
 
         mockMvc.perform(get("/api/v1/admin/request/seller-register")
@@ -96,7 +99,7 @@ public class AdminControllerTest {
     @Test
     public void accept_seller_register_request_not_exist() throws Exception {
         doThrow(new EntityNotFoundException("SellerRegister not found"))
-                .when(adminService)
+                .when(sellerRegisterService)
                 .acceptSellerRegisterRequest(anyLong());
 
         mockMvc.perform(post("/api/v1/admin/request/seller-register/{id}", 1)
@@ -107,7 +110,7 @@ public class AdminControllerTest {
     @Test
     public void accept_seller_register_request_seller_already_exist() throws Exception{
         doThrow(new EntityAlreadyExistsException("Seller already exists"))
-                .when(adminService)
+                .when(sellerRegisterService)
                 .acceptSellerRegisterRequest(anyLong());
 
         mockMvc.perform(post("/api/v1/admin/request/seller-register/{id}", 1)
@@ -125,7 +128,7 @@ public class AdminControllerTest {
     @Test
     public void decline_seller_register_request_not_exist() throws Exception{
         doThrow(new EntityNotFoundException("SellerRegister not found"))
-                .when(adminService)
+                .when(sellerRegisterService)
                 .acceptSellerRegisterRequest(anyLong());
 
         mockMvc.perform(post("/api/v1/admin/request/seller-register/{id}", 1)
