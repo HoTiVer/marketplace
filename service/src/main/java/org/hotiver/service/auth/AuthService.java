@@ -215,7 +215,7 @@ public class AuthService {
             String key = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());
             String code = String.format("%06d", new Random().nextInt(999999));
 
-            emailService.send(user.getEmail(), "Password verify", code);
+            emailService.sendAsync(user.getEmail(), "Password verify", code);
             redisService.saveValue(key, code, 10);
         }
 
@@ -268,6 +268,6 @@ public class AuthService {
         String code = String.format("%06d", new Random().nextInt(999999));
         String key = RedisKeyUtils.generateRedisTwoFactorKey(email);
         redisService.saveValue(key, code, 10);
-        emailService.send(email, "Verify Code", "Your Code: " + code);
+        emailService.sendAsync(email, "Verify Code", "Your Code: " + code);
     }
 }
