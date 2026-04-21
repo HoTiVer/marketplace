@@ -136,7 +136,7 @@ public class AuthController {
                 .build();
     }
 
-    @PreAuthorize("isAuthenticated()")
+    //@PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<UserInfoDto> getUserInfoForFrontend() {
         return ResponseEntity.ok().body(authService.getUserInfoForFrontend());
