@@ -5,6 +5,7 @@ import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Type;
+import org.hotiver.common.Exception.base.InvalidStateException;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -69,5 +70,22 @@ public class Product {
             images = new ArrayList<>();
         }
         images.add(productImage);
+    }
+
+    public void sell(Integer quantityToBuy) {
+        if (quantityToBuy <= 0) {
+            throw new InvalidStateException("Quantity must be greater than zero.");
+        }
+        if (quantityToBuy > stockQuantity) {
+            throw new InvalidStateException("Buying quantity is greater than stock quantity");
+        }
+
+        salesCount += quantityToBuy;
+        stockQuantity -= quantityToBuy;
+    }
+
+    public void getBack(Integer quantityToBack) {
+        salesCount -= quantityToBack;
+        stockQuantity += quantityToBack;
     }
 }

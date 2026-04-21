@@ -8,7 +8,6 @@ import org.hotiver.common.Exception.auth.ForbiddenOperationException;
 import org.hotiver.common.Exception.base.InvalidStateException;
 import org.hotiver.common.Exception.base.ResourceNotFoundException;
 import org.hotiver.common.Exception.order.CannotBuyOwnProductException;
-import org.hotiver.common.Exception.user.UserNotFoundException;
 import org.hotiver.domain.Entity.*;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.order.*;
@@ -28,7 +27,6 @@ import java.time.LocalDate;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -55,58 +53,53 @@ public class OrderService {
         this.currentUserService = currentUserService;
     }
 
-    //TODO too big method
+
     @Transactional
     public void createOrder(CreateOrderDto createOrderDto) {
         User user = currentUserService.getCurrentUser();
 
-        Set<CartItem> userCart = new HashSet<>(user.getCart());
-
-        if (userCart.isEmpty()) {
+        if (user.getCart().isEmpty()) {
             throw new EntityNotFoundException("Cart is empty");
         }
 
-        for (CartItem cartItem : userCart) {
-            Product product = productRepo.findById(cartItem.getProduct().getId())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Product "+ cartItem.getProduct().getName() +" not found"));
+        for (CartItem cartItem : new HashSet<>(user.getCart())) {
+            Product product = cartItem.getProduct();
 
-            if (product.getSeller().getId().equals(user.getId())) {
-                throw new CannotBuyOwnProductException("You cannot buy your own product");
-            }
+            validateBuyer(product, user.getId());
 
-            Integer quantity = cartItem.getQuantity();
-            if (quantity > product.getStockQuantity() && quantity > 0) {
-                throw new EntityNotFoundException("Quantity is greater than stock quantity");
-            }
+            Order order = createOrder(product, createOrderDto, user, cartItem.getQuantity());
 
-            Order order = Order.builder()
-                    .product(product)
-                    .user(user)
-                    .seller(product.getSeller())
-                    .quantity(quantity)
-                    .orderDate(Date.valueOf(LocalDate.now()))
-                    .deliveryDate(null)
-                    .status(OrderStatus.CREATED)
-                    .totalPrice(product.getPrice().multiply(BigDecimal.valueOf(quantity)))
-                    .deliveryCity(createOrderDto.deliveryCity())
-                    .deliveryAddress(createOrderDto.deliveryAddress())
-                    .recipientName(createOrderDto.receiverName())
-                    .recipientPhone(createOrderDto.receiverPhone())
-                    .build();
+            product.sell(cartItem.getQuantity());
 
-            product.setSalesCount(product.getSalesCount() + 1);
-            product.setStockQuantity(product.getStockQuantity() - quantity);
             productRepo.save(product);
-
             orderRepo.save(order);
             user.getCart().remove(cartItem);
             cartItemRepo.delete(cartItem);
-
-            //saveOrderInOutbox(order);
         }
+    }
 
-        userCart.clear();
+    private void validateBuyer(Product product, Long buyerId) {
+        if (product.getSeller().getId().equals(buyerId)) {
+            throw new CannotBuyOwnProductException("You cannot buy your own product");
+        }
+    }
+
+    private Order createOrder(Product product, CreateOrderDto createOrderDto,
+                              User user, Integer quantity) {
+        return Order.builder()
+                .product(product)
+                .user(user)
+                .seller(product.getSeller())
+                .quantity(quantity)
+                .orderDate(Date.valueOf(LocalDate.now()))
+                .deliveryDate(null)
+                .status(OrderStatus.CREATED)
+                .totalPrice(product.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                .deliveryCity(createOrderDto.deliveryCity())
+                .deliveryAddress(createOrderDto.deliveryAddress())
+                .recipientName(createOrderDto.receiverName())
+                .recipientPhone(createOrderDto.receiverPhone())
+                .build();
     }
 
     private void saveOrderInOutbox(Order order) {
@@ -160,7 +153,9 @@ public class OrderService {
 
                 Product product = productRepo.findById(order.getProduct().getId())
                                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
-                product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
+
+                product.getBack(order.getQuantity());
+
                 productRepo.save(product);
         }
         else {
@@ -184,47 +179,58 @@ public class OrderService {
         return new SellerOrdersResponse(sellerOrderDto, orderStatuses);
     }
 
-    //TODO too big method
     public void changeOrderStatus(Long orderId, String status) {
         SecurityUser user = currentUserService.getUserPrincipal();
 
-        OrderStatus newStatus;
-        try {
-            newStatus = OrderStatus.valueOf(status);
-        } catch (IllegalArgumentException e) {
-            throw new ResourceNotFoundException("Order status not found");
-        }
-
+        OrderStatus newStatus = parseOrderStatus(status);
         Seller seller = sellerRepo.findByEmail(user.getUsername())
                 .orElseThrow(() -> new EntityNotFoundException("Seller not found"));
 
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
 
-        if (!order.getSeller().getId().equals(seller.getId())) {
-            throw new ForbiddenOperationException("You are not allowed to change the order status");
-        }
+        validateSellerOwnerShip(order, seller.getId());
 
         if (!order.getStatus().canChangeTo(newStatus)) {
             throw new InvalidStateException("Order status can't be changed");
         }
 
-        if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.RETURNED) {
-            Product product = productRepo.findById(order.getProduct().getId())
-                            .orElseThrow(() -> new EntityNotFoundException("Product not found"));
-            product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
-            productRepo.save(product);
-        }
-
-        if (newStatus == OrderStatus.DELIVERED) {
-            order.setDeliveryDate(Date.valueOf(LocalDate.now()));
-        }
-
-        if (newStatus == OrderStatus.COMPLETED) {
-            saveOrderInOutbox(order);
-        }
+        applyStatusChange(order, newStatus);
 
         order.setStatus(newStatus);
         orderRepo.save(order);
+    }
+
+    private void applyStatusChange(Order order, OrderStatus newStatus) {
+        switch (newStatus) {
+            case CANCELLED, RETURNED -> restoreStock(order);
+            case DELIVERED -> setDeliveryDate(order);
+            case COMPLETED -> saveOrderInOutbox(order);
+        }
+    }
+
+    private void restoreStock(Order order) {
+        Product product = order.getProduct();
+
+        product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
+        productRepo.save(product);
+    }
+
+    private void setDeliveryDate(Order order) {
+        order.setDeliveryDate(Date.valueOf(LocalDate.now()));
+    }
+
+    private void validateSellerOwnerShip(Order order, Long sellerId) {
+        if (!order.getSeller().getId().equals(sellerId)) {
+            throw new ForbiddenOperationException("You are not allowed to change the order status");
+        }
+    }
+
+    private OrderStatus parseOrderStatus(String status) {
+        try {
+            return OrderStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new ResourceNotFoundException("Order status not found");
+        }
     }
 }

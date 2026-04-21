@@ -57,4 +57,8 @@ public class User {
     private Set<CartItem> cart = new HashSet<>();
 
     private Boolean isTwoFactorEnable;
+
+    public void removeFromCart(CartItem cartItem) {
+        cart.remove(cartItem);
+    }
 }
