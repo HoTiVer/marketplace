@@ -8,6 +8,7 @@ import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
 import org.hotiver.service.auth.AuthService;
 import org.hotiver.service.auth.JwtService;
+import org.hotiver.service.auth.OAuth2Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -23,15 +24,16 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final JwtService jwtService;
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
-    private final AuthService authService;
+    private final OAuth2Service oAuth2Service;
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    public OAuth2SuccessHandler(JwtService jwtService, UserRepo userRepo, RoleRepo roleRepo, AuthService authService) {
+    public OAuth2SuccessHandler(JwtService jwtService, UserRepo userRepo,
+                                RoleRepo roleRepo, OAuth2Service oAuth2Service) {
         this.jwtService = jwtService;
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
-        this.authService = authService;
+        this.oAuth2Service = oAuth2Service;
     }
 
     @Override
@@ -43,7 +45,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         DefaultOidcUser oidcUser = (DefaultOidcUser) authentication.getPrincipal();
         String email = oidcUser.getEmail();
 
-        AuthResponse authResponse = authService.authAsOAuth2User(email);
+        AuthResponse authResponse = oAuth2Service.authAsOAuth2User(email);
 
         ResponseCookie accessCookie = ResponseCookie.from("accessToken",
                         authResponse.accessToken())

@@ -21,7 +21,7 @@ CREATE SEQUENCE IF NOT EXISTS sequence_review START WITH 1 INCREMENT BY 5;
 CREATE TABLE public."user"(
     id BIGINT,
     email VARCHAR(100) NOT NULL,
-    password VARCHAR(270) NOT NULL,
+    password VARCHAR(270),
     display_name VARCHAR(40) NOT NULL,
     balance DOUBLE PRECISION NOT NULL DEFAULT 0,
     register_date DATE NOT NULL DEFAULT CURRENT_DATE,
