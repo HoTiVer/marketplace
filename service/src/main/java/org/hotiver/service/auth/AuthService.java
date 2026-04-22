@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.hotiver.common.Enum.RoleType;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.common.Exception.auth.NoAuthorizationException;
-import org.hotiver.common.Utils.HashUtils;
 import org.hotiver.common.Utils.RedisKeyUtils;
 import org.hotiver.common.Utils.TimeUtils;
 import org.hotiver.domain.Entity.Role;
@@ -15,14 +14,11 @@ import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.jwt.JwtTokensDto;
-import org.hotiver.dto.user.PasswordChangeDto;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.UserRepo;
-import org.hotiver.service.email.EmailService;
 import org.hotiver.service.factory.UserFactory;
 import org.hotiver.service.redis.RedisService;
-import org.hotiver.service.common.CurrentUserService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,26 +35,21 @@ public class AuthService {
     private final Long millisecondsToSaveJwtRefresh;
     private final Long millisecondsToSaveJwtAccess;
     private final JwtService jwtService;
-    private final EmailService emailService;
     private final RedisService redisService;
-    private final CurrentUserService currentUserService;
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
     private final PasswordEncoder passwordEncoder;
     private final TokensService tokensService;
     private final UserFactory userFactory;
 
-    public AuthService(JwtService jwtService, EmailService emailService,
-                       RedisService redisService, CurrentUserService currentUserService,
+    public AuthService(JwtService jwtService, RedisService redisService,
                        UserRepo userRepo, RoleRepo roleRepo,
                        PasswordEncoder passwordEncoder, TokensService tokensService,
                        UserFactory userFactory) {
         millisecondsToSaveJwtRefresh = jwtService.getJwtRefreshExpirationMilliseconds();
         millisecondsToSaveJwtAccess =  jwtService.getJwtAccessExpirationMilliseconds();
-        this.emailService = emailService;
         this.redisService = redisService;
         this.jwtService = jwtService;
-        this.currentUserService = currentUserService;
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
         this.passwordEncoder = passwordEncoder;
@@ -105,10 +96,6 @@ public class AuthService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-//        if (user.get().getIsTwoFactorEnable()){
-//            sendVerificationCode(loginRequest.getEmail());
-//        }
-
         JwtTokensDto jwtTokensDto = tokensService.generateJwtTokens(user);
 
         tokensService.saveJwtRefreshTokenInRedis(jwtTokensDto, user);
@@ -116,35 +103,6 @@ public class AuthService {
         log.info("Login success: userId={}", user.getId());
         return buildAuthResponse(jwtTokensDto);
     }
-
-//    @Transactional
-//    public AuthResponse verifyCode(CodeVerifyDto codeVerifyDto) {
-//        String key = RedisKeyUtils.generateRedisTwoFactorKey(codeVerifyDto.getEmail());
-//        String storedCode = redisService.getValue(key);
-//
-//        if (storedCode == null) {
-//            return null;
-//        }
-//
-//        if (storedCode.equals(codeVerifyDto.getCode())) {
-//            redisService.deleteValue(key);
-//
-//            var opUser = userRepo.findByEmail(codeVerifyDto.getEmail());
-//            if (opUser.isEmpty())
-//                return null;
-//
-//
-//            JwtTokensDto jwtTokensDto = generateJwtTokens(opUser.get());
-//
-//            String refreshTokenKey = RedisKeyUtils.generateRedisRefreshTokenKey(opUser.get().getId());
-//            redisService.saveValue(refreshTokenKey, jwtTokensDto.getRefreshToken(),
-//                    TimeUnit.MILLISECONDS.toMinutes(timeToSaveJwtRefresh));
-//
-//            return new AuthResponse(refreshTokenKey, jwtTokensDto.getRefreshToken());
-//        }
-//
-//        return null;
-//    }
 
     public AuthResponse refresh(String refreshToken) {
         if (!jwtService.isTokenValid(refreshToken)) {
@@ -208,53 +166,6 @@ public class AuthService {
         );
     }
 
-    public boolean changeUserPassword(PasswordChangeDto passwordChangeDto) {
-        User user = currentUserService.getCurrentUser();
-
-        if (user.getIsTwoFactorEnable()){
-            String key = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());
-            String code = String.format("%06d", new Random().nextInt(999999));
-
-            emailService.sendAsync(user.getEmail(), "Password verify", code);
-            redisService.saveValue(key, code, 10);
-        }
-
-        if (passwordEncoder.matches(passwordChangeDto.getOldPassword(), user.getPassword())) {
-            user.setPassword(passwordEncoder.encode(passwordChangeDto.getNewPassword()));
-            userRepo.save(user);
-            return true;
-        }
-        return false;
-    }
-
-//    public void verifyChangeUserPassword(PasswordChangeDto passwordChangeDto) {
-//        User user = getCurrentUser();
-//
-//        String code = passwordChangeDto.getCode();
-//        String keyToFind = "passwordVerify:" + HashUtils.hashKeySha256(user.getId().toString());
-//
-//        if (redisService.hasKey(keyToFind)) {
-//            if (redisService.getValue(keyToFind).equals(code)) {
-//
-//                redisService.deleteValue(keyToFind);
-//
-//                PasswordEncoder encoder = new BCryptPasswordEncoder();
-//
-//                user.setPassword(encoder.encode(passwordChangeDto.getPassword()));
-//                userRepo.save(user);
-//            }
-//        }
-//    }
-//
-//    public void changeTwoFactorStatus() {
-//        User user = getCurrentUser();
-//
-//        Boolean twoFactorStatus = user.getIsTwoFactorEnable();
-//        user.setIsTwoFactorEnable(!twoFactorStatus);
-//
-//        userRepo.save(user);
-//    }
-
     private AuthResponse buildAuthResponse(JwtTokensDto jwtTokensDto) {
         return new AuthResponse(
                 jwtTokensDto.getAccessToken(),
@@ -262,12 +173,5 @@ public class AuthService {
                 TimeUtils.toSeconds(millisecondsToSaveJwtAccess),
                 TimeUtils.toSeconds(millisecondsToSaveJwtRefresh)
         );
-    }
-
-    private void sendVerificationCode(String email) {
-        String code = String.format("%06d", new Random().nextInt(999999));
-        String key = RedisKeyUtils.generateRedisTwoFactorKey(email);
-        redisService.saveValue(key, code, 10);
-        emailService.sendAsync(email, "Verify Code", "Your Code: " + code);
     }
 }

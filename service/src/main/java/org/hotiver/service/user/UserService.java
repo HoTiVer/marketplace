@@ -1,14 +1,11 @@
 package org.hotiver.service.user;
 
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
-import org.hotiver.common.Utils.HashUtils;
-import jakarta.transaction.Transactional;
 import org.hotiver.common.Enum.SellerRegisterRequestStatus;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
-import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.dto.user.*;
 import org.hotiver.repo.SellerRegisterRepo;
@@ -22,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserService {
@@ -114,60 +110,6 @@ public class UserService {
         contactsDto.setEmail(user.getEmail());
 
         return contactsDto;
-    }
-
-    public void updateUserContacts(UserContactsDto userContactsDto) {
-        User user = currentUserService.getCurrentUser();
-        String newEmail = userContactsDto.getEmail();
-
-        if (userRepo.existsUserByEmail(newEmail))
-            throw new EntityAlreadyExistsException("You cannot change your email to this");
-
-
-        String code = String.format("%06d", new Random().nextInt(999999));
-        String verificationCodeKey = "verification:" + HashUtils.hashKeySha256(newEmail);
-        redisService.saveValue(verificationCodeKey, code, 10);
-        //emailService.send(newEmail, "Validation code", code);
-
-        String newEmailKey = "newEmail:" + HashUtils.hashKeySha256(user.getId().toString());
-        redisService.saveValue(newEmailKey, newEmail, 10);
-    }
-
-    @Transactional
-    public AuthResponse verifyChangingUserContacts(CodeVerifyDto codeVerifyDto) {
-        User user = currentUserService.getCurrentUser();
-
-        String newEmailKey = "newEmail:" + HashUtils.hashKeySha256(user.getId().toString());
-        String newEmail = redisService.getValue(newEmailKey);
-
-        String code = codeVerifyDto.getCode();
-        String verificationCodeKey = "verification:" + HashUtils.hashKeySha256(newEmail);
-
-        if (redisService.getValue(verificationCodeKey).equals(code)){
-            redisService.deleteValue(verificationCodeKey);
-            redisService.deleteValue(newEmailKey);
-
-            user.setEmail(newEmail);
-            userRepo.save(user);
-
-            SecurityUser securityUser = new SecurityUser(user);
-
-            String refreshToken = jwtService.generateRefreshToken(securityUser);
-            Long timeToSave = jwtService.getJwtRefreshExpirationMilliseconds();
-            String accessToken = jwtService.generateAccessToken(securityUser);
-
-            String oldEmailKey = "refresh:" + HashUtils.hashKeySha256(user.getId().toString());
-            redisService.deleteValue(oldEmailKey);
-
-            redisService.saveValue("refresh:" + HashUtils.hashKeySha256(user.getId().toString()),
-                    refreshToken, TimeUnit.MILLISECONDS.toMinutes(timeToSave));
-
-            return new AuthResponse(accessToken, refreshToken,
-                    jwtService.getJwtAccessExpirationMilliseconds(), jwtService.getJwtRefreshExpirationMilliseconds());
-        }
-        else {
-            return null;
-        }
     }
 
     public SecurityInfoDto getSecurityInfo() {
