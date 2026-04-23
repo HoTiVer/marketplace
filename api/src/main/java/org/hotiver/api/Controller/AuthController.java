@@ -3,11 +3,10 @@ package org.hotiver.api.Controller;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.hotiver.dto.auth.AuthResponse;
-import org.hotiver.dto.auth.LoginRequest;
-import org.hotiver.dto.auth.RegisterRequest;
+import org.hotiver.dto.auth.*;
 import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.service.auth.AuthService;
+import org.hotiver.service.user.UserPasswordService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserPasswordService userPasswordService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserPasswordService userPasswordService) {
         this.authService = authService;
+        this.userPasswordService = userPasswordService;
     }
 
     @PostMapping("/register")
@@ -122,6 +123,20 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, deleteAccess.toString())
                 .header(HttpHeaders.SET_COOKIE, deleteRefresh.toString())
                 .build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(
+            @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
+        userPasswordService.forgotPassword(forgotPasswordRequest.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(
+            @RequestBody @Valid ResetPasswordRequest resetPasswordRequest) {
+        userPasswordService.resetPassword(resetPasswordRequest);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
