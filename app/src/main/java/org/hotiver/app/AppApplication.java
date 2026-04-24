@@ -1,12 +1,9 @@
 package org.hotiver.app;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -20,13 +17,14 @@ public class AppApplication {
 		try {
 			Dotenv dotenv = Dotenv.load();
 
+			System.setProperty("SPRING_PROFILES_ACTIVE", dotenv.get("SPRING_PROFILES_ACTIVE"));
 			System.setProperty("DB_URL", dotenv.get("DB_URL"));
 			System.setProperty("DB_USERNAME", dotenv.get("DB_USERNAME"));
 			System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
 			System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
 			System.setProperty("JWT_REFRESH_EXPIRATION", dotenv.get("JWT_REFRESH_EXPIRATION"));
 			System.setProperty("JWT_ACCESS_EXPIRATION", dotenv.get("JWT_ACCESS_EXPIRATION"));
-			System.setProperty("REDIS_HOST", dotenv.get("REDIS_HOST"));;
+			System.setProperty("REDIS_HOST", dotenv.get("REDIS_HOST"));
 			System.setProperty("SERVICE_EMAIL", dotenv.get("SERVICE_EMAIL"));
 			System.setProperty("EMAIL_PASSWORD", dotenv.get("EMAIL_PASSWORD"));
 			System.setProperty("GOOGLE_CLIENT_ID", dotenv.get("GOOGLE_CLIENT_ID"));

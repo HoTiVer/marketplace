@@ -14,6 +14,7 @@ import org.hotiver.dto.validation.RegisterRequest.EmailUniqueChecker;
 import org.hotiver.repo.UserRepo;
 import org.hotiver.service.auth.AuthService;
 import org.hotiver.service.auth.JwtService;
+import org.hotiver.service.user.UserPasswordService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,9 @@ public class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private UserPasswordService userPasswordService;
 
     @MockitoBean
     private JwtService jwtService;

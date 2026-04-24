@@ -1,6 +1,8 @@
 spring:
   application:
     name: app
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
   main:
     banner-mode: console
   banner:
@@ -21,7 +23,7 @@ spring:
       host: ${REDIS_HOST}
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    #locations: classpath:db/migration
     baseline-on-migrate: true
   security:
     oauth2:
