@@ -36,10 +36,6 @@ public class SellerService {
                 .profileDescription(seller.getProfileDescription())
                 .build();
     }
-
-    public void sendMessageToSeller(String username, SendMessageDto message) {
-        chatService.sendMessageToSeller(username, message);
-    }
 }
 
 

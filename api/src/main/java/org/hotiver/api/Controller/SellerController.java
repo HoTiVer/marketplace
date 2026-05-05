@@ -34,12 +34,4 @@ public class SellerController {
     public ResponseEntity<List<ListProductDto>> getSellerProducts(@PathVariable String username){
         return ResponseEntity.ok().body(productQueryService.getSellerProducts(username));
     }
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/seller/message/{username}")
-    public ResponseEntity<Void> sendMessageToSeller(@PathVariable String username,
-                                                 @RequestBody @Valid SendMessageDto message) {
-        sellerService.sendMessageToSeller(username, message);
-        return ResponseEntity.ok().build();
-    }
 }
