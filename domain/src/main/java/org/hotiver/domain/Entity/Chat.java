@@ -3,6 +3,8 @@ package org.hotiver.domain.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -30,4 +32,6 @@ public class Chat {
     private User user2;
 
     private String lastMessage;
+
+    private LocalDateTime updatedAt;
 }

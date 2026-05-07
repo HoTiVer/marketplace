@@ -11,19 +11,18 @@ import java.util.Optional;
 
 public interface ChatRepo extends JpaRepository<Chat, Long> {
 
-    @Query(
-        value = """
-        SELECT
-            c.id as chatId,
-            CASE
-                WHEN c.user1_id = :userId THEN u2.display_name
-                ELSE u1.display_name
-                    END as name
-        FROM Chat c
-        JOIN public.User u1 on c.user1_id = u1.id
-        JOIN public.User u2 on c.user2_id = u2.id
-        WHERE c.user1_id = :userId or c.user2_id = :userId
-    """, nativeQuery = true)
+    @Query("""
+    SELECT
+        c.id,
+        CASE WHEN c.user1.id = :userId THEN u2.displayName ELSE u1.displayName END,
+        c.lastMessage,
+        c.updatedAt
+    FROM Chat c
+        JOIN c.user1 u1
+        JOIN c.user2 u2
+    WHERE c.user1.id = :userId OR c.user2.id = :userId
+    ORDER BY c.updatedAt DESC
+""")
     List<UserChatsDto> findUserChatsDtoByUserId(Long userId);
 
     @Query(value = """

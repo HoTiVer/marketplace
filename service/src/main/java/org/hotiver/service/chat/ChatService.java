@@ -104,11 +104,13 @@ public class ChatService {
 
         if (chat == null) {
             chat = createChat(sender, receiver);
+            updateChatLastMessageTime(chat);
             chatRepo.save(chat);
         }
         Message message = createMessage(chat, sendMessageDto.getContent(), sender);
         messageRepo.save(message);
         chat.setLastMessage(message.getContent());
+        updateChatLastMessageTime(chat);
         chatRepo.save(chat);
 
         UpdateChatEvent updateChatEvent = createUpdateChatEvent(message, sender);
@@ -144,5 +146,9 @@ public class ChatService {
         chat.setLastMessage("");
 
         return chat;
+    }
+
+    private void updateChatLastMessageTime(Chat chat) {
+        chat.setUpdatedAt(LocalDateTime.now());
     }
 }
