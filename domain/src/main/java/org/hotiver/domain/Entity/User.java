@@ -53,7 +53,11 @@ public class User {
     )
     private Set<Product> wishlist = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     private Set<CartItem> cart = new HashSet<>();
 
     private Boolean isTwoFactorEnable;

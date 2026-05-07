@@ -1,8 +1,6 @@
 package org.hotiver.api.Controller.chat;
 
-import jakarta.validation.Valid;
 import org.hotiver.dto.chat.ChatDto;
-import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.user.UserChatsDto;
 import org.hotiver.service.chat.ChatService;
 import org.springframework.http.ResponseEntity;

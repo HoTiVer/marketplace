@@ -1,0 +1,6 @@
+
+ALTER TABLE chat
+ADD COLUMN last_message VARCHAR(500) NOT NULL DEFAULT '';
+
+ALTER TABLE message
+ADD COLUMN status VARCHAR(30);

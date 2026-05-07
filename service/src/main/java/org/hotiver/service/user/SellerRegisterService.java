@@ -57,7 +57,8 @@ public class SellerRegisterService {
 
         sellerRepo.save(seller);
 
-        chatService.sendMessage(0L, seller.getId(), "You are a seller now.");
+        //TODO
+        //chatService.sendMessage(0L, seller.getId(), "You are a seller now.");
         emailService.sendAsync(user.getEmail(), "Seller request", "You are a seller now.");
 
         sellerRegister.setStatus(SellerRegisterRequestStatus.ACCEPTED);
@@ -91,8 +92,9 @@ public class SellerRegisterService {
         SellerRegister sellerRegister = sellerRegisterRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("SellerRegister not found"));
 
-        chatService.sendMessage(0L, sellerRegister.getUserId(),
-                "You are not allowed to be a seller.");
+        //TODO
+//        chatService.sendMessage(0L, sellerRegister.getUserId(),
+//                "You are not allowed to be a seller.");
 
         User user = userRepo.findById(sellerRegister.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));

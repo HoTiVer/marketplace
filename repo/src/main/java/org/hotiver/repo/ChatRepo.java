@@ -34,6 +34,10 @@ public interface ChatRepo extends JpaRepository<Chat, Long> {
             ELSE u1.display_name
             END as chatName,
         CASE
+            WHEN c.user1_id = :userId THEN u2.id
+            ELSE u1.id
+            END as receiverId,
+        CASE
             WHEN c.user1_id = :userId THEN s2 IS NOT NULL
             ELSE s1 IS NOT NULL
             END as isSeller,

@@ -3,6 +3,8 @@ package org.hotiver.domain.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hotiver.common.Enum.MessageStatus;
+
 import java.time.LocalDateTime;
 
 @Setter
@@ -25,13 +27,16 @@ public class Message {
     )
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Chat chat;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User sender;
 
     private String content;
 
     private LocalDateTime sentAt;
+
+    @Enumerated(EnumType.STRING)
+    private MessageStatus status;
 }

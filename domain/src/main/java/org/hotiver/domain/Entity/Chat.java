@@ -23,9 +23,11 @@ public class Chat {
     )
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user1;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user2;
+
+    private String lastMessage;
 }

@@ -11,7 +11,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 @EnableAsync
 @EnableCaching
 @EnableScheduling
-@EnableWebSocketMessageBroker
 @SpringBootApplication(scanBasePackages = "org.hotiver")
 public class AppApplication {
 
