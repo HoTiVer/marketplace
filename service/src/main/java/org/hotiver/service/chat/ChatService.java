@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 
 @Service
@@ -54,63 +55,41 @@ public class ChatService {
         return chat;
     }
 
-//    public void sendMessage(Long chatId, SendMessageDto sendMessageDto) {
-//        User sender = currentUserService.getCurrentUser();
-//
-//        Chat chat = chatRepo.findById(chatId)
-//                .orElseThrow(()-> new EntityNotFoundException("Chat is not found"));
-//
-//
-//        if (chat.getUser1().equals(sender) || chat.getUser2().equals(sender)) {
-//            Message message = createMessage(chat, sendMessageDto.getContent(), sender);
-//
-//            messageRepo.save(message);
-//        }
-//    }
+    @Transactional
+    public void sendMessage(Long senderId, Long receiverId, String message) {
+        SendMessageDto sendMessageDto = new SendMessageDto(
+                receiverId,
+                message
+        );
+        User sender = userRepo.findById(senderId)
+                .orElseThrow(()-> new EntityNotFoundException("Sender is not found"));
 
-//    public void sendMessage(Long senderId, Long receiverId, String message) {
-//        if (Objects.equals(receiverId, senderId) || message == null){
-//            return;
-//        }
-//
-//        User sender = userRepo.findById(senderId)
-//                .orElseThrow(()-> new EntityNotFoundException("Sender is not found"));
-//
-//        Chat chat = chatRepo.findChatByUsersIds(senderId, receiverId)
-//                .orElse(null);
-//
-//        if (chat == null) {
-//            User receiver = userRepo.findById(receiverId)
-//                    .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
-//            chat = createChat(sender, receiver);
-//            chatRepo.save(chat);
-//        }
-//        Message messageToSave = createMessage(chat, message, sender);
-//
-//        messageRepo.save(messageToSave);
-//    }
+        SecurityUser user = new SecurityUser(sender);
+
+        sendMessage(sendMessageDto, user);
+    }
 
     @Transactional
     public void sendMessage(SendMessageDto sendMessageDto, SecurityUser senderPrincipal) {
-        if (senderPrincipal.getId().equals(sendMessageDto.getReceiverId()))
+        if (senderPrincipal.getId().equals(sendMessageDto.receiverId()))
             throw new InvalidStateException("You cannot write message to yourself");
+        if (sendMessageDto.receiverId() < 1)
+            throw new InvalidStateException("You cannot write message to this user");
 
         User sender = userRepo.findByEmail(senderPrincipal.getUsername())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        User receiver = userRepo.findById(sendMessageDto.getReceiverId())
+        User receiver = userRepo.findById(sendMessageDto.receiverId())
                 .orElseThrow(()-> new EntityNotFoundException("Receiver is not found"));
         Chat chat = chatRepo.findChatByUsersIds(sender.getId(), receiver.getId())
                 .orElse(null);
 
         if (chat == null) {
             chat = createChat(sender, receiver);
-            updateChatLastMessageTime(chat);
             chatRepo.save(chat);
         }
-        Message message = createMessage(chat, sendMessageDto.getContent(), sender);
+        Message message = createMessage(chat, sendMessageDto.content(), sender);
         messageRepo.save(message);
-        chat.setLastMessage(message.getContent());
-        updateChatLastMessageTime(chat);
+        updateChatLastMessage(chat, message.getContent());
         chatRepo.save(chat);
 
         UpdateChatEvent updateChatEvent = createUpdateChatEvent(message, sender);
@@ -143,12 +122,13 @@ public class ChatService {
 
         chat.setUser1(sender);
         chat.setUser2(receiver);
-        chat.setLastMessage("");
+        updateChatLastMessage(chat, "");
 
         return chat;
     }
 
-    private void updateChatLastMessageTime(Chat chat) {
+    private void updateChatLastMessage(Chat chat, String content) {
+        chat.setLastMessage(content);
         chat.setUpdatedAt(LocalDateTime.now());
     }
 }

@@ -88,8 +88,8 @@ public class ProductService {
                 productImageService.deleteAllImages(product.getId());
 
                 //TODO
-//                chatService.sendMessage(0L, user.getId(),
-//                        "Admin deleted your product: " + product.getName());
+                chatService.sendMessage(0L, user.getId(),
+                        "Admin deleted your product: " + product.getName());
             }
         }
     }
