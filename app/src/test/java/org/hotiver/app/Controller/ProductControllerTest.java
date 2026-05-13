@@ -26,9 +26,11 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -86,6 +88,9 @@ public class ProductControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value(productGetDto.getName()));
+
+        verify(productQueryService, times(1))
+                .getProductById(any());
     }
 
     @Test
@@ -95,6 +100,9 @@ public class ProductControllerTest {
         mockMvc.perform(get("/api/v1/product/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+
+        verify(productQueryService, times(1))
+                .getProductById(any());
     }
 
     @Test
@@ -112,6 +120,9 @@ public class ProductControllerTest {
         );
 
         response.andExpect(status().isOk());
+
+        verify(productService, times(1))
+                .addProduct(any(), any());
     }
 
     @Test
@@ -131,6 +142,9 @@ public class ProductControllerTest {
         );
 
         response.andExpect(status().isUnprocessableEntity());
+
+        verify(productService, times(0))
+                .addProduct(any(), any());
     }
 
     @Test
@@ -150,6 +164,9 @@ public class ProductControllerTest {
         );
 
         response.andExpect(status().isUnprocessableEntity());
+
+        verify(productService, times(0))
+                .addProduct(any(), any());
     }
 
     @Test
@@ -169,6 +186,9 @@ public class ProductControllerTest {
         );
 
         response.andExpect(status().isUnprocessableEntity());
+
+        verify(productService, times(0))
+                .addProduct(any(), any());
     }
 
     @Test
@@ -193,6 +213,9 @@ public class ProductControllerTest {
         response.andExpect(status().isNotFound())
             .andExpect(jsonPath("$.message")
                     .value("Category not found"));
+
+        verify(productService, times(1))
+                .addProduct(any(), any());
     }
 
 
@@ -201,6 +224,9 @@ public class ProductControllerTest {
         mockMvc.perform(delete("/api/v1/product/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
+
+        verify(productService, times(1))
+                .deleteProductById(any());
     }
 
     @Test
@@ -213,6 +239,9 @@ public class ProductControllerTest {
         mockMvc.perform(delete("/api/v1/product/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+
+        verify(productService, times(1))
+                .deleteProductById(any());
     }
 
     @Test
@@ -234,6 +263,9 @@ public class ProductControllerTest {
         );
 
         response.andExpect(status().isOk());
+
+        verify(productService, times(1))
+                .updateProductById(any(), any(), any());
     }
 
     @Test
@@ -257,5 +289,8 @@ public class ProductControllerTest {
         );
 
         response.andExpect(status().isUnprocessableEntity());
+
+        verify(productService, times(0))
+                .updateProductById(any(), any(), any());
     }
 }
