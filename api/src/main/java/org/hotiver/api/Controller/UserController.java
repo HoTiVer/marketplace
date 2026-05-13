@@ -2,7 +2,7 @@ package org.hotiver.api.Controller;
 
 import jakarta.validation.Valid;
 import org.hotiver.dto.auth.AuthResponse;
-import org.hotiver.dto.seller.SellerRegisterDto;
+import org.hotiver.dto.common.RedirectResponse;
 import org.hotiver.dto.user.*;
 import org.hotiver.service.user.UserChangeEmailService;
 import org.hotiver.service.user.UserPasswordService;
@@ -66,13 +66,6 @@ public class UserController {
         return ResponseEntity.ok().body(userService.getSecurityInfo());
     }
 
-    @PostMapping("/new-seller/register")
-    public ResponseEntity<Void> sendSellerRegisterRequest(
-            @Valid @RequestBody SellerRegisterDto sellerRegisterDto) {
-        userService.sendSellerRegisterRequest(sellerRegisterDto);
-        return ResponseEntity.ok().build();
-    }
-
     @PutMapping("/security/password")
     public ResponseEntity<Void> changeUserPassword(
             @Valid @RequestBody PasswordChangeDto passwordChangeDto) {
@@ -98,4 +91,3 @@ public class UserController {
 //    }
 
 }
-record RedirectResponse(String redirectUrl, String method) { }

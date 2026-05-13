@@ -1,74 +1,26 @@
 package org.hotiver.service.user;
 
-import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
-import org.hotiver.common.Enum.SellerRegisterRequestStatus;
+
 import org.hotiver.domain.Entity.Seller;
-import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
-import org.hotiver.domain.security.SecurityUser;
-import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.dto.user.*;
-import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+
 import java.util.*;
 
 @Service
 public class UserService {
 
-    private final SellerRegisterRepo sellerRegisterRepo;
+
     private final SellerRepo sellerRepo;
     private final CurrentUserService currentUserService;
 
-    public UserService(SellerRegisterRepo sellerRegisterRepo,
-                       SellerRepo sellerRepo, CurrentUserService currentUserService) {
-        this.sellerRegisterRepo = sellerRegisterRepo;
+    public UserService(SellerRepo sellerRepo, CurrentUserService currentUserService) {
         this.sellerRepo = sellerRepo;
         this.currentUserService = currentUserService;
-    }
-
-    public void sendSellerRegisterRequest(SellerRegisterDto sellerRegisterDto) {
-        if (!sellerRegisterDto.getRequestedNickname().matches("^[A-Za-z0-9]+$")) {
-            throw new IllegalArgumentException(
-                    "Nickname may contain only English letters and numbers"
-            );
-        }
-
-        if (sellerRepo.existsByNickname(sellerRegisterDto.getRequestedNickname())){
-            throw new EntityAlreadyExistsException("Seller with nickname "
-                    + sellerRegisterDto.getRequestedNickname()
-                    + " already exists");
-        }
-
-        SecurityUser user = currentUserService.getUserPrincipal();
-        Long userId = user.getId();
-
-        if (sellerRepo.existsById(userId)){
-            throw new EntityAlreadyExistsException("You are already a seller");
-        }
-
-        Date today = Date.from(Instant.now());
-        if (sellerRegisterRepo.existsByUserIdAndRequestDate(userId, today)) {
-            throw new EntityAlreadyExistsException("You already send a request");
-        }
-
-        if (sellerRegisterRepo.existsByUserIdAndStatus(userId, SellerRegisterRequestStatus.ACTIVE)) {
-            throw new EntityAlreadyExistsException("you already send a request, wait for answer.");
-        }
-
-        SellerRegister sellerRegister = SellerRegister.builder()
-                .userId(userId)
-                .requestedNickname(sellerRegisterDto.getRequestedNickname())
-                .displayName(sellerRegisterDto.getDisplayName())
-                .profileDescription(sellerRegisterDto.getDescription())
-                .requestDate(Date.from(Instant.now()))
-                .status(SellerRegisterRequestStatus.ACTIVE)
-                .build();
-
-        sellerRegisterRepo.save(sellerRegister);
     }
 
     public PersonalInfoDto getPersonalInfo() {

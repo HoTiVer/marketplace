@@ -7,31 +7,41 @@ import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.SellerRegister;
 import org.hotiver.domain.Entity.User;
+import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.admin.SellerRegisterResponse;
+import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.repo.RoleRepo;
 import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
 import org.hotiver.repo.UserRepo;
 import org.hotiver.service.chat.ChatService;
+import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.email.EmailService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 
 @Service
 public class SellerRegisterService {
 
     private final ChatService chatService;
+    private final CurrentUserService currentUserService;
     private final SellerRegisterRepo sellerRegisterRepo;
     private final UserRepo userRepo;
     private final SellerRepo sellerRepo;
     private final RoleRepo roleRepo;
     private final EmailService emailService;
 
-    public SellerRegisterService(ChatService chatService, SellerRegisterRepo sellerRegisterRepo,
-                                 UserRepo userRepo, SellerRepo sellerRepo, RoleRepo roleRepo, EmailService emailService) {
+    public SellerRegisterService(ChatService chatService,
+                                 CurrentUserService currentUserService,
+                                 SellerRegisterRepo sellerRegisterRepo,
+                                 UserRepo userRepo, SellerRepo sellerRepo,
+                                 RoleRepo roleRepo, EmailService emailService) {
         this.chatService = chatService;
+        this.currentUserService = currentUserService;
         this.sellerRegisterRepo = sellerRegisterRepo;
         this.userRepo = userRepo;
         this.sellerRepo = sellerRepo;
@@ -41,6 +51,63 @@ public class SellerRegisterService {
 
     public List<SellerRegisterResponse> getSellerRegisterRequests() {
         return sellerRegisterRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE);
+    }
+
+    public void sendSellerRegisterRequest(SellerRegisterDto sellerRegisterDto) {
+        validateNickname(sellerRegisterDto.getRequestedNickname());
+
+        isSellerWithNickNameExists(sellerRegisterDto.getRequestedNickname());
+
+        SecurityUser user = currentUserService.getUserPrincipal();
+        Long userId = user.getId();
+
+        isYouAlreadySeller(userId);
+
+        isAlreadySentRequest(userId);
+
+        SellerRegister sellerRegister = SellerRegister.builder()
+                .userId(userId)
+                .requestedNickname(sellerRegisterDto.getRequestedNickname())
+                .displayName(sellerRegisterDto.getDisplayName())
+                .profileDescription(sellerRegisterDto.getDescription())
+                .requestDate(Date.from(Instant.now()))
+                .status(SellerRegisterRequestStatus.ACTIVE)
+                .build();
+
+        sellerRegisterRepo.save(sellerRegister);
+    }
+
+    private void validateNickname(String nickname) {
+        if (!nickname.matches("^[A-Za-z0-9]+$")) {
+            throw new IllegalArgumentException(
+                    "Nickname may contain only English letters and numbers"
+            );
+        }
+    }
+
+    private void isSellerWithNickNameExists(String nickname) {
+        if (sellerRepo.existsByNickname(nickname)){
+            throw new EntityAlreadyExistsException("Seller with nickname "
+                    + nickname
+                    + " already exists");
+        }
+    }
+
+    private void isYouAlreadySeller(Long userId) {
+        if (sellerRepo.existsById(userId)){
+            throw new EntityAlreadyExistsException("You are already a seller");
+        }
+    }
+
+    private void isAlreadySentRequest(Long userId) {
+        Date today = Date.from(Instant.now());
+        if (sellerRegisterRepo.existsByUserIdAndRequestDate(userId, today)) {
+            throw new EntityAlreadyExistsException("You already send a request today");
+        }
+
+        if (sellerRegisterRepo.existsByUserIdAndStatus(userId, SellerRegisterRequestStatus.ACTIVE)) {
+            throw new EntityAlreadyExistsException("You already send a request, wait for answer.");
+        }
     }
 
     @Transactional
@@ -57,7 +124,6 @@ public class SellerRegisterService {
 
         sellerRepo.save(seller);
 
-        //TODO
         chatService.sendMessage(0L, seller.getId(), "You are a seller now.");
         emailService.sendAsync(user.getEmail(), "Seller request", "You are a seller now.");
 
@@ -92,7 +158,6 @@ public class SellerRegisterService {
         SellerRegister sellerRegister = sellerRegisterRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("SellerRegister not found"));
 
-        //TODO
         chatService.sendMessage(0L, sellerRegister.getUserId(),
                 "You are not allowed to be a seller.");
 
