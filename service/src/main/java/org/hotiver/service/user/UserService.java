@@ -10,11 +10,7 @@ import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.dto.user.*;
 import org.hotiver.repo.SellerRegisterRepo;
 import org.hotiver.repo.SellerRepo;
-import org.hotiver.repo.UserRepo;
-import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.common.CurrentUserService;
-import org.hotiver.service.email.EmailService;
-import org.hotiver.service.redis.RedisService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -23,24 +19,14 @@ import java.util.*;
 @Service
 public class UserService {
 
-    private final UserRepo userRepo;
     private final SellerRegisterRepo sellerRegisterRepo;
     private final SellerRepo sellerRepo;
-    private final RedisService redisService;
-    private final EmailService emailService;
-    private final JwtService jwtService;
     private final CurrentUserService currentUserService;
 
-    public UserService(UserRepo userRepo, SellerRegisterRepo sellerRegisterRepo,
-                       SellerRepo sellerRepo, RedisService redisService,
-                       EmailService emailService, JwtService jwtService,
-                       CurrentUserService currentUserService) {
-        this.userRepo = userRepo;
+    public UserService(SellerRegisterRepo sellerRegisterRepo,
+                       SellerRepo sellerRepo, CurrentUserService currentUserService) {
         this.sellerRegisterRepo = sellerRegisterRepo;
         this.sellerRepo = sellerRepo;
-        this.redisService = redisService;
-        this.emailService = emailService;
-        this.jwtService = jwtService;
         this.currentUserService = currentUserService;
     }
 
@@ -95,10 +81,10 @@ public class UserService {
                 .isSeller(false)
                 .build();
 
-        if (sellerRepo.existsById(user.getId())) {
-            Seller seller = sellerRepo.findByEmail(user.getEmail()).orElse(null);
+        Optional<Seller> seller = sellerRepo.findByEmail(user.getEmail());
+        if (seller.isPresent()) {
             personalInfoDto.setIsSeller(true);
-            personalInfoDto.setSellerNickname(seller.getNickname());
+            personalInfoDto.setSellerNickname(seller.get().getNickname());
         }
         return personalInfoDto;
     }

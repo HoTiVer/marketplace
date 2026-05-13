@@ -37,11 +37,7 @@ public class CategoryService {
     }
 
     public void deleteCategory(Long id) {
-        if (!categoryRepo.existsById(id)) {
-            throw new EntityNotFoundException("Category with id " + id + " not found");
-        }
         categoryRepo.deleteById(id);
-
     }
 
     public void editCategory(Long id, CategoryDto categoryDto) {
