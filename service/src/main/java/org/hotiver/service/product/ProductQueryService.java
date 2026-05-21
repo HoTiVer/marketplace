@@ -1,12 +1,15 @@
 package org.hotiver.service.product;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.hotiver.common.Exception.auth.ForbiddenOperationException;
 import org.hotiver.common.Exception.seller.SellerNotFoundException;
 import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Seller;
+import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.product.*;
 import org.hotiver.repo.ProductRepo;
 import org.hotiver.repo.SellerRepo;
+import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.mapper.ProductMapper;
 import org.springframework.stereotype.Service;
 
@@ -19,13 +22,15 @@ public class ProductQueryService {
     private final ProductMapper productMapper;
     private final ProductImageService productImageService;
     private final SellerRepo sellerRepo;
+    private final CurrentUserService currentUserService;
 
     public ProductQueryService(ProductRepo productRepo, ProductMapper productMapper,
-                               ProductImageService productImageService, SellerRepo sellerRepo) {
+                               ProductImageService productImageService, SellerRepo sellerRepo, CurrentUserService currentUserService) {
         this.productRepo = productRepo;
         this.productMapper = productMapper;
         this.productImageService = productImageService;
         this.sellerRepo = sellerRepo;
+        this.currentUserService = currentUserService;
     }
 
     public ProductGetDto getProductById(Long id) {
@@ -60,6 +65,8 @@ public class ProductQueryService {
                 .orElseThrow(()-> new EntityNotFoundException("Product with id "
                         + productId + " not found"));
 
+        isSellerOwnProduct(product);
+
         CurrentSellerProductDto returnProduct = productMapper.entityToCurrentSellerProductDto(
                 product
         );
@@ -70,11 +77,18 @@ public class ProductQueryService {
         return returnProduct;
     }
 
-    public List<ListProductDto> getSellerProducts(String username) {
+    public List<ListProductDto> getSellerVisibleProducts(String username) {
         Seller seller = sellerRepo.findByNickname(username)
                 .orElseThrow(()-> new SellerNotFoundException("Seller not found"));
 
         return productRepo.findAllVisibleBySellerId(seller.getId());
+    }
+
+    private void isSellerOwnProduct(Product product) {
+        SecurityUser user = currentUserService.getUserPrincipal();
+        if (!user.getId().equals(product.getSeller().getId())) {
+            throw new ForbiddenOperationException("Seller is not own product");
+        }
     }
 
 }

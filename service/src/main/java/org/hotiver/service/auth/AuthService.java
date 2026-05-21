@@ -155,15 +155,14 @@ public class AuthService {
     public UserInfoDto getUserInfoForFrontend() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        Optional<User> user = userRepo.findByEmail(email);
 
-        return new UserInfoDto(
-                user.getDisplayName(),
-                user.getRoles().stream()
+        return user.map(value -> new UserInfoDto(
+                value.getDisplayName(),
+                value.getRoles().stream()
                         .map(role -> role.getName().toString())
                         .toList()
-        );
+        )).orElse(null);
     }
 
     private AuthResponse buildAuthResponse(JwtTokensDto jwtTokensDto) {

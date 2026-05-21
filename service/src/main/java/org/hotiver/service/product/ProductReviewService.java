@@ -7,7 +7,6 @@ import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Review;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
-import org.hotiver.dto.review.ProductReviewResponse;
 import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
 import org.hotiver.dto.review.ProductReviewPageDto;
