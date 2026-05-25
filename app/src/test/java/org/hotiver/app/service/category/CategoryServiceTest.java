@@ -7,6 +7,7 @@ import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.repo.CategoryRepo;
 import org.hotiver.service.category.CategoryService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -40,83 +41,95 @@ public class CategoryServiceTest {
         );
     }
 
-    @Test
-    public void get_all_categories() {
-        when(categoryRepo.findAllSortedByName()).thenReturn(categories);
+    @Nested
+    class GetCategories {
+        @Test
+        public void shouldReturnCategories() {
+            when(categoryRepo.findAllSortedByName()).thenReturn(categories);
 
-        List<CategoryDto> result = categoryService.getCategories();
+            List<CategoryDto> result = categoryService.getCategories();
 
-        assertEquals(categories.size(), result.size());
-        assertEquals(categories.getFirst().getName(), result.getFirst().getName());
+            assertEquals(categories.size(), result.size());
+            assertEquals(categories.getFirst().getName(), result.getFirst().getName());
 
-        verify(categoryRepo, times(1)).findAllSortedByName();
+            verify(categoryRepo, times(1)).findAllSortedByName();
+        }
+
+        @Test
+        public void shouldReturnCategoriesEmptyList() {
+            when(categoryRepo.findAllSortedByName()).thenReturn(Collections.emptyList());
+
+            List<CategoryDto> result = categoryService.getCategories();
+
+            assertEquals(0, result.size());
+
+            verify(categoryRepo, times(1)).findAllSortedByName();
+        }
     }
 
-    @Test
-    public void get_all_categories_empty() {
-        when(categoryRepo.findAllSortedByName()).thenReturn(Collections.emptyList());
+    @Nested
+    class AddCategory {
+        @Test
+        public void shouldAddCategorySuccess() {
+            CategoryDto categoryDto = new CategoryDto(1L, "Category 1");
 
-        List<CategoryDto> result = categoryService.getCategories();
+            when(categoryRepo.existsByName(categoryDto.getName())).thenReturn(false);
 
-        assertEquals(0, result.size());
+            categoryService.addCategory(categoryDto);
 
-        verify(categoryRepo, times(1)).findAllSortedByName();
+            verify(categoryRepo, times(1)).existsByName(anyString());
+            verify(categoryRepo, times(1)).save(any());
+        }
+
+        @Test
+        public void shouldThrowException_whenCategoryAlreadyExists() {
+            CategoryDto categoryDto = new CategoryDto(1L, "Category 1");
+
+            when(categoryRepo.existsByName(categoryDto.getName())).thenReturn(true);
+
+            assertThrows(EntityAlreadyExistsException.class,
+                    () -> categoryService.addCategory(categoryDto));
+
+            verify(categoryRepo, times(1)).existsByName(anyString());
+            verify(categoryRepo, never()).save(any());
+        }
     }
 
-    @Test
-    public void add_category_success() {
-        CategoryDto categoryDto = new CategoryDto(1L, "Category 1");
+    @Nested
+    class DeleteCategory {
+        @Test
+        public void shouldDeleteCategory() {
+            doNothing().when(categoryRepo).deleteById(anyLong());
 
-        when(categoryRepo.existsByName(categoryDto.getName())).thenReturn(false);
+            categoryService.deleteCategory(anyLong());
 
-        categoryService.addCategory(categoryDto);
-
-        verify(categoryRepo, times(1)).existsByName(anyString());
-        verify(categoryRepo, times(1)).save(any());
+            verify(categoryRepo, times(1)).deleteById(anyLong());
+        }
     }
 
-    @Test
-    public void add_category_already_exists() {
-        CategoryDto categoryDto = new CategoryDto(1L, "Category 1");
+    @Nested
+    class EditCategory {
+        @Test
+        public void shouldEditCategory() {
+            when(categoryRepo.findById(anyLong()))
+                    .thenReturn(Optional.of(new Category(1L, "Category 1")));
 
-        when(categoryRepo.existsByName(categoryDto.getName())).thenReturn(true);
+            when(categoryRepo.save(any())).thenReturn(new Category(1L, "Category 1"));
 
-        assertThrows(EntityAlreadyExistsException.class,
-                () -> categoryService.addCategory(categoryDto));
+            categoryService.editCategory(1L, categories.getFirst());
 
-        verify(categoryRepo, times(1)).existsByName(anyString());
-        verify(categoryRepo, never()).save(any());
-    }
+            verify(categoryRepo, times(1)).save(any());
+        }
 
-    @Test
-    public void delete_category_success() {
-        doNothing().when(categoryRepo).deleteById(anyLong());
+        @Test
+        public void shouldThrowException_whenCategoryNotFound() {
+            when(categoryRepo.findById(anyLong()))
+                    .thenReturn(Optional.empty());
 
-        categoryService.deleteCategory(anyLong());
+            assertThrows(EntityNotFoundException.class,
+                    () -> categoryService.editCategory(1L, categories.getFirst()));
 
-        verify(categoryRepo, times(1)).deleteById(anyLong());
-    }
-
-    @Test
-    public void edit_category_success() {
-        when(categoryRepo.findById(anyLong()))
-                .thenReturn(Optional.of(new Category(1L, "Category 1")));
-
-        when(categoryRepo.save(any())).thenReturn(new Category(1L, "Category 1"));
-
-        categoryService.editCategory(1L, categories.getFirst());
-
-        verify(categoryRepo, times(1)).save(any());
-    }
-
-    @Test
-    public void edit_category_not_found() {
-        when(categoryRepo.findById(anyLong()))
-                .thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class,
-                () -> categoryService.editCategory(1L, categories.getFirst()));
-
-        verify(categoryRepo, never()).save(any());
+            verify(categoryRepo, never()).save(any());
+        }
     }
 }
