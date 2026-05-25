@@ -17,51 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.TimeZone;
 
 @SpringBootTest
-@ActiveProfiles("test")
-@Testcontainers
-class AppApplicationTests {
-
-	static {
-		System.setProperty("user.timezone", "UTC");
-		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-	}
-
-	@MockitoBean
-	private RedisStartupChecker redisStartupChecker;
-
-	@MockitoBean
-	private KafkaProducer kafkaProducer;
-
-	@Container
-	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
-			.withDatabaseName("testdb")
-			.withUsername("test")
-			.withPassword("test");
-
-	@Container
-	static MinIOContainer minio = new MinIOContainer("minio/minio:RELEASE.2023-09-04T19-57-37Z")
-			.withUserName("testuser")
-			.withPassword("testpassword");
-
-	@DynamicPropertySource
-	static void configure(DynamicPropertyRegistry registry) {
-		registry.add("spring.datasource.url", postgres::getJdbcUrl);
-		registry.add("spring.datasource.username", postgres::getUsername);
-		registry.add("spring.datasource.password", postgres::getPassword);
-
-		registry.add("minio.endpoint", minio::getS3URL);
-		registry.add("minio.user", minio::getUserName);
-		registry.add("minio.password", minio::getPassword);
-		registry.add("minio.bucket", () -> "test-bucket");
-
-		String minioUrl = minio.getS3URL();
-		registry.add("minio.endpoint", () -> minioUrl);
-		registry.add("storage.host", () -> minioUrl);
-
-		registry.add("storage.max-images-count.product", () -> 10);
-
-		registry.add("frontend.url", () -> "frontend");
-	}
+class AppApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	void contextLoads() { }
