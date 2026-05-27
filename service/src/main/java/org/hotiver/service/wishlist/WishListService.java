@@ -6,8 +6,9 @@ import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.product.ListProductDto;
-import org.hotiver.repo.ProductRepo;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.ProductRepo;
+import org.hotiver.repo.core.UserRepo;
+import org.hotiver.repo.projection.ProductProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.product.ProductImageService;
 import org.springframework.stereotype.Service;
@@ -22,20 +23,24 @@ public class WishListService {
     private final ProductRepo productRepo;
     private final ProductImageService productImageService;
     private final CurrentUserService currentUserService;
+    private final ProductProjectionRepo productProjectionRepo;
 
     public WishListService(UserRepo userRepo, ProductRepo productRepo,
                            ProductImageService productImageService,
-                           CurrentUserService currentUserService) {
+                           CurrentUserService currentUserService,
+                           ProductProjectionRepo productProjectionRepo) {
         this.userRepo = userRepo;
         this.productRepo = productRepo;
         this.productImageService = productImageService;
         this.currentUserService = currentUserService;
+        this.productProjectionRepo = productProjectionRepo;
     }
 
     public List<ListProductDto> getUserWishList() {
         SecurityUser user = currentUserService.getUserPrincipal();
 
-        List<ListProductDto> products = productRepo.findUserProductWishList(user.getUsername());
+        List<ListProductDto> products = productProjectionRepo
+                .findUserProductWishList(user.getUsername());
 
         productImageService.addHostToImage(products);
 

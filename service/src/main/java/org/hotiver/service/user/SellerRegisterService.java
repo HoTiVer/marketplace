@@ -10,10 +10,11 @@ import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.admin.SellerRegisterResponse;
 import org.hotiver.dto.seller.SellerRegisterDto;
-import org.hotiver.repo.RoleRepo;
-import org.hotiver.repo.SellerRegisterRepo;
-import org.hotiver.repo.SellerRepo;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.RoleRepo;
+import org.hotiver.repo.core.SellerRegisterRepo;
+import org.hotiver.repo.core.SellerRepo;
+import org.hotiver.repo.core.UserRepo;
+import org.hotiver.repo.projection.SellerRegisterProjectionRepo;
 import org.hotiver.service.chat.ChatService;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.email.EmailService;
@@ -30,6 +31,7 @@ public class SellerRegisterService {
     private final ChatService chatService;
     private final CurrentUserService currentUserService;
     private final SellerRegisterRepo sellerRegisterRepo;
+    private final SellerRegisterProjectionRepo sellerRegisterProjectionRepo;
     private final UserRepo userRepo;
     private final SellerRepo sellerRepo;
     private final RoleRepo roleRepo;
@@ -39,7 +41,8 @@ public class SellerRegisterService {
                                  CurrentUserService currentUserService,
                                  SellerRegisterRepo sellerRegisterRepo,
                                  UserRepo userRepo, SellerRepo sellerRepo,
-                                 RoleRepo roleRepo, EmailService emailService) {
+                                 RoleRepo roleRepo, EmailService emailService,
+                                 SellerRegisterProjectionRepo sellerRegisterProjectionRepo) {
         this.chatService = chatService;
         this.currentUserService = currentUserService;
         this.sellerRegisterRepo = sellerRegisterRepo;
@@ -47,10 +50,11 @@ public class SellerRegisterService {
         this.sellerRepo = sellerRepo;
         this.roleRepo = roleRepo;
         this.emailService = emailService;
+        this.sellerRegisterProjectionRepo = sellerRegisterProjectionRepo;
     }
 
     public List<SellerRegisterResponse> getSellerRegisterRequests() {
-        return sellerRegisterRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE);
+        return sellerRegisterProjectionRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE);
     }
 
     public void sendSellerRegisterRequest(SellerRegisterDto sellerRegisterDto) {

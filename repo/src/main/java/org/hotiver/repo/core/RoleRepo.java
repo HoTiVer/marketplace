@@ -1,4 +1,4 @@
-package org.hotiver.repo;
+package org.hotiver.repo.core;
 
 import org.hotiver.common.Enum.RoleType;
 import org.hotiver.domain.Entity.Role;
@@ -10,9 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface RoleRepo extends JpaRepository<Role, Long> {
-
-    @Query("SELECT r FROM Role r WHERE r.id = :id")
-    Optional<Role> findById(Long id);
 
     @Query("SELECT r FROM Role r WHERE r.name = :name")
     Optional<Role> findByName(RoleType name);

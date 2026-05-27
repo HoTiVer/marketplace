@@ -7,8 +7,9 @@ import org.hotiver.domain.Entity.Product;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.product.*;
-import org.hotiver.repo.ProductRepo;
-import org.hotiver.repo.SellerRepo;
+import org.hotiver.repo.core.ProductRepo;
+import org.hotiver.repo.core.SellerRepo;
+import org.hotiver.repo.projection.ProductProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.mapper.ProductMapper;
 import org.springframework.stereotype.Service;
@@ -23,14 +24,18 @@ public class ProductQueryService {
     private final ProductImageService productImageService;
     private final SellerRepo sellerRepo;
     private final CurrentUserService currentUserService;
+    private final ProductProjectionRepo productProjectionRepo;
 
     public ProductQueryService(ProductRepo productRepo, ProductMapper productMapper,
-                               ProductImageService productImageService, SellerRepo sellerRepo, CurrentUserService currentUserService) {
+                               ProductImageService productImageService, SellerRepo sellerRepo,
+                               CurrentUserService currentUserService,
+                               ProductProjectionRepo productProjectionRepo) {
         this.productRepo = productRepo;
         this.productMapper = productMapper;
         this.productImageService = productImageService;
         this.sellerRepo = sellerRepo;
         this.currentUserService = currentUserService;
+        this.productProjectionRepo = productProjectionRepo;
     }
 
     public ProductGetDto getProductById(Long id) {
@@ -52,7 +57,7 @@ public class ProductQueryService {
         Seller seller = sellerRepo.findByEmail(username)
                 .orElseThrow(()-> new EntityNotFoundException("Seller does not exist"));
 
-        List<SellerInventoryProductDto> sellerProducts = productRepo
+        List<SellerInventoryProductDto> sellerProducts = productProjectionRepo
                 .getCurrentSellerProducts(seller.getId());
 
         productImageService.setSellerInventoryProductDtoImageUrl(sellerProducts);
@@ -81,7 +86,7 @@ public class ProductQueryService {
         Seller seller = sellerRepo.findByNickname(username)
                 .orElseThrow(()-> new SellerNotFoundException("Seller not found"));
 
-        return productRepo.findAllVisibleBySellerId(seller.getId());
+        return productProjectionRepo.findAllVisibleBySellerId(seller.getId());
     }
 
     private void isSellerOwnProduct(Product product) {

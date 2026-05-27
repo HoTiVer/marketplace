@@ -1,12 +1,10 @@
-package org.hotiver.repo;
+package org.hotiver.repo.core;
 
 import org.hotiver.domain.Entity.User;
-import org.hotiver.dto.product.ListProductDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository

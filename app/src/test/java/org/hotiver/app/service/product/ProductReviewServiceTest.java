@@ -10,10 +10,12 @@ import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ProductReviewPageDto;
 import org.hotiver.dto.review.ReviewDto;
-import org.hotiver.repo.OrderRepo;
-import org.hotiver.repo.ProductRepo;
-import org.hotiver.repo.ReviewRepo;
-import org.hotiver.repo.SellerRepo;
+import org.hotiver.repo.core.OrderRepo;
+import org.hotiver.repo.core.ProductRepo;
+import org.hotiver.repo.core.ReviewRepo;
+import org.hotiver.repo.analytics.ReviewAnalyticsRepo;
+import org.hotiver.repo.core.SellerRepo;
+import org.hotiver.repo.projection.ReviewProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.product.ProductReviewService;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +42,12 @@ public class ProductReviewServiceTest {
 
     @Mock
     private ReviewRepo reviewRepo;
+
+    @Mock
+    private ReviewProjectionRepo reviewProjectionRepo;
+
+    @Mock
+    private ReviewAnalyticsRepo reviewAnalyticsRepo;
 
     @Mock
     private ProductRepo productRepo;
@@ -96,7 +104,7 @@ public class ProductReviewServiceTest {
                     OrderStatus.COMPLETED.toString())).thenReturn(true);
 
             when(reviewRepo.findReviewByUserIdAndProductId(user.getId(), productId))
-                    .thenReturn(null);
+                    .thenReturn(Optional.empty());
 
             productReviewService.addReviewToProduct(reviewDto, productId);
 
@@ -179,9 +187,9 @@ public class ProductReviewServiceTest {
         void shouldGetProductReviews() {
             when(productRepo.findById(productId)).thenReturn(Optional.of(product));
 
-            when(reviewRepo.getProductReview(productId)).thenReturn(productReviewDtoList);
+            when(reviewProjectionRepo.getProductReviews(productId)).thenReturn(productReviewDtoList);
 
-            when(reviewRepo.calculateProductRating(productId))
+            when(reviewAnalyticsRepo.calculateProductRating(productId))
                     .thenReturn(Optional.of(BigDecimal.valueOf(4.5)));
 
             ProductReviewPageDto review = productReviewService
@@ -193,8 +201,8 @@ public class ProductReviewServiceTest {
             assertEquals("test", review.getProductName());
 
             verify(productRepo).findById(productId);
-            verify(reviewRepo).getProductReview(productId);
-            verify(reviewRepo).calculateProductRating(productId);
+            verify(reviewProjectionRepo).getProductReviews(productId);
+            verify(reviewAnalyticsRepo).calculateProductRating(productId);
         }
 
         @Test
@@ -203,9 +211,9 @@ public class ProductReviewServiceTest {
 
             when(productRepo.findById(productId)).thenReturn(Optional.of(product));
 
-            when(reviewRepo.getProductReview(productId)).thenReturn(productReviewDtoList);
+            when(reviewProjectionRepo.getProductReviews(productId)).thenReturn(productReviewDtoList);
 
-            when(reviewRepo.calculateProductRating(productId))
+            when(reviewAnalyticsRepo.calculateProductRating(productId))
                     .thenReturn(Optional.of(BigDecimal.valueOf(4.5)));
 
             ProductReviewPageDto review = productReviewService
@@ -217,8 +225,8 @@ public class ProductReviewServiceTest {
             assertEquals("test", review.getProductName());
 
             verify(productRepo).findById(productId);
-            verify(reviewRepo).getProductReview(productId);
-            verify(reviewRepo).calculateProductRating(productId);
+            verify(reviewProjectionRepo).getProductReviews(productId);
+            verify(reviewAnalyticsRepo).calculateProductRating(productId);
         }
 
         @Test
@@ -230,8 +238,8 @@ public class ProductReviewServiceTest {
             );
 
             verify(productRepo).findById(productId);
-            verify(reviewRepo, never()).getProductReview(productId);
-            verify(reviewRepo, never()).calculateProductRating(productId);
+            verify(reviewProjectionRepo, never()).getProductReviews(productId);
+            verify(reviewAnalyticsRepo, never()).calculateProductRating(productId);
         }
     }
 }

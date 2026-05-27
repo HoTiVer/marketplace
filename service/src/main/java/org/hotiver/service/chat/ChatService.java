@@ -13,17 +13,17 @@ import org.hotiver.dto.chat.ChatMessageProjection;
 import org.hotiver.dto.chat.SendMessageDto;
 import org.hotiver.dto.chat.UpdateChatEvent;
 import org.hotiver.dto.user.UserChatsDto;
-import org.hotiver.repo.ChatRepo;
-import org.hotiver.repo.MessageRepo;
-import org.hotiver.repo.SellerRepo;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.ChatRepo;
+import org.hotiver.repo.core.MessageRepo;
+import org.hotiver.repo.core.UserRepo;
+import org.hotiver.repo.projection.ChatProjectionRepo;
+import org.hotiver.repo.projection.MessageProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 
 @Service
@@ -32,24 +32,26 @@ public class ChatService {
 
     private final UserRepo userRepo;
     private final ChatRepo chatRepo;
+    private final ChatProjectionRepo chatProjectionRepo;
     private final MessageRepo messageRepo;
-    private final SellerRepo sellerRepo;
+    private final MessageProjectionRepo messageProjectionRepo;
     private final CurrentUserService currentUserService;
     private final ChatWsSender chatWsSender;
 
     public List<UserChatsDto> getUserChats() {
         SecurityUser user = currentUserService.getUserPrincipal();
 
-        return chatRepo.findUserChatsDtoByUserId(user.getId());
+        return chatProjectionRepo.findUserChatsDtoByUserId(user.getId());
     }
 
     public ChatDto getChat(Long id) {
         SecurityUser user = currentUserService.getUserPrincipal();
 
-        ChatDto chat = chatRepo.findChatDtoByChatId(id, user.getId())
+        ChatDto chat = chatProjectionRepo.findChatDtoByChatId(id, user.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Chat not found"));
 
-        List<ChatMessageProjection> messages = messageRepo.findAllByChatIdOrderBySentAtAsc(id);
+        List<ChatMessageProjection> messages = messageProjectionRepo
+                .findAllByChatIdOrderBySentAtAsc(id);
 
         chat.setMessages(messages);
         return chat;

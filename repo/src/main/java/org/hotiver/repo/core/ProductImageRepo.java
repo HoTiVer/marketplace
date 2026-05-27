@@ -1,4 +1,4 @@
-package org.hotiver.repo;
+package org.hotiver.repo.core;
 
 import org.hotiver.domain.Entity.ProductImage;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -8,7 +8,7 @@ import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.user.CodeVerifyDto;
 import org.hotiver.dto.user.UserContactsDto;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.UserRepo;
 import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.redis.RedisService;

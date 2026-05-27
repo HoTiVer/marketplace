@@ -10,7 +10,12 @@ import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
 import org.hotiver.dto.review.ProductReviewPageDto;
-import org.hotiver.repo.*;
+import org.hotiver.repo.analytics.ReviewAnalyticsRepo;
+import org.hotiver.repo.core.OrderRepo;
+import org.hotiver.repo.core.ProductRepo;
+import org.hotiver.repo.core.ReviewRepo;
+import org.hotiver.repo.core.SellerRepo;
+import org.hotiver.repo.projection.ReviewProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.springframework.stereotype.Service;
 
@@ -28,15 +33,21 @@ public class ProductReviewService {
     private final OrderRepo orderRepo;
     private final SellerRepo sellerRepo;
     private final CurrentUserService currentUserService;
+    private final ReviewProjectionRepo reviewProjectionRepo;
+    private final ReviewAnalyticsRepo reviewAnalyticsRepo;
 
     public ProductReviewService(ReviewRepo reviewRepo, ProductRepo productRepo,
                                 OrderRepo orderRepo, SellerRepo sellerRepo,
-                                CurrentUserService currentUserService) {
+                                CurrentUserService currentUserService,
+                                ReviewProjectionRepo reviewProjectionRepo,
+                                ReviewAnalyticsRepo reviewAnalyticsRepo) {
         this.reviewRepo = reviewRepo;
         this.productRepo = productRepo;
         this.orderRepo = orderRepo;
         this.sellerRepo = sellerRepo;
         this.currentUserService = currentUserService;
+        this.reviewProjectionRepo = reviewProjectionRepo;
+        this.reviewAnalyticsRepo = reviewAnalyticsRepo;
     }
 
     public void addReviewToProduct(ReviewDto reviewDto, Long id) {
@@ -50,7 +61,8 @@ public class ProductReviewService {
             throw new ForbiddenOperationException("You should fully buy it before placing comment");
         }
 
-        Review review = reviewRepo.findReviewByUserIdAndProductId(user.getId(), product.getId());
+        Review review = reviewRepo.findReviewByUserIdAndProductId(user.getId(), product.getId())
+                .orElse(null);
         if (review != null)
             updateReview(reviewDto, review, product);
         else
@@ -79,7 +91,7 @@ public class ProductReviewService {
     }
 
     private void calculateSellerRating(Long sellerId) {
-        BigDecimal averageRating = reviewRepo.calculateSellerRating(sellerId)
+        BigDecimal averageRating = reviewAnalyticsRepo.calculateSellerRating(sellerId)
                 .map(r -> r.setScale(1, RoundingMode.HALF_UP))
                 .orElse(null);
 
@@ -92,7 +104,7 @@ public class ProductReviewService {
     }
 
     private void calculateProductRating(Long productId) {
-        BigDecimal averageRating = reviewRepo.calculateProductRating(productId)
+        BigDecimal averageRating = reviewAnalyticsRepo.calculateProductRating(productId)
                 .map(r -> r.setScale(1, RoundingMode.HALF_UP))
                 .orElse(null);
 
@@ -109,9 +121,9 @@ public class ProductReviewService {
                 .orElseThrow(()-> new EntityNotFoundException("Product not found"));
 
 
-        List<ProductReviewDto> productReviews = reviewRepo.getProductReview(productId);
+        List<ProductReviewDto> productReviews = reviewProjectionRepo.getProductReviews(productId);
 
-        BigDecimal productAverageRating = reviewRepo.calculateProductRating(productId)
+        BigDecimal productAverageRating = reviewAnalyticsRepo.calculateProductRating(productId)
                 .map(r -> r.setScale(1, RoundingMode.HALF_UP))
                 .orElse(null);
 

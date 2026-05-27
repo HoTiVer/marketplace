@@ -3,7 +3,7 @@ package org.hotiver.service.common;
 import org.hotiver.common.Exception.auth.NoAuthorizationException;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.UserRepo;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;

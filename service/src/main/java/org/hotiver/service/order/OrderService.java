@@ -3,6 +3,7 @@ package org.hotiver.service.order;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.hotiver.common.Enum.OrderStatus;
 import org.hotiver.common.Exception.auth.ForbiddenOperationException;
 import org.hotiver.common.Exception.base.InvalidStateException;
@@ -11,7 +12,8 @@ import org.hotiver.common.Exception.order.CannotBuyOwnProductException;
 import org.hotiver.domain.Entity.*;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.order.*;
-import org.hotiver.repo.*;
+import org.hotiver.repo.core.*;
+import org.hotiver.repo.projection.OrderProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.redis.RedisOutboxService;
 import org.springframework.data.domain.Page;
@@ -27,31 +29,19 @@ import java.time.LocalDate;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
     private final ProductRepo productRepo;
     private final UserRepo userRepo;
     private final OrderRepo orderRepo;
+    private final OrderProjectionRepo orderProjectionRepo;
     private final CartItemRepo cartItemRepo;
     private final SellerRepo sellerRepo;
     private final RedisOutboxService redisOutboxService;
     private final CurrentUserService currentUserService;
-
-    public OrderService(ProductRepo productRepo, UserRepo userRepo,
-                        OrderRepo orderRepo, CartItemRepo cartItemRepo,
-                        SellerRepo sellerRepo, RedisOutboxService redisOutboxService,
-                        CurrentUserService currentUserService) {
-        this.productRepo = productRepo;
-        this.userRepo = userRepo;
-        this.orderRepo = orderRepo;
-        this.cartItemRepo = cartItemRepo;
-        this.sellerRepo = sellerRepo;
-        this.redisOutboxService = redisOutboxService;
-        this.currentUserService = currentUserService;
-    }
 
 
     @Transactional
@@ -135,7 +125,7 @@ public class OrderService {
         SecurityUser user = currentUserService.getUserPrincipal();
 
         Pageable pageable = PageRequest.of(page, size);
-        return orderRepo.findUserOrders(user.getId(), pageable);
+        return orderProjectionRepo.findUserOrders(user.getId(), pageable);
     }
 
     public void cancelUserOrder(Long orderId) {
@@ -171,7 +161,7 @@ public class OrderService {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<SellerOrderDto> sellerOrderDto = orderRepo
+        Page<SellerOrderDto> sellerOrderDto = orderProjectionRepo
                 .findSellerOrders(seller.getId(), pageable);
 
         List<OrderStatus> orderStatuses = List.of(OrderStatus.values());

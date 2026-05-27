@@ -3,8 +3,8 @@ package org.hotiver.app.service.product;
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.dto.product.ListProductDto;
-import org.hotiver.repo.CategoryRepo;
-import org.hotiver.repo.ProductRepo;
+import org.hotiver.repo.core.CategoryRepo;
+import org.hotiver.repo.query.ProductQueryRepo;
 import org.hotiver.service.product.ProductImageService;
 import org.hotiver.service.product.ProductSearchService;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 public class ProductSearchServiceTest {
 
     @Mock
-    private ProductRepo productRepo;
+    private ProductQueryRepo productQueryRepo;
 
     @Mock
     private CategoryRepo categoryRepo;
@@ -71,23 +71,23 @@ public class ProductSearchServiceTest {
     class ProductSearchByKeyWords {
         @Test
         public void shouldReturnNotEmptyPage() {
-            when(productRepo.findByKeyWord("test", PageRequest.of(pageNumber, size)))
+            when(productQueryRepo.findByKeyWord("test", PageRequest.of(pageNumber, size)))
                     .thenReturn(page);
 
             productSearchService.productSearchByKeyWords("test", pageNumber, size);
 
-            verify(productRepo).findByKeyWord("test", PageRequest.of(pageNumber, size));
+            verify(productQueryRepo).findByKeyWord("test", PageRequest.of(pageNumber, size));
             verify(productImageService).addHostToImage(page);
         }
 
         @Test
         public void shouldReturnEmptyPage() {
-            when(productRepo.findByKeyWord("test", PageRequest.of(pageNumber, size)))
+            when(productQueryRepo.findByKeyWord("test", PageRequest.of(pageNumber, size)))
                     .thenReturn(page);
 
             productSearchService.productSearchByKeyWords("test", pageNumber, size);
 
-            verify(productRepo).findByKeyWord("test", PageRequest.of(pageNumber, size));
+            verify(productQueryRepo).findByKeyWord("test", PageRequest.of(pageNumber, size));
             verify(productImageService).addHostToImage(page);
         }
     }
@@ -96,7 +96,7 @@ public class ProductSearchServiceTest {
     class ProductSearchByCategory {
         @Test
         public void shouldReturnNotEmptyPage() {
-            when(productRepo.findByCategory("test", PageRequest.of(pageNumber, size)))
+            when(productQueryRepo.findByCategory("test", PageRequest.of(pageNumber, size)))
                     .thenReturn(page);
 
             when(categoryRepo.findByName("test"))
@@ -104,13 +104,13 @@ public class ProductSearchServiceTest {
 
             productSearchService.productSearchByCategory("test", pageNumber, size);
 
-            verify(productRepo).findByCategory("test", PageRequest.of(pageNumber, size));
+            verify(productQueryRepo).findByCategory("test", PageRequest.of(pageNumber, size));
             verify(productImageService).addHostToImage(page);
         }
 
         @Test
         public void shouldReturnEmptyPage() {
-            when(productRepo.findByCategory("test", PageRequest.of(pageNumber, size)))
+            when(productQueryRepo.findByCategory("test", PageRequest.of(pageNumber, size)))
                     .thenReturn(page);
 
             when(categoryRepo.findByName("test"))
@@ -118,7 +118,7 @@ public class ProductSearchServiceTest {
 
             productSearchService.productSearchByCategory("test", pageNumber, size);
 
-            verify(productRepo).findByCategory("test", PageRequest.of(pageNumber, size));
+            verify(productQueryRepo).findByCategory("test", PageRequest.of(pageNumber, size));
             verify(productImageService).addHostToImage(page);
         }
 
@@ -132,7 +132,7 @@ public class ProductSearchServiceTest {
                         .productSearchByCategory("test", pageNumber, size);
             });
 
-            verify(productRepo, never()).findByCategory("test", PageRequest.of(pageNumber, size));
+            verify(productQueryRepo, never()).findByCategory("test", PageRequest.of(pageNumber, size));
             verify(productImageService, never()).addHostToImage(page);
         }
     }

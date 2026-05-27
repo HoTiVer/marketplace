@@ -4,7 +4,7 @@ package org.hotiver.service.user;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.user.*;
-import org.hotiver.repo.SellerRepo;
+import org.hotiver.repo.core.SellerRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.springframework.stereotype.Service;
 

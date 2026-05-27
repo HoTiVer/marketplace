@@ -11,7 +11,7 @@ import org.hotiver.dto.auth.AuthResponse;
 import org.hotiver.dto.auth.LoginRequest;
 import org.hotiver.dto.auth.RegisterRequest;
 import org.hotiver.dto.validation.RegisterRequest.EmailUniqueChecker;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.UserRepo;
 import org.hotiver.service.auth.AuthService;
 import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.user.UserPasswordService;

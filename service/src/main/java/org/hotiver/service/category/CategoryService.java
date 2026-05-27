@@ -4,7 +4,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.dto.category.CategoryDto;
-import org.hotiver.repo.CategoryRepo;
+import org.hotiver.repo.core.CategoryRepo;
+import org.hotiver.repo.projection.CategoryProjectionRepo;
 import org.springframework.stereotype.Service;
 
 
@@ -14,13 +15,16 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepo categoryRepo;
+    private final CategoryProjectionRepo categoryProjectionRepo;
 
-    public CategoryService(CategoryRepo categoryRepo) {
+    public CategoryService(CategoryRepo categoryRepo,
+                           CategoryProjectionRepo categoryProjectionRepo) {
         this.categoryRepo = categoryRepo;
+        this.categoryProjectionRepo = categoryProjectionRepo;
     }
 
     public List<CategoryDto> getCategories() {
-        return categoryRepo.findAllSortedByName();
+        return categoryProjectionRepo.findAllSortedByName();
     }
 
     public void addCategory(CategoryDto categoryDto) {

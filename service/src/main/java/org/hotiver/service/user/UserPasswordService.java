@@ -6,7 +6,7 @@ import org.hotiver.common.Utils.HashUtils;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.dto.auth.ResetPasswordRequest;
 import org.hotiver.dto.user.PasswordChangeDto;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.UserRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.email.EmailService;
 import org.hotiver.service.redis.RedisService;

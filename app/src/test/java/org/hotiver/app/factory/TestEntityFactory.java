@@ -1,13 +1,16 @@
 package org.hotiver.app.factory;
 
 import lombok.RequiredArgsConstructor;
+import org.hotiver.app.AbstractRepositoryTest;
 import org.hotiver.common.Enum.RoleType;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.domain.Entity.User;
-import org.hotiver.repo.RoleRepo;
-import org.hotiver.repo.SellerRepo;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.RoleRepo;
+import org.hotiver.repo.core.SellerRepo;
+import org.hotiver.repo.core.UserRepo;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

@@ -7,9 +7,10 @@ import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.keys.CartItemId;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.cart.CartItemDto;
-import org.hotiver.repo.CartItemRepo;
-import org.hotiver.repo.ProductRepo;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.CartItemRepo;
+import org.hotiver.repo.core.ProductRepo;
+import org.hotiver.repo.core.UserRepo;
+import org.hotiver.repo.projection.CartItemProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.product.ProductImageService;
 import org.springframework.stereotype.Service;
@@ -25,21 +26,24 @@ public class CartService {
     private final CartItemRepo cartItemRepo;
     private final CurrentUserService currentUserService;
     private final ProductImageService productImageService;
+    private final CartItemProjectionRepo cartItemProjectionRepo;
 
     public CartService(UserRepo userRepo, ProductRepo productRepo,
                        CartItemRepo cartItemRepo, CurrentUserService currentUserService,
-                       ProductImageService productImageService) {
+                       ProductImageService productImageService,
+                       CartItemProjectionRepo cartItemProjectionRepo) {
         this.userRepo = userRepo;
         this.productRepo = productRepo;
         this.cartItemRepo = cartItemRepo;
         this.currentUserService = currentUserService;
         this.productImageService = productImageService;
+        this.cartItemProjectionRepo = cartItemProjectionRepo;
     }
 
     public List<CartItemDto> getUserCart() {
         SecurityUser user = currentUserService.getUserPrincipal();
 
-        List<CartItemDto> userCart = cartItemRepo.findByUserId(user.getId());
+        List<CartItemDto> userCart = cartItemProjectionRepo.findByUserId(user.getId());
 
         userCart.forEach(cartItemDto -> {
            cartItemDto.setMainImageUrl(

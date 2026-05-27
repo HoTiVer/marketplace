@@ -1,44 +1,39 @@
 package org.hotiver.service.homepage;
 
+import lombok.RequiredArgsConstructor;
 import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.dto.home.HomePageDto;
 import org.hotiver.dto.product.ListProductDto;
-import org.hotiver.repo.CategoryRepo;
-import org.hotiver.repo.ProductRepo;
+import org.hotiver.repo.projection.CategoryProjectionRepo;
+import org.hotiver.repo.projection.ProductProjectionRepo;
 import org.hotiver.service.product.ProductImageService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class HomePageService {
 
-    private final ProductRepo productRepo;
-    private final CategoryRepo categoryRepo;
+    private final CategoryProjectionRepo categoryProjectionRepo;
     private final ProductImageService productImageService;
+    private final ProductProjectionRepo productProjectionRepo;
     private final Integer limitForFeaturesProducts = 8;
     private final Integer limitForNewProducts = 8;
     private final Integer limitForPopularProducts = 8;
 
-    public HomePageService(ProductRepo productRepo, CategoryRepo categoryRepo,
-                           ProductImageService productImageService) {
-        this.productRepo = productRepo;
-        this.categoryRepo = categoryRepo;
-        this.productImageService = productImageService;
-    }
-
     public HomePageDto getMainPage() {
-        List<CategoryDto> categories = categoryRepo.findCategoryAndConvertToDto();
+        List<CategoryDto> categories = categoryProjectionRepo.findCategoryAndConvertToDto();
 
-        List<ListProductDto> featured = productRepo
+        List<ListProductDto> featured = productProjectionRepo
                 .findRandomVisibleProducts(limitForFeaturesProducts);
         productImageService.addHostToImage(featured);
 
-        List<ListProductDto> newProducts = productRepo
+        List<ListProductDto> newProducts = productProjectionRepo
                 .findNewestVisibleProducts(limitForNewProducts);
         productImageService.addHostToImage(newProducts);
 
-        List<ListProductDto> popularProducts = productRepo
+        List<ListProductDto> popularProducts = productProjectionRepo
                 .findPopularVisibleProducts(limitForPopularProducts);
         productImageService.addHostToImage(popularProducts);
 

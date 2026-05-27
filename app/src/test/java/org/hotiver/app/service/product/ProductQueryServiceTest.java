@@ -9,8 +9,9 @@ import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.dto.product.SellerInventoryProductDto;
-import org.hotiver.repo.ProductRepo;
-import org.hotiver.repo.SellerRepo;
+import org.hotiver.repo.core.ProductRepo;
+import org.hotiver.repo.core.SellerRepo;
+import org.hotiver.repo.projection.ProductProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.mapper.ProductMapper;
 import org.hotiver.service.product.ProductImageService;
@@ -38,6 +39,9 @@ public class ProductQueryServiceTest {
 
     @Mock
     private ProductRepo productRepo;
+
+    @Mock
+    private ProductProjectionRepo productProjectionRepo;
 
     @Mock
     private ProductMapper productMapper;
@@ -158,13 +162,14 @@ public class ProductQueryServiceTest {
 
             when(sellerRepo.findByEmail("test")).thenReturn(Optional.of(seller));
 
-            when(productRepo.getCurrentSellerProducts(sellerId))
+            when(productProjectionRepo.getCurrentSellerProducts(sellerId))
                     .thenReturn(list);
 
             productQueryService.getCurrentSellerProducts("test");
 
             verify(sellerRepo, times(1)).findByEmail("test");
-            verify(productRepo, times(1)).getCurrentSellerProducts(sellerId);
+            verify(productProjectionRepo, times(1))
+                    .getCurrentSellerProducts(sellerId);
         }
 
         @Test
@@ -177,7 +182,7 @@ public class ProductQueryServiceTest {
                     () -> productQueryService.getCurrentSellerProducts("test"));
 
             verify(sellerRepo, times(1)).findByEmail("test");
-            verify(productRepo, never()).getCurrentSellerProducts(sellerId);
+            verify(productProjectionRepo, never()).getCurrentSellerProducts(sellerId);
         }
     }
 
@@ -253,7 +258,7 @@ public class ProductQueryServiceTest {
             productQueryService.getSellerVisibleProducts("test");
 
             verify(sellerRepo, times(1)).findByNickname("test");
-            verify(productRepo, times(1))
+            verify(productProjectionRepo, times(1))
                     .findAllVisibleBySellerId(seller.getId());
         }
 
@@ -265,7 +270,7 @@ public class ProductQueryServiceTest {
                     () -> productQueryService.getSellerVisibleProducts("test"));
 
             verify(sellerRepo, times(1)).findByNickname("test");
-            verify(productRepo, never()).findAllVisibleBySellerId(seller.getId());
+            verify(productProjectionRepo, never()).findAllVisibleBySellerId(seller.getId());
         }
     }
 }

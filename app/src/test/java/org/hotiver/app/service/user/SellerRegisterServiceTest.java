@@ -9,10 +9,11 @@ import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.admin.SellerRegisterResponse;
 import org.hotiver.dto.seller.SellerRegisterDto;
-import org.hotiver.repo.RoleRepo;
-import org.hotiver.repo.SellerRegisterRepo;
-import org.hotiver.repo.SellerRepo;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.RoleRepo;
+import org.hotiver.repo.core.SellerRegisterRepo;
+import org.hotiver.repo.core.SellerRepo;
+import org.hotiver.repo.core.UserRepo;
+import org.hotiver.repo.projection.SellerRegisterProjectionRepo;
 import org.hotiver.service.chat.ChatService;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.email.EmailService;
@@ -24,7 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
 import java.util.*;
 
 
@@ -38,6 +38,9 @@ public class SellerRegisterServiceTest {
 
     @Mock
     private SellerRegisterRepo sellerRegisterRepo;
+
+    @Mock
+    private SellerRegisterProjectionRepo sellerRegisterProjectionRepo;
 
     @Mock
     private CurrentUserService currentUserService;
@@ -92,7 +95,7 @@ public class SellerRegisterServiceTest {
 
     @Test
     public void get_seller_register_requests() {
-        when(sellerRegisterRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE))
+        when(sellerRegisterProjectionRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE))
                 .thenReturn(sellerRegisterResponseList);
 
         var response = sellerRegisterService.getSellerRegisterRequests();
@@ -102,7 +105,7 @@ public class SellerRegisterServiceTest {
 
     @Test
     public void get_seller_register_requests_empty() {
-        when(sellerRegisterRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE))
+        when(sellerRegisterProjectionRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE))
                 .thenReturn(Collections.emptyList());
 
         var response = sellerRegisterService.getSellerRegisterRequests();

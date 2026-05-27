@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hotiver.domain.Entity.Role;
 import org.hotiver.domain.Entity.User;
 import org.hotiver.domain.security.SecurityUser;
-import org.hotiver.repo.UserRepo;
+import org.hotiver.repo.core.UserRepo;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

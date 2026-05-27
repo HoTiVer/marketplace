@@ -4,7 +4,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
 import org.hotiver.domain.Entity.Category;
 import org.hotiver.dto.category.CategoryDto;
-import org.hotiver.repo.CategoryRepo;
+import org.hotiver.repo.core.CategoryRepo;
+import org.hotiver.repo.projection.CategoryProjectionRepo;
 import org.hotiver.service.category.CategoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -28,6 +29,9 @@ public class CategoryServiceTest {
     @Mock
     private CategoryRepo categoryRepo;
 
+    @Mock
+    private CategoryProjectionRepo categoryProjectionRepo;
+
     @InjectMocks
     private CategoryService categoryService;
 
@@ -45,25 +49,25 @@ public class CategoryServiceTest {
     class GetCategories {
         @Test
         public void shouldReturnCategories() {
-            when(categoryRepo.findAllSortedByName()).thenReturn(categories);
+            when(categoryProjectionRepo.findAllSortedByName()).thenReturn(categories);
 
             List<CategoryDto> result = categoryService.getCategories();
 
             assertEquals(categories.size(), result.size());
             assertEquals(categories.getFirst().getName(), result.getFirst().getName());
 
-            verify(categoryRepo, times(1)).findAllSortedByName();
+            verify(categoryProjectionRepo, times(1)).findAllSortedByName();
         }
 
         @Test
         public void shouldReturnCategoriesEmptyList() {
-            when(categoryRepo.findAllSortedByName()).thenReturn(Collections.emptyList());
+            when(categoryProjectionRepo.findAllSortedByName()).thenReturn(Collections.emptyList());
 
             List<CategoryDto> result = categoryService.getCategories();
 
             assertEquals(0, result.size());
 
-            verify(categoryRepo, times(1)).findAllSortedByName();
+            verify(categoryProjectionRepo, times(1)).findAllSortedByName();
         }
     }
 
