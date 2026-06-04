@@ -19,6 +19,7 @@ import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.email.EmailService;
 import org.hotiver.service.user.SellerRegisterService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -93,150 +94,162 @@ public class SellerRegisterServiceTest {
         )));
     }
 
-    @Test
-    public void get_seller_register_requests() {
-        when(sellerRegisterProjectionRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE))
-                .thenReturn(sellerRegisterResponseList);
+    @Nested
+    class GetSellerRegisterRequests {
+        @Test
+        public void shouldReturnSellerRegisterRequests() {
+            when(sellerRegisterProjectionRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE))
+                    .thenReturn(sellerRegisterResponseList);
 
-        var response = sellerRegisterService.getSellerRegisterRequests();
+            var response = sellerRegisterService.getSellerRegisterRequests();
 
-        assertEquals(sellerRegisterResponseList.size(), response.size());
+            assertEquals(sellerRegisterResponseList.size(), response.size());
+        }
+
+        @Test
+        public void shouldReturnEmptySellerRegisterRequests() {
+            when(sellerRegisterProjectionRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE))
+                    .thenReturn(Collections.emptyList());
+
+            var response = sellerRegisterService.getSellerRegisterRequests();
+
+            assertEquals(0, response.size());
+        }
     }
 
-    @Test
-    public void get_seller_register_requests_empty() {
-        when(sellerRegisterProjectionRepo.findByStatus(SellerRegisterRequestStatus.ACTIVE))
-                .thenReturn(Collections.emptyList());
+    @Nested
+    class SendSellerRegisterRequest {
+        @Test
+        public void shouldSendSellerRegisterRequest() {
+            when(currentUserService.getUserPrincipal())
+                    .thenReturn(new SecurityUser(user));
 
-        var response = sellerRegisterService.getSellerRegisterRequests();
-
-        assertEquals(0, response.size());
-    }
-
-    @Test
-    public void send_seller_register_request() {
-        when(currentUserService.getUserPrincipal())
-                .thenReturn(new SecurityUser(user));
-
-        sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto);
-
-        verify(sellerRegisterRepo, times(1))
-                .save(any(SellerRegister.class));
-    }
-
-    @Test
-    public void send_seller_register_request_invalid_nickname() {
-        sellerRegisterDto.setRequestedNickname("!!!");
-
-        assertThrows(IllegalArgumentException.class, ()-> {
             sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto);
-        });
 
-        verify(sellerRegisterRepo, never()).save(any());
+            verify(sellerRegisterRepo, times(1))
+                    .save(any(SellerRegister.class));
+        }
+
+        @Test
+        public void shouldThrowException_whenInvalidNickname() {
+            sellerRegisterDto.setRequestedNickname("!!!");
+
+            assertThrows(IllegalArgumentException.class,
+                    ()-> sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto)
+            );
+
+            verify(sellerRegisterRepo, never()).save(any());
+        }
+
+        @Test
+        public void shouldThrowException_whenNicknameExists() {
+            when(sellerRepo.existsByNickname(anyString())).thenReturn(true);
+
+            assertThrows(EntityAlreadyExistsException.class,
+                    ()-> sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto)
+            );
+
+            verify(sellerRegisterRepo, never()).save(any());
+        }
+
+        @Test
+        public void shouldThrowException_whenUserAlreadySeller() {
+            when(currentUserService.getUserPrincipal())
+                    .thenReturn(new SecurityUser(user));
+
+            when(sellerRepo.existsById(anyLong())).thenReturn(true);
+
+            assertThrows(EntityAlreadyExistsException.class,
+                    ()-> sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto)
+            );
+
+            verify(sellerRegisterRepo, never()).save(any());
+        }
+
+        @Test
+        public void shouldThrowException_whenRequestAlreadySentToday() {
+            when(currentUserService.getUserPrincipal())
+                    .thenReturn(new SecurityUser(user));
+
+            when(sellerRegisterRepo.existsByUserIdAndRequestDate(eq(1L), any(Date.class)))
+                    .thenReturn(true);
+
+            assertThrows(EntityAlreadyExistsException.class,
+                    ()-> sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto)
+            );
+
+            verify(sellerRegisterRepo, never()).save(any());
+        }
+
+        @Test
+        public void shouldThrowException_whenRequestAlreadySent() {
+            when(currentUserService.getUserPrincipal())
+                    .thenReturn(new SecurityUser(user));
+
+            when(sellerRegisterRepo.existsByUserIdAndStatus(1L,
+                    SellerRegisterRequestStatus.ACTIVE))
+                    .thenReturn(true);
+
+            assertThrows(EntityAlreadyExistsException.class,
+                    ()-> sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto)
+            );
+
+            verify(sellerRegisterRepo, never()).save(any());
+        }
     }
 
-    @Test
-    public void send_seller_register_request_seller_with_nickname_exists() {
-        when(sellerRepo.existsByNickname(anyString())).thenReturn(true);
+    @Nested
+    class AcceptSellerRegisterRequest {
+        @Test
+        public void shouldAcceptSellerRegisterRequest() {
+            SellerRegister sellerRegister = new SellerRegister();
+            sellerRegister.setUserId(1L);
+            sellerRegister.setRequestedNickname("test");
 
-        assertThrows(EntityAlreadyExistsException.class, ()-> {
-            sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto);
-        });
+            when(sellerRegisterRepo.findById(1L)).thenReturn(Optional.of(sellerRegister));
+            when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+            when(roleRepo.findById(3L)).thenReturn(Optional.of(new Role(3L, RoleType.SELLER)));
+            when(sellerRepo.existsByNickname("test")).thenReturn(false);
 
-        verify(sellerRegisterRepo, never()).save(any());
-    }
-
-    @Test
-    public void send_seller_register_request_already_seller() {
-        when(currentUserService.getUserPrincipal())
-                .thenReturn(new SecurityUser(user));
-
-        when(sellerRepo.existsById(anyLong())).thenReturn(true);
-
-        assertThrows(EntityAlreadyExistsException.class, ()-> {
-            sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto);
-        });
-
-        verify(sellerRegisterRepo, never()).save(any());
-    }
-
-    @Test
-    public void send_seller_register_request_already_sent_request_today() {
-        when(currentUserService.getUserPrincipal())
-                .thenReturn(new SecurityUser(user));
-
-        when(sellerRegisterRepo.existsByUserIdAndRequestDate(eq(1L), any(Date.class)))
-                .thenReturn(true);
-
-        assertThrows(EntityAlreadyExistsException.class, ()-> {
-            sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto);
-        });
-
-        verify(sellerRegisterRepo, never()).save(any());
-    }
-
-    @Test
-    public void send_seller_register_request_already_sent_request() {
-        when(currentUserService.getUserPrincipal())
-                .thenReturn(new SecurityUser(user));
-
-        when(sellerRegisterRepo.existsByUserIdAndStatus(1L, SellerRegisterRequestStatus.ACTIVE))
-                .thenReturn(true);
-
-        assertThrows(EntityAlreadyExistsException.class, ()-> {
-            sellerRegisterService.sendSellerRegisterRequest(sellerRegisterDto);
-        });
-
-        verify(sellerRegisterRepo, never()).save(any());
-    }
-
-    @Test
-    public void accept_seller_register_request() {
-        SellerRegister sellerRegister = new SellerRegister();
-        sellerRegister.setUserId(1L);
-        sellerRegister.setRequestedNickname("test");
-
-        when(sellerRegisterRepo.findById(1L)).thenReturn(Optional.of(sellerRegister));
-        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
-        when(roleRepo.findById(3L)).thenReturn(Optional.of(new Role(3L, RoleType.SELLER)));
-        when(sellerRepo.existsByNickname("test")).thenReturn(false);
-
-        sellerRegisterService.acceptSellerRegisterRequest(1L);
-
-        verify(sellerRepo, times(1)).save(any());
-        verify(sellerRegisterRepo, times(1)).save(any());
-    }
-
-    @Test
-    public void accept_seller_register_request_nickname_already_exists() {
-        SellerRegister sellerRegister = new SellerRegister();
-        sellerRegister.setUserId(1L);
-        sellerRegister.setRequestedNickname("test");
-
-        when(sellerRegisterRepo.findById(1L)).thenReturn(Optional.of(sellerRegister));
-        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
-        when(sellerRepo.existsByNickname("test")).thenReturn(true);
-
-        assertThrows(EntityAlreadyExistsException.class, ()-> {
             sellerRegisterService.acceptSellerRegisterRequest(1L);
-        });
 
-        verify(sellerRepo, never()).save(any());
-        verify(sellerRegisterRepo, never()).save(any());
+            verify(sellerRepo, times(1)).save(any());
+            verify(sellerRegisterRepo, times(1)).save(any());
+        }
+
+        @Test
+        public void shouldThrowException_whenNicknameAlreadyExists() {
+            SellerRegister sellerRegister = new SellerRegister();
+            sellerRegister.setUserId(1L);
+            sellerRegister.setRequestedNickname("test");
+
+            when(sellerRegisterRepo.findById(1L)).thenReturn(Optional.of(sellerRegister));
+            when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+            when(sellerRepo.existsByNickname("test")).thenReturn(true);
+
+            assertThrows(EntityAlreadyExistsException.class,
+                    ()-> sellerRegisterService.acceptSellerRegisterRequest(1L)
+            );
+
+            verify(sellerRepo, never()).save(any());
+            verify(sellerRegisterRepo, never()).save(any());
+        }
     }
 
-    @Test
-    public void decline_seller_register_request() {
-        SellerRegister sellerRegister = new SellerRegister();
-        sellerRegister.setUserId(1L);
-        sellerRegister.setRequestedNickname("test");
+    @Nested
+    class DeclineSellerRegisterRequest {
+        @Test
+        public void shouldDeclineSellerRegisterRequest() {
+            SellerRegister sellerRegister = new SellerRegister();
+            sellerRegister.setUserId(1L);
+            sellerRegister.setRequestedNickname("test");
 
-        when(sellerRegisterRepo.findById(1L)).thenReturn(Optional.of(sellerRegister));
-        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+            when(sellerRegisterRepo.findById(1L)).thenReturn(Optional.of(sellerRegister));
+            when(userRepo.findById(1L)).thenReturn(Optional.of(user));
 
-        sellerRegisterService.declineSellerRegisterRequest(1L);
+            sellerRegisterService.declineSellerRegisterRequest(1L);
 
-        verify(sellerRegisterRepo, times(1)).save(any());
+            verify(sellerRegisterRepo, times(1)).save(any());
+        }
     }
-
 }

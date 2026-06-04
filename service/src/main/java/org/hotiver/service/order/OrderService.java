@@ -35,7 +35,6 @@ import java.util.List;
 public class OrderService {
 
     private final ProductRepo productRepo;
-    private final UserRepo userRepo;
     private final OrderRepo orderRepo;
     private final OrderProjectionRepo orderProjectionRepo;
     private final CartItemRepo cartItemRepo;

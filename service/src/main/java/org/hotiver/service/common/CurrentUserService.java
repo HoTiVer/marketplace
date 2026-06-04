@@ -18,7 +18,7 @@ public class CurrentUserService {
     }
 
     public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = getAuthentication();
         String email = authentication.getName();
 
         return userRepo.findByEmail(email)
@@ -26,13 +26,18 @@ public class CurrentUserService {
     }
 
     public SecurityUser getUserPrincipal() {
+        Authentication auth = getAuthentication();
+
+        return (SecurityUser) auth.getPrincipal();
+    }
+
+    private Authentication getAuthentication() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
             throw new NoAuthorizationException("Unauthorized");
         }
-
-        return (SecurityUser) auth.getPrincipal();
+        return auth;
     }
 
 }

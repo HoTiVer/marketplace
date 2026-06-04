@@ -31,6 +31,6 @@ public class WishListController {
 
     @PostMapping("/wishlist/{productId}")
     public void addProductInWishList(@PathVariable Long productId){
-        wishListService.addProductInWishList(productId);
+        wishListService.addProductToWishList(productId);
     }
 }

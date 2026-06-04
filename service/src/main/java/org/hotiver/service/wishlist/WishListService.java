@@ -40,7 +40,7 @@ public class WishListService {
         SecurityUser user = currentUserService.getUserPrincipal();
 
         List<ListProductDto> products = productProjectionRepo
-                .findUserProductWishList(user.getUsername());
+                .findUserProductWishListByUserId(user.getId());
 
         productImageService.addHostToImage(products);
 
@@ -57,11 +57,11 @@ public class WishListService {
         userRepo.save(user);
     }
 
-    public void addProductInWishList(Long productId) {
+    public void addProductToWishList(Long productId) {
         User user = currentUserService.getCurrentUser();
 
         Product product = productRepo.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
         if (user.getWishlist().contains(product)){
             return;

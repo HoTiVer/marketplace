@@ -14,7 +14,6 @@ import java.util.*;
 @Service
 public class UserService {
 
-
     private final SellerRepo sellerRepo;
     private final CurrentUserService currentUserService;
 

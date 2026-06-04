@@ -1,27 +1,18 @@
 package org.hotiver.service.user;
 
+import lombok.RequiredArgsConstructor;
 import org.hotiver.common.Exception.seller.SellerNotFoundException;
 import org.hotiver.domain.Entity.Seller;
 import org.hotiver.dto.seller.SellerProfileDto;
-import org.hotiver.repo.core.ProductRepo;
 import org.hotiver.repo.core.SellerRepo;
-import org.hotiver.service.chat.ChatService;
 import org.springframework.stereotype.Service;
 
 
 @Service
+@RequiredArgsConstructor
 public class SellerService {
 
     private final SellerRepo sellerRepo;
-    private final ProductRepo productRepo;
-    private final ChatService chatService;
-
-    public SellerService(SellerRepo sellerRepo, ProductRepo productRepo,
-                         ChatService chatService) {
-        this.sellerRepo = sellerRepo;
-        this.productRepo = productRepo;
-        this.chatService = chatService;
-    }
 
     public SellerProfileDto getSellerByUsername(String username) {
         Seller seller = sellerRepo.findByNickname(username)

@@ -105,20 +105,20 @@ public class WishListControllerTest {
                 .andExpect(status().isOk());
 
 
-        verify(wishListService, times(1)).addProductInWishList(anyLong());
+        verify(wishListService, times(1)).addProductToWishList(anyLong());
     }
 
     @Test
     public void add_not_existing_product_in_wishlist() throws Exception {
         doThrow(ResourceNotFoundException.class)
                 .when(wishListService)
-                .addProductInWishList(anyLong());
+                .addProductToWishList(anyLong());
 
         mockMvc.perform(post("/api/v1/wishlist/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        verify(wishListService, times(1)).addProductInWishList(anyLong());
+        verify(wishListService, times(1)).addProductToWishList(anyLong());
     }
 
 }

@@ -102,7 +102,7 @@ public interface ProductProjectionRepo extends Repository<Product, Long> {
         JOIN user_wishes uw ON uw.user_id = u.id
         JOIN product p ON p.id = uw.product_id
         LEFT JOIN product_image pi ON pi.product_id = p.id AND pi.is_main = true
-        WHERE u.email = :email
+        WHERE u.id = :userId
     """, nativeQuery = true)
-    List<ListProductDto> findUserProductWishList(String email);
+    List<ListProductDto> findUserProductWishListByUserId(Long userId);
 }
