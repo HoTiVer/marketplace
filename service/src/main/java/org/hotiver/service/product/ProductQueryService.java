@@ -12,6 +12,7 @@ import org.hotiver.repo.core.SellerRepo;
 import org.hotiver.repo.projection.ProductProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.mapper.ProductMapper;
+import org.hotiver.service.storage.ImageStorageService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,17 +26,19 @@ public class ProductQueryService {
     private final SellerRepo sellerRepo;
     private final CurrentUserService currentUserService;
     private final ProductProjectionRepo productProjectionRepo;
+    private final ImageStorageService imageStorageService;
 
     public ProductQueryService(ProductRepo productRepo, ProductMapper productMapper,
                                ProductImageService productImageService, SellerRepo sellerRepo,
                                CurrentUserService currentUserService,
-                               ProductProjectionRepo productProjectionRepo) {
+                               ProductProjectionRepo productProjectionRepo, ImageStorageService imageStorageService) {
         this.productRepo = productRepo;
         this.productMapper = productMapper;
         this.productImageService = productImageService;
         this.sellerRepo = sellerRepo;
         this.currentUserService = currentUserService;
         this.productProjectionRepo = productProjectionRepo;
+        this.imageStorageService = imageStorageService;
     }
 
     public ProductGetDto getProductById(Long id) {
@@ -86,7 +89,9 @@ public class ProductQueryService {
         Seller seller = sellerRepo.findByNickname(username)
                 .orElseThrow(()-> new SellerNotFoundException("Seller not found"));
 
-        return productProjectionRepo.findAllVisibleBySellerId(seller.getId());
+        var products = productProjectionRepo.findAllVisibleBySellerId(seller.getId());
+        productImageService.addHostToImage(products);
+        return products;
     }
 
     private void isSellerOwnProduct(Product product) {
