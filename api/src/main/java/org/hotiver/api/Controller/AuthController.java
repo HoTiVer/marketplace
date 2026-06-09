@@ -8,6 +8,7 @@ import org.hotiver.dto.user.UserInfoDto;
 import org.hotiver.service.auth.AuthService;
 import org.hotiver.service.user.UserPasswordService;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -139,6 +140,7 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<UserInfoDto> getUserInfoForFrontend() {
         return ResponseEntity.ok().body(authService.getUserInfoForFrontend());
