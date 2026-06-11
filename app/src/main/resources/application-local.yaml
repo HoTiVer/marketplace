@@ -1,3 +1,10 @@
 spring:
   flyway:
     locations: classpath:db/migration/common,classpath:db/migration/local
+
+logging:
+  level:
+    root: info
+    org.hotiver: debug
+    org.springframework.security: debug
+    org.hibernate.SQL: debug

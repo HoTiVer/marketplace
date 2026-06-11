@@ -39,7 +39,7 @@ public class Product {
 
     private String description;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @Enumerated(value = EnumType.STRING)
     private Category category;
 
@@ -47,7 +47,7 @@ public class Product {
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> characteristic;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Seller seller;
 
     private Integer stockQuantity;

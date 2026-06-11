@@ -18,7 +18,7 @@ public class Seller  {
     @Id
     private Long id; 
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "id")
     private User user;
