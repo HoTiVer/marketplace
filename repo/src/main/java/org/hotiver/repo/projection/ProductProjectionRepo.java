@@ -15,12 +15,21 @@ public interface ProductProjectionRepo extends Repository<Product, Long> {
     SELECT
         p.id as productId,
         p.name as productName,
-        p.price as price,
-        pi.url AS mainImageUrl
+        CASE
+            WHEN pp.discount_percent IS NULL THEN p.price
+            ELSE p.price - (p.price * pp.discount_percent / 100)
+            END as price,
+        pi.url AS mainImageUrl,
+        pp.discount_percent as promotionValue
     FROM product p
     LEFT JOIN product_image pi
         ON pi.product_id = p.id AND pi.is_main = true
-    WHERE is_visible = true AND p.seller_id = :sellerId
+    LEFT JOIN product_promotion pp
+        ON pp.product_id = p.id
+                   AND pp.active
+                   AND pp.start_time <= NOW()
+                   AND pp.end_time >= NOW()
+    WHERE p.is_visible = true AND p.seller_id = :sellerId
     ORDER BY p.name
     """, nativeQuery = true)
     List<ListProductDto> findAllVisibleBySellerId(@Param("sellerId") Long id);
@@ -30,10 +39,16 @@ public interface ProductProjectionRepo extends Repository<Product, Long> {
                 p.id as productId,
                 p.name as productName,
                 p.price as price,
-                pi.url AS mainImageUrl
+                pi.url AS mainImageUrl,
+                pp.discount_percent as promotionValue
           FROM product p
           LEFT JOIN product_image pi
             ON pi.product_id = p.id AND pi.is_main = true
+          LEFT JOIN product_promotion pp
+            ON pp.product_id = p.id
+                AND pp.active
+                AND pp.start_time <= NOW()
+                AND pp.end_time >= NOW()
           WHERE is_visible = true
           ORDER BY random()
           LIMIT :limit
@@ -47,10 +62,16 @@ public interface ProductProjectionRepo extends Repository<Product, Long> {
                 p.id as productId,
                 p.name as productName,
                 p.price as price,
-                pi.url AS mainImageUrl
+                pi.url AS mainImageUrl,
+                pp.discount_percent as promotionValue
           FROM product p
           LEFT JOIN product_image pi
             ON pi.product_id = p.id AND pi.is_main = true
+          LEFT JOIN product_promotion pp
+            ON pp.product_id = p.id
+                AND pp.active
+                AND pp.start_time <= NOW()
+                AND pp.end_time >= NOW()
           WHERE is_visible = true
           ORDER BY p.publishing_date DESC
           LIMIT :limit
@@ -64,10 +85,16 @@ public interface ProductProjectionRepo extends Repository<Product, Long> {
                 p.id as productId,
                 p.name as productName,
                 p.price as price,
-                pi.url AS mainImageUrl
+                pi.url AS mainImageUrl,
+                pp.discount_percent as promotionValue
           FROM product p
           LEFT JOIN product_image pi
             ON pi.product_id = p.id AND pi.is_main = true
+          LEFT JOIN product_promotion pp
+            ON pp.product_id = p.id
+                AND pp.active
+                AND pp.start_time <= NOW()
+                AND pp.end_time >= NOW()
           WHERE is_visible = true
           ORDER BY p.sales_count DESC
           LIMIT :limit

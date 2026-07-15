@@ -15,10 +15,16 @@ public interface ProductQueryRepo extends Repository<Product, Long> {
         p.id as productId,
         p.name as productName,
         p.price as price,
-        pi.url AS mainImageUrl
+        pi.url AS mainImageUrl,
+        pp.discount_percent as promotionValue
     FROM product p
     LEFT JOIN product_image pi
         ON pi.product_id = p.id AND pi.is_main = true
+    LEFT JOIN product_promotion pp
+        ON pp.product_id = p.id
+            AND pp.active
+            AND pp.start_time <= NOW()
+            AND pp.end_time >= NOW()
     JOIN category c ON c.id = p.category_id
     WHERE c.name = :category AND p.is_visible = true
     """,
@@ -35,13 +41,19 @@ public interface ProductQueryRepo extends Repository<Product, Long> {
         p.id as productId,
         p.name as productName,
         p.price as price,
-        pi.url AS mainImageUrl
+        pi.url AS mainImageUrl,
+        pp.discount_percent as promotionValue
     FROM product p
     JOIN category c ON p.category_id = c.id
     JOIN seller s ON p.seller_id = s.id
     JOIN public."user" u ON s.id = u.id
     LEFT JOIN product_image pi
         ON pi.product_id = p.id AND pi.is_main = true
+    LEFT JOIN product_promotion pp
+        ON pp.product_id = p.id
+            AND pp.active
+            AND pp.start_time <= NOW()
+            AND pp.end_time >= NOW()
     WHERE p.is_visible = true
       AND (
             LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))

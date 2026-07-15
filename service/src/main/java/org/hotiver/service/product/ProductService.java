@@ -1,7 +1,7 @@
 package org.hotiver.service.product;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hotiver.common.Exception.seller.SellerNotFoundException;
 import org.hotiver.domain.Entity.*;
@@ -15,11 +15,13 @@ import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.mapper.ProductMapper;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 
 import java.util.*;
 
+@AllArgsConstructor
 @Slf4j
 @Service
 public class ProductService {
@@ -31,19 +33,7 @@ public class ProductService {
     private final ProductRepo productRepo;
     private final CategoryRepo categoryRepo;
     private final ProductMapper productMapper;
-
-    public ProductService(ChatService chatService, ProductImageService productImageService,
-                          CurrentUserService currentUserService, SellerRepo sellerRepo,
-                          ProductRepo productRepo, CategoryRepo categoryRepo,
-                          ProductMapper productMapper) {
-        this.chatService = chatService;
-        this.productImageService = productImageService;
-        this.currentUserService = currentUserService;
-        this.sellerRepo = sellerRepo;
-        this.productRepo = productRepo;
-        this.categoryRepo = categoryRepo;
-        this.productMapper = productMapper;
-    }
+    private final ProductPriceHistoryService productPriceHistoryService;
 
     @Transactional
     public void addProduct(ProductAddDto productAddDto,
@@ -63,6 +53,7 @@ public class ProductService {
         product = productRepo.save(product);
 
         productImageService.addImageToProduct(product, image);
+        productPriceHistoryService.addProductPriceHistory(product);
         productRepo.save(product);
     }
 
@@ -113,6 +104,7 @@ public class ProductService {
         productMapper.updateProductFromDto(productAddDto, product);
 
         productImageService.addImageToProduct(product, image);
+        productPriceHistoryService.addProductPriceHistory(product);
 
         productRepo.save(product);
     }

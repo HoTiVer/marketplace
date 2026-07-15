@@ -29,4 +29,6 @@ public class ProductGetDto {
     private String sellerUsername;
 
     private List<ProductImageDto> images;
+
+    private ProductPromotionDto promotion;
 }

@@ -37,6 +37,9 @@ public class Product {
 
     private BigDecimal price;
 
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ProductPriceHistory> priceHistory;
+
     private String description;
 
     @OneToOne(fetch = FetchType.LAZY)

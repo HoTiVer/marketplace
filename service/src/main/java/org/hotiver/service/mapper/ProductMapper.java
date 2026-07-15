@@ -26,6 +26,7 @@ public interface ProductMapper {
     @Mapping(target = "rating", ignore = true)
     @Mapping(target = "isVisible", ignore = true)
     @Mapping(target = "images", ignore = true)
+    @Mapping(target = "priceHistory", ignore = true)
     void updateProductFromDto(ProductAddDto productAddDto, @MappingTarget Product product);
 
 
@@ -40,6 +41,7 @@ public interface ProductMapper {
     @Mapping(target = "isVisible", constant = "true")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "images", ignore = true)
+    @Mapping(target = "priceHistory", ignore = true)
     Product productAddDtoToEntity(ProductAddDto productAddDto, Category category, Seller seller);
 
 
@@ -48,6 +50,7 @@ public interface ProductMapper {
     @Mapping(source = "product.seller.nickname", target = "sellerUsername")
     @Mapping(source = "product.id", target = "id")
     @Mapping(source = "product.name", target = "name")
+    @Mapping(target = "promotion", ignore = true)
     ProductGetDto entityToProductGetDto(Product product);
 
 

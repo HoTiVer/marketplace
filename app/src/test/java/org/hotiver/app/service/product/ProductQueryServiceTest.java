@@ -84,6 +84,7 @@ public class ProductQueryServiceTest {
                 new HashMap<String, Object>(),
                 "test",
                 "test",
+                null,
                 null
         );
     }
@@ -103,6 +104,7 @@ public class ProductQueryServiceTest {
                 1L,
                 "test",
                 BigDecimal.valueOf(1.5),
+                null,
                 "test",
                 new Category(1L, "test"),
                 new HashMap<String, Object>(),

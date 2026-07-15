@@ -76,7 +76,8 @@ public class WishListServiceTest {
                             1L,
                             "test1",
                             BigDecimal.valueOf(52),
-                            "/url/1"
+                            "/url/1",
+                            0
                     )
             );
 
@@ -85,7 +86,8 @@ public class WishListServiceTest {
                             2L,
                             "test2",
                             BigDecimal.valueOf(52),
-                            "/url/2"
+                            "/url/2",
+                            0
                     )
             );
         }

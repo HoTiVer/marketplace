@@ -27,11 +27,14 @@ public class ProductQueryService {
     private final CurrentUserService currentUserService;
     private final ProductProjectionRepo productProjectionRepo;
     private final ImageStorageService imageStorageService;
+    private final ProductPromotionService productPromotionService;
 
     public ProductQueryService(ProductRepo productRepo, ProductMapper productMapper,
                                ProductImageService productImageService, SellerRepo sellerRepo,
                                CurrentUserService currentUserService,
-                               ProductProjectionRepo productProjectionRepo, ImageStorageService imageStorageService) {
+                               ProductProjectionRepo productProjectionRepo,
+                               ImageStorageService imageStorageService,
+                               ProductPromotionService productPromotionService) {
         this.productRepo = productRepo;
         this.productMapper = productMapper;
         this.productImageService = productImageService;
@@ -39,6 +42,7 @@ public class ProductQueryService {
         this.currentUserService = currentUserService;
         this.productProjectionRepo = productProjectionRepo;
         this.imageStorageService = imageStorageService;
+        this.productPromotionService = productPromotionService;
     }
 
     public ProductGetDto getProductById(Long id) {
@@ -52,6 +56,11 @@ public class ProductQueryService {
 
         List<ProductImageDto> images = productImageService.getProductImagesDto(product);
         returnProduct.setImages(images);
+
+        ProductPromotionDto promotion = productPromotionService.getProductPromotion(product);
+
+        returnProduct.setPrice(promotion.promotionPrice());
+        returnProduct.setPromotion(promotion);
 
         return returnProduct;
     }

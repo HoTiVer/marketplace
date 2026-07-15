@@ -1,7 +1,7 @@
 package org.hotiver.app.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hotiver.api.Controller.ProductSearchController;
+import org.hotiver.api.Controller.product.ProductSearchController;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.service.auth.JwtService;
@@ -53,10 +53,10 @@ public class ProductSearchControllerTest {
     public void setup() {
         productDtoPage = new PageImpl<ListProductDto>(List.of(
                 new ListProductDto(1L, "test1",
-                        BigDecimal.valueOf(1), "url1"),
+                        BigDecimal.valueOf(1), "url1", 0),
 
                 new ListProductDto(2L, "test2",
-                        BigDecimal.valueOf(2), "url2")
+                        BigDecimal.valueOf(2), "url2", 0)
         ));
     }
 

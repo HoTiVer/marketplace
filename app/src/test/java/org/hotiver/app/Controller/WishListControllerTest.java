@@ -47,9 +47,9 @@ public class WishListControllerTest {
     public void get_user_wishlist_success() throws Exception {
         List<ListProductDto> wishlist = List.of(
                 new ListProductDto(1L, "test1",
-                        BigDecimal.valueOf(52.0), null),
+                        BigDecimal.valueOf(52.0), null, 0),
                 new ListProductDto(2L, "test2",
-                        BigDecimal.valueOf(100.0), null));
+                        BigDecimal.valueOf(100.0), null, 0));
 
         when(wishListService.getUserWishList()).thenReturn(wishlist);
 

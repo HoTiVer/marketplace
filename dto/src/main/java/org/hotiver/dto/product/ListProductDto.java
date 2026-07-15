@@ -16,4 +16,5 @@ public class ListProductDto {
     String productName;
     BigDecimal price;
     String mainImageUrl;
+    Integer promotionValue;
 }

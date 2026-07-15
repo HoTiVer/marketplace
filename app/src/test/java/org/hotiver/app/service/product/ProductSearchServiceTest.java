@@ -53,8 +53,10 @@ public class ProductSearchServiceTest {
     @BeforeEach
     void setUp() {
         List<ListProductDto> products = List.of(
-                new ListProductDto(1L, "test product 1", BigDecimal.valueOf(99.99), "image1.jpg"),
-                new ListProductDto(2L, "test product 2", BigDecimal.valueOf(149.99), "image2.jpg")
+                new ListProductDto(1L, "test product 1",
+                        BigDecimal.valueOf(99.99), "image1.jpg", 0),
+                new ListProductDto(2L, "test product 2",
+                        BigDecimal.valueOf(149.99), "image2.jpg", 0)
         );
 
         Pageable pageable = PageRequest.of(pageNumber, size);
