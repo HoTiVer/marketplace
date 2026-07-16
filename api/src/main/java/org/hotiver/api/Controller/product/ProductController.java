@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.hotiver.dto.product.*;
-import org.hotiver.service.product.ProductPromotionService;
 import org.hotiver.service.product.ProductPriceHistoryService;
 import org.hotiver.service.product.ProductQueryService;
 import org.hotiver.service.product.ProductService;

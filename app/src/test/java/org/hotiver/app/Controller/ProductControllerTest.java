@@ -8,6 +8,7 @@ import org.hotiver.dto.product.ProductAddDto;
 import org.hotiver.dto.product.ProductGetDto;
 import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.product.ProductImageService;
+import org.hotiver.service.product.ProductPriceHistoryService;
 import org.hotiver.service.product.ProductQueryService;
 import org.hotiver.service.product.ProductService;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,9 @@ public class ProductControllerTest {
 
     @MockitoBean
     private ProductImageService productImageService;
+
+    @MockitoBean
+    private ProductPriceHistoryService productPriceHistoryService;
 
     @MockitoBean
     private JwtService jwtService;

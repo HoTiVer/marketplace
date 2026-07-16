@@ -8,6 +8,7 @@ import org.hotiver.domain.Entity.*;
 import org.hotiver.domain.security.SecurityUser;
 import org.hotiver.dto.product.CurrentSellerProductDto;
 import org.hotiver.dto.product.ProductGetDto;
+import org.hotiver.dto.product.ProductPromotionDto;
 import org.hotiver.dto.product.SellerInventoryProductDto;
 import org.hotiver.repo.core.ProductRepo;
 import org.hotiver.repo.core.SellerRepo;
@@ -15,6 +16,7 @@ import org.hotiver.repo.projection.ProductProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.mapper.ProductMapper;
 import org.hotiver.service.product.ProductImageService;
+import org.hotiver.service.product.ProductPromotionService;
 import org.hotiver.service.product.ProductQueryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -54,6 +56,9 @@ public class ProductQueryServiceTest {
 
     @Mock
     private CurrentUserService currentUserService;
+
+    @Mock
+    private ProductPromotionService productPromotionService;
 
     @InjectMocks
     private ProductQueryService productQueryService;
@@ -130,6 +135,13 @@ public class ProductQueryServiceTest {
 
             when(productMapper.entityToProductGetDto(product))
                     .thenReturn(productGetDto);
+
+            when(productPromotionService.getProductPromotion(product))
+                    .thenReturn(new ProductPromotionDto(
+                            false,
+                            product.getPrice(),
+                            product.getPrice(),
+                            null));
 
             ProductGetDto productGetDto = productQueryService.getProductById(productId);
 

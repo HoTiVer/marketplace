@@ -12,6 +12,7 @@ import org.hotiver.service.chat.ChatService;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.mapper.ProductMapper;
 import org.hotiver.service.product.ProductImageService;
+import org.hotiver.service.product.ProductPriceHistoryService;
 import org.hotiver.service.product.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -53,6 +54,9 @@ public class ProductServiceTest {
 
     @Mock
     private ProductMapper productMapper;
+
+    @Mock
+    private ProductPriceHistoryService productPriceHistoryService;
 
     @InjectMocks
     private ProductService productService;

@@ -42,8 +42,6 @@ Google OAuth
 
 - Cache / Token Store: Redis
 
-- Frontend: HTML, JS Modules, TailwindCSS
-
 - Deployment: Docker
 
 
@@ -58,6 +56,14 @@ Redis as high-performance storage for blacklisted tokens
 PostgreSQL as main persistent storage
 
 Spring Data JPA for ORM & query abstraction
+
+### Testing & Quality
+
+- **200+ Unit & Integration Tests**: Coverage of key services:
+- business logic, controllers, and authorization.
+- Run tests:
+  ```bash
+  mvn test
 
 ----
 
@@ -112,8 +118,14 @@ MAX_PRODUCT_IMAGES_COUNT=10
 ```
 ### Running the Application
 
-`docker-compose up --build`
+Before running the main app, you need to run 
+MinIO, Kafka and Redis
 
+Run in docker:
+
+```bash
+docker-compose up --build
+```
 App runs at: http://localhost:8080
 
 
