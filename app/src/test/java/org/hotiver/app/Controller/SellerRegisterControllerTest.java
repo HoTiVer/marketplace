@@ -10,6 +10,7 @@ import org.hotiver.dto.seller.SellerRegisterDto;
 import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.user.SellerRegisterService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -47,134 +48,148 @@ public class SellerRegisterControllerTest {
     @MockitoBean
     private JwtFilter jwtFilter;
 
-    private List<SellerRegisterResponse> sellerRegisters;
+    @Nested
+    class SendSellerRegisterRequest {
 
-    @BeforeEach
-    public void setup() {
-        sellerRegisters = new ArrayList<>();
-        sellerRegisters.add(
-                new SellerRegisterResponse(
-                        1L,
-                        "requestedNickname",
-                        "displayName",
-                        "profileDescription"
-                )
-        );
+        @Test
+        public void shouldReturnCreated_whenSellerRegisterRequestSent() throws Exception {
+            SellerRegisterDto sellerRegisterDto = new SellerRegisterDto(
+                    "test",
+                    "test",
+                    "test"
+            );
+            sellerRegisterDto.setRequestedNickname("test");
+            sellerRegisterDto.setDisplayName("test");
+
+            doNothing().when(sellerRegisterService)
+                    .sendSellerRegisterRequest(any(SellerRegisterDto.class));
+
+            mockMvc.perform(post("/api/v1/seller-requests")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(sellerRegisterDto)))
+                    .andExpect(status().isCreated());
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whensDisplayNameIsBlank() throws Exception {
+            SellerRegisterDto sellerRegisterDto = new SellerRegisterDto();
+
+            doNothing().when(sellerRegisterService)
+                    .sendSellerRegisterRequest(any(SellerRegisterDto.class));
+
+            mockMvc.perform(post("/api/v1/seller-requests")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(sellerRegisterDto)))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whensNicknameIsBlank() throws Exception {
+            SellerRegisterDto sellerRegisterDto = new SellerRegisterDto();
+
+            doNothing().when(sellerRegisterService)
+                    .sendSellerRegisterRequest(any(SellerRegisterDto.class));
+
+            mockMvc.perform(post("/api/v1/seller-requests")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(sellerRegisterDto)))
+                    .andExpect(status().isUnprocessableEntity());
+        }
     }
 
-    @Test
-    public void get_seller_register_requests_not_empty() throws Exception {
-        doReturn(sellerRegisters)
-                .when(sellerRegisterService)
-                .getSellerRegisterRequests();
+    @Nested
+    class GetSellerRegisterRequests {
 
-        mockMvc.perform(get("/api/v1/seller-requests")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(sellerRegisters.size()));
+        private List<SellerRegisterResponse> sellerRegisters;
+
+        @BeforeEach
+        public void setup() {
+            sellerRegisters = new ArrayList<>();
+            sellerRegisters.add(
+                    new SellerRegisterResponse(
+                            1L,
+                            "requestedNickname",
+                            "displayName",
+                            "profileDescription"
+                    )
+            );
+        }
+
+        @Test
+        public void shouldReturnSellerRegisterRequests() throws Exception {
+            doReturn(sellerRegisters)
+                    .when(sellerRegisterService)
+                    .getSellerRegisterRequests();
+
+            mockMvc.perform(get("/api/v1/seller-requests")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(sellerRegisters.size()));
+        }
+
+        @Test
+        public void shouldReturnEmptySellerRegisterRequests() throws Exception {
+            sellerRegisters = new ArrayList<>();
+
+            doReturn(sellerRegisters)
+                    .when(sellerRegisterService)
+                    .getSellerRegisterRequests();
+
+            mockMvc.perform(get("/api/v1/seller-requests")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(sellerRegisters.size()));
+        }
     }
 
-    @Test
-    public void get_seller_register_requests_empty() throws Exception {
-        sellerRegisters = new ArrayList<>();
+    @Nested
+    class AcceptSellerRegisterRequest {
 
-        doReturn(sellerRegisters)
-                .when(sellerRegisterService)
-                .getSellerRegisterRequests();
+        @Test
+        public void shouldReturnNoContent_whenSellerRegisterRequestAccepted() throws Exception {
 
-        mockMvc.perform(get("/api/v1/seller-requests")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(sellerRegisters.size()));
+            mockMvc.perform(post("/api/v1/seller-requests/{id}/approve", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        public void shouldReturnNotFound_whenSellerRegisterRequestNotExists() throws Exception {
+            doThrow(new EntityNotFoundException("SellerRegister not found"))
+                    .when(sellerRegisterService)
+                    .acceptSellerRegisterRequest(anyLong());
+
+            mockMvc.perform(post("/api/v1/seller-requests/{id}/approve", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        public void shouldReturnConflict_whenSellerAlreadyExist() throws Exception {
+            doThrow(new EntityAlreadyExistsException("Seller already exists"))
+                    .when(sellerRegisterService)
+                    .acceptSellerRegisterRequest(anyLong());
+
+            mockMvc.perform(post("/api/v1/seller-requests/{id}/approve", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isConflict());
+        }
     }
 
-    @Test
-    public void accept_seller_register_request() throws Exception {
+    @Nested
+    class DeclineSellerRegisterRequest {
+        @Test
+        public void shouldReturnNoContent_whenDeclineSellerRegisterRequest() throws Exception{
+            mockMvc.perform(delete("/api/v1/seller-requests/{id}", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNoContent());
+        }
 
-        mockMvc.perform(post("/api/v1/seller-requests/{id}/approve", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        @Test
+        public void shouldReturnNoContent_whenSellerRegisterRequestNotExists() throws Exception{
+            mockMvc.perform(delete("/api/v1/seller-requests/{id}", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNoContent());
+        }
     }
-
-    @Test
-    public void accept_seller_register_request_not_exist() throws Exception {
-        doThrow(new EntityNotFoundException("SellerRegister not found"))
-                .when(sellerRegisterService)
-                .acceptSellerRegisterRequest(anyLong());
-
-        mockMvc.perform(post("/api/v1/seller-requests/{id}/approve", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void accept_seller_register_request_seller_already_exist() throws Exception{
-        doThrow(new EntityAlreadyExistsException("Seller already exists"))
-                .when(sellerRegisterService)
-                .acceptSellerRegisterRequest(anyLong());
-
-        mockMvc.perform(post("/api/v1/seller-requests/{id}/approve", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isConflict());
-    }
-
-    @Test
-    public void decline_seller_register_request() throws Exception{
-        mockMvc.perform(delete("/api/v1/seller-requests/{id}", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void decline_seller_register_request_not_exist() throws Exception{
-        mockMvc.perform(delete("/api/v1/seller-requests/{id}", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void send_seller_register_request() throws Exception {
-        SellerRegisterDto sellerRegisterDto = new SellerRegisterDto(
-                "test",
-                "test",
-                "test"
-        );
-        sellerRegisterDto.setRequestedNickname("test");
-        sellerRegisterDto.setDisplayName("test");
-
-        doNothing().when(sellerRegisterService)
-                .sendSellerRegisterRequest(any(SellerRegisterDto.class));
-
-        mockMvc.perform(post("/api/v1/seller-requests")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sellerRegisterDto)))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void send_seller_register_request_blank_display_name() throws Exception {
-        SellerRegisterDto sellerRegisterDto = new SellerRegisterDto();
-
-        doNothing().when(sellerRegisterService)
-                .sendSellerRegisterRequest(any(SellerRegisterDto.class));
-
-        mockMvc.perform(post("/api/v1/seller-requests")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sellerRegisterDto)))
-                .andExpect(status().isUnprocessableEntity());
-    }
-
-    @Test
-    public void send_seller_register_request_blank_nickname() throws Exception {
-        SellerRegisterDto sellerRegisterDto = new SellerRegisterDto();
-
-        doNothing().when(sellerRegisterService)
-                .sendSellerRegisterRequest(any(SellerRegisterDto.class));
-
-        mockMvc.perform(post("/api/v1/seller-requests")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sellerRegisterDto)))
-                .andExpect(status().isUnprocessableEntity());
-    }
-
 }

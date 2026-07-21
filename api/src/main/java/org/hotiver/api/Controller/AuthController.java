@@ -31,7 +31,7 @@ public class AuthController {
 
         CookieData cookieData = setSuccessAuthCookie(authResponse);
 
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .header(HttpHeaders.SET_COOKIE, cookieData.accessCookie().toString())
                 .header(HttpHeaders.SET_COOKIE, cookieData.refreshCookie().toString())
                 .build();

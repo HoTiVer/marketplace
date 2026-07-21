@@ -10,6 +10,7 @@ import org.hotiver.dto.product.*;
 import org.hotiver.service.product.ProductPriceHistoryService;
 import org.hotiver.service.product.ProductQueryService;
 import org.hotiver.service.product.ProductService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -68,7 +69,7 @@ public class ProductController {
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         productService.addProduct(productAddDto, image);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PreAuthorize("hasAnyRole('SELLER','ADMIN')")
@@ -107,7 +108,7 @@ public class ProductController {
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         productService.updateProductById(id, dto, image);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('SELLER')")

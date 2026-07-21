@@ -12,6 +12,7 @@ import org.hotiver.service.product.ProductPriceHistoryService;
 import org.hotiver.service.product.ProductQueryService;
 import org.hotiver.service.product.ProductService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -76,223 +77,236 @@ public class ProductControllerTest {
                 "key2", "value2"));
     }
 
-    @Test
-    public void get_product_by_id() throws Exception {
-        ProductGetDto productGetDto = ProductGetDto.builder()
-                .id(1L)
-                .name("Product 1")
-                .price(BigDecimal.valueOf(1.0))
-                .build();
+    @Nested
+    class GetProductById {
+        @Test
+        public void shouldReturnProduct() throws Exception {
+            ProductGetDto productGetDto = ProductGetDto.builder()
+                    .id(1L)
+                    .name("Product 1")
+                    .price(BigDecimal.valueOf(1.0))
+                    .build();
 
-        when(productQueryService.getProductById(any())).thenReturn(productGetDto);
+            when(productQueryService.getProductById(any())).thenReturn(productGetDto);
 
-        mockMvc.perform(get("/api/v1/product/{id}", 1)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(productGetDto.getName()));
+            mockMvc.perform(get("/api/v1/product/{id}", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.name").value(productGetDto.getName()));
 
-        verify(productQueryService, times(1))
-                .getProductById(any());
+            verify(productQueryService, times(1))
+                    .getProductById(any());
+        }
+
+        @Test
+        public void shouldReturnNotFound_whenProductNotExists() throws Exception {
+            when(productQueryService.getProductById(any()))
+                    .thenThrow(new EntityNotFoundException());
+
+            mockMvc.perform(get("/api/v1/product/{id}", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
+
+            verify(productQueryService, times(1))
+                    .getProductById(any());
+        }
     }
 
-    @Test
-    public void get_product_by_id_product_not_exist() throws Exception {
-        when(productQueryService.getProductById(any())).thenThrow(new EntityNotFoundException());
+    @Nested
+    class AddProduct {
+        @Test
+        public void shouldReturnCreated_whenProductCreated() throws Exception {
+            MockMultipartFile data = new MockMultipartFile(
+                    "data",
+                    "",
+                    "application/json",
+                    objectMapper.writeValueAsBytes(productAddDto)
+            );
 
-        mockMvc.perform(get("/api/v1/product/{id}", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+            ResultActions response = mockMvc.perform(
+                    multipart("/api/v1/product")
+                            .file(data)
+            );
 
-        verify(productQueryService, times(1))
-                .getProductById(any());
+            response.andExpect(status().isCreated());
+
+            verify(productService, times(1))
+                    .addProduct(any(), any());
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenProductPriceIsNegative() throws Exception {
+            productAddDto.setPrice(BigDecimal.valueOf(-1.0));
+
+            MockMultipartFile data = new MockMultipartFile(
+                    "data",
+                    "",
+                    "application/json",
+                    objectMapper.writeValueAsBytes(productAddDto)
+            );
+
+            ResultActions response = mockMvc.perform(
+                    multipart("/api/v1/product")
+                            .file(data)
+            );
+
+            response.andExpect(status().isUnprocessableEntity());
+
+            verify(productService, times(0))
+                    .addProduct(any(), any());
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenProductNameIsNull() throws Exception {
+            productAddDto.setName(null);
+
+            MockMultipartFile data = new MockMultipartFile(
+                    "data",
+                    "",
+                    "application/json",
+                    objectMapper.writeValueAsBytes(productAddDto)
+            );
+
+            ResultActions response = mockMvc.perform(
+                    multipart("/api/v1/product")
+                            .file(data)
+            );
+
+            response.andExpect(status().isUnprocessableEntity());
+
+            verify(productService, times(0))
+                    .addProduct(any(), any());
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenProductNameIsEmpty() throws Exception {
+            productAddDto.setName("");
+
+            MockMultipartFile data = new MockMultipartFile(
+                    "data",
+                    "",
+                    "application/json",
+                    objectMapper.writeValueAsBytes(productAddDto)
+            );
+
+            ResultActions response = mockMvc.perform(
+                    multipart("/api/v1/product")
+                            .file(data)
+            );
+
+            response.andExpect(status().isUnprocessableEntity());
+
+            verify(productService, times(0))
+                    .addProduct(any(), any());
+        }
+
+        @Test
+        public void shouldReturnNotFound_whenCategoryNotExists() throws Exception {
+
+            doThrow(new EntityNotFoundException("Category not found"))
+                    .when(productService)
+                    .addProduct(any(), any());
+
+            MockMultipartFile data = new MockMultipartFile(
+                    "data",
+                    "",
+                    "application/json",
+                    objectMapper.writeValueAsBytes(productAddDto)
+            );
+
+            ResultActions response = mockMvc.perform(
+                    multipart("/api/v1/product")
+                            .file(data)
+            );
+
+            response.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message")
+                            .value("Category not found"));
+
+            verify(productService, times(1))
+                    .addProduct(any(), any());
+        }
     }
 
-    @Test
-    public void add_product_success() throws Exception {
-        MockMultipartFile data = new MockMultipartFile(
-                "data",
-                "",
-                "application/json",
-                objectMapper.writeValueAsBytes(productAddDto)
-        );
+    @Nested
+    class DeleteProductById {
 
-        ResultActions response = mockMvc.perform(
-                multipart("/api/v1/product")
-                        .file(data)
-        );
+        @Test
+        public void shouldReturnNoContent_whenProductDeletedSuccessfully() throws Exception {
+            mockMvc.perform(delete("/api/v1/product/{id}", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNoContent());
 
-        response.andExpect(status().isOk());
+            verify(productService, times(1))
+                    .deleteProductById(any());
+        }
 
-        verify(productService, times(1))
-                .addProduct(any(), any());
+        @Test
+        public void shouldReturnNotFound_whenProductIsNotExist() throws Exception {
+
+            doThrow(new EntityNotFoundException("Product not found"))
+                    .when(productService)
+                    .deleteProductById(anyLong());
+
+            mockMvc.perform(delete("/api/v1/product/{id}", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
+
+            verify(productService, times(1))
+                    .deleteProductById(any());
+        }
     }
 
-    @Test
-    public void add_product_negative_price() throws Exception {
-        productAddDto.setPrice(BigDecimal.valueOf(-1.0));
+    @Nested
+    class UpdateProductById {
+        @Test
+        public void shouldReturnNoContent_whenProductUpdated() throws Exception {
+            MockMultipartFile data = new MockMultipartFile(
+                    "data",
+                    "",
+                    "application/json",
+                    objectMapper.writeValueAsBytes(productAddDto)
+            );
 
-        MockMultipartFile data = new MockMultipartFile(
-                "data",
-                "",
-                "application/json",
-                objectMapper.writeValueAsBytes(productAddDto)
-        );
+            ResultActions response = mockMvc.perform(
+                    multipart("/api/v1/product/1")
+                            .file(data)
+                            .with(request -> {
+                                request.setMethod("PUT");
+                                return request;
+                            })
+            );
 
-        ResultActions response = mockMvc.perform(
-                multipart("/api/v1/product")
-                        .file(data)
-        );
+            response.andExpect(status().isNoContent());
 
-        response.andExpect(status().isUnprocessableEntity());
+            verify(productService, times(1))
+                    .updateProductById(any(), any(), any());
+        }
 
-        verify(productService, times(0))
-                .addProduct(any(), any());
-    }
+        @Test
+        public void shouldReturnUnprocessableEntity_whenProductNameIsNull() throws Exception {
+            productAddDto.setName(null);
 
-    @Test
-    public void add_product_null_name() throws Exception {
-        productAddDto.setName(null);
+            MockMultipartFile data = new MockMultipartFile(
+                    "data",
+                    "",
+                    "application/json",
+                    objectMapper.writeValueAsBytes(productAddDto)
+            );
 
-        MockMultipartFile data = new MockMultipartFile(
-                "data",
-                "",
-                "application/json",
-                objectMapper.writeValueAsBytes(productAddDto)
-        );
+            ResultActions response = mockMvc.perform(
+                    multipart("/api/v1/product/1")
+                            .file(data)
+                            .with(request -> {
+                                request.setMethod("PUT");
+                                return request;
+                            })
+            );
 
-        ResultActions response = mockMvc.perform(
-                multipart("/api/v1/product")
-                        .file(data)
-        );
+            response.andExpect(status().isUnprocessableEntity());
 
-        response.andExpect(status().isUnprocessableEntity());
-
-        verify(productService, times(0))
-                .addProduct(any(), any());
-    }
-
-    @Test
-    public void add_product_empty_name() throws Exception {
-        productAddDto.setName("");
-
-        MockMultipartFile data = new MockMultipartFile(
-                "data",
-                "",
-                "application/json",
-                objectMapper.writeValueAsBytes(productAddDto)
-        );
-
-        ResultActions response = mockMvc.perform(
-                multipart("/api/v1/product")
-                        .file(data)
-        );
-
-        response.andExpect(status().isUnprocessableEntity());
-
-        verify(productService, times(0))
-                .addProduct(any(), any());
-    }
-
-    @Test
-    public void add_product_category_not_exist() throws Exception {
-
-        doThrow(new EntityNotFoundException("Category not found"))
-                .when(productService)
-                .addProduct(any(), any());
-
-        MockMultipartFile data = new MockMultipartFile(
-                "data",
-                "",
-                "application/json",
-                objectMapper.writeValueAsBytes(productAddDto)
-        );
-
-        ResultActions response = mockMvc.perform(
-                multipart("/api/v1/product")
-                        .file(data)
-        );
-
-        response.andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.message")
-                    .value("Category not found"));
-
-        verify(productService, times(1))
-                .addProduct(any(), any());
-    }
-
-
-    @Test
-    public void delete_product_success() throws Exception {
-        mockMvc.perform(delete("/api/v1/product/{id}", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
-
-        verify(productService, times(1))
-                .deleteProductById(any());
-    }
-
-    @Test
-    public void delete_product_is_not_exist() throws Exception {
-
-        doThrow(new EntityNotFoundException("Product not found"))
-                .when(productService)
-                .deleteProductById(anyLong());
-
-        mockMvc.perform(delete("/api/v1/product/{id}", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-
-        verify(productService, times(1))
-                .deleteProductById(any());
-    }
-
-    @Test
-    public void update_product_success() throws Exception {
-        MockMultipartFile data = new MockMultipartFile(
-                "data",
-                "",
-                "application/json",
-                objectMapper.writeValueAsBytes(productAddDto)
-        );
-
-        ResultActions response = mockMvc.perform(
-                multipart("/api/v1/product/1")
-                        .file(data)
-                        .with(request -> {
-                            request.setMethod("PUT");
-                            return request;
-                        })
-        );
-
-        response.andExpect(status().isOk());
-
-        verify(productService, times(1))
-                .updateProductById(any(), any(), any());
-    }
-
-    @Test
-    public void update_product_name_null() throws Exception {
-        productAddDto.setName(null);
-
-        MockMultipartFile data = new MockMultipartFile(
-                "data",
-                "",
-                "application/json",
-                objectMapper.writeValueAsBytes(productAddDto)
-        );
-
-        ResultActions response = mockMvc.perform(
-                multipart("/api/v1/product/1")
-                        .file(data)
-                        .with(request -> {
-                            request.setMethod("PUT");
-                            return request;
-                        })
-        );
-
-        response.andExpect(status().isUnprocessableEntity());
-
-        verify(productService, times(0))
-                .updateProductById(any(), any(), any());
+            verify(productService, times(0))
+                    .updateProductById(any(), any(), any());
+        }
     }
 }

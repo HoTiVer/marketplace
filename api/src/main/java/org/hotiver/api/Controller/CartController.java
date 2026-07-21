@@ -2,6 +2,7 @@ package org.hotiver.api.Controller;
 
 import org.hotiver.dto.cart.CartItemDto;
 import org.hotiver.service.order.CartService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,21 +26,21 @@ public class CartController {
     }
 
     @PostMapping("/{productId}")
-    public ResponseEntity addProductToCart(@PathVariable Long productId) {
+    public ResponseEntity<Void> addProductToCart(@PathVariable Long productId) {
         cartService.addProductToCart(productId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @DeleteMapping("/{productId}")
-    public ResponseEntity deleteProductFromCart(@PathVariable Long productId) {
+    public ResponseEntity<Void> deleteProductFromCart(@PathVariable Long productId) {
         cartService.deleteProductFromCart(productId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{productId}")
-    public ResponseEntity updateProductCount(@PathVariable Long productId,
+    public ResponseEntity<Void> updateProductCount(@PathVariable Long productId,
                                    @RequestParam Integer count) {
         cartService.updateProductCount(productId, count);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

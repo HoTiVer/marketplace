@@ -2,6 +2,7 @@ package org.hotiver.api.Controller;
 
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.service.wishlist.WishListService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,12 +26,14 @@ public class WishListController {
     }
 
     @DeleteMapping("/wishlist/{productId}")
-    public void removeProductFromWishList(@PathVariable Long productId){
+    public ResponseEntity<Void> removeProductFromWishList(@PathVariable Long productId){
         wishListService.removeProductFromWishList(productId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/wishlist/{productId}")
-    public void addProductInWishList(@PathVariable Long productId){
+    public ResponseEntity<Void> addProductInWishList(@PathVariable Long productId){
         wishListService.addProductToWishList(productId);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

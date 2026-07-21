@@ -10,6 +10,7 @@ import org.hotiver.dto.category.CategoryDto;
 import org.hotiver.service.category.CategoryService;
 import org.hotiver.service.auth.JwtService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -58,125 +59,163 @@ public class CategoryControllerTest {
         categoryDtoList.add(new CategoryDto(1L, "test"));
     }
 
-    @Test
-    public void get_all_categories_success() throws Exception {
-        given(categoryService.getCategories())
-                .willReturn(categoryDtoList);
+    @Nested
+    class GetCategories {
 
-        ResultActions result = mockMvc
-                .perform(get("/api/v1/category")
-                        .contentType(MediaType.APPLICATION_JSON));
+        @Test
+        public void shouldReturnCategoriesList() throws Exception {
+            given(categoryService.getCategories())
+                    .willReturn(categoryDtoList);
 
+            ResultActions result = mockMvc
+                    .perform(get("/api/v1/category")
+                            .contentType(MediaType.APPLICATION_JSON));
 
-        result
-                .andDo(print())
-                .andExpect(status().is(200))
-                .andExpect(jsonPath("$.size()").value(categoryDtoList.size()))
-                .andExpect(jsonPath("$.[0].id")
-                .value(categoryDtoList.getFirst().getId()));
+            result.andDo(print())
+                    .andExpect(status().is(200))
+                    .andExpect(jsonPath("$.size()").value(categoryDtoList.size()))
+                    .andExpect(jsonPath("$.[0].id")
+                            .value(categoryDtoList.getFirst().getId()));
 
-        verify(categoryService, times(1)).getCategories();
+            verify(categoryService, times(1)).getCategories();
+        }
+
+        @Test
+        public void shouldReturnEmptyCategories() throws Exception {
+            given(categoryService.getCategories())
+                    .willReturn(new ArrayList<>());
+
+            ResultActions result = mockMvc
+                    .perform(get("/api/v1/category")
+                            .contentType(MediaType.APPLICATION_JSON));
+
+            result.andDo(print())
+                    .andExpect(status().is(200))
+                    .andExpect(jsonPath("$.size()").value(0));
+
+            verify(categoryService, times(1)).getCategories();
+        }
     }
 
-    @Test
-    public void add_category_success() throws Exception {
-        ResultActions resultActions = mockMvc
-                .perform(post("/api/v1/category")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(categoryDtoList.getFirst())));
+    @Nested
+    class AddCategory {
 
-        resultActions.andExpect(status().isCreated());
-        verify(categoryService, times(1)).addCategory(any());
+        @Test
+        public void shouldReturnCreated_whenCategorySuccessfullyAdded() throws Exception {
+            ResultActions resultActions = mockMvc
+                    .perform(post("/api/v1/category")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper
+                                    .writeValueAsString(categoryDtoList.getFirst())));
+
+            resultActions.andExpect(status().isCreated());
+            verify(categoryService, times(1)).addCategory(any());
+        }
+
+        @Test
+        public void shouldReturnConflict_whenCategoryNameExists() throws Exception {
+            String message = "Category already exists";
+
+            doThrow(new  EntityAlreadyExistsException(message))
+                    .when(categoryService)
+                    .addCategory(any());
+
+            ResultActions resultActions = mockMvc
+                    .perform(post("/api/v1/category")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper
+                                    .writeValueAsString(categoryDtoList.getFirst())));
+
+            resultActions.andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.message").value(message));
+
+            verify(categoryService, times(1)).addCategory(any());
+        }
+
+        @Test
+        public void add_category_category_name_is_null() throws Exception {
+            CategoryDto emptyFieldDto = new CategoryDto();
+
+            ResultActions resultActions = mockMvc
+                    .perform(post("/api/v1/category")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(emptyFieldDto)));
+
+            resultActions.andExpect(status().isUnprocessableEntity());
+            verify(categoryService, times(0)).addCategory(any());
+        }
     }
 
-    @Test
-    public void add_category_category_name_exists() throws Exception {
-        String message = "Category already exists";
+    @Nested
+    class DeleteCategory {
+        @Test
+        public void delete_category_success() throws Exception {
+            ResultActions resultActions = mockMvc
+                    .perform(delete("/api/v1/category/{id}",
+                            categoryDtoList.getFirst().getId())
+                            .contentType(MediaType.APPLICATION_JSON));
 
-        doThrow(new  EntityAlreadyExistsException(message))
-                .when(categoryService)
-                .addCategory(any());
-
-        ResultActions resultActions = mockMvc
-                .perform(post("/api/v1/category")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(categoryDtoList.getFirst())));
-
-        resultActions.andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value(message));
-
-        verify(categoryService, times(1)).addCategory(any());
+            resultActions.andExpect(status().isNoContent());
+            verify(categoryService, times(1))
+                    .deleteCategory(anyLong());
+        }
     }
 
-    @Test
-    public void add_category_category_name_is_null() throws Exception {
-        CategoryDto emptyFieldDto = new CategoryDto();
+    @Nested
+    class EditCategory {
+        @Test
+        public void edit_category_success() throws Exception {
+            CategoryDto categoryDto = new CategoryDto();
+            categoryDto.setName("updated test");
 
-        ResultActions resultActions = mockMvc
-                .perform(post("/api/v1/category")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(emptyFieldDto)));
+            ResultActions resultActions = mockMvc
+                    .perform(put("/api/v1/category/{id}",
+                            categoryDtoList.getFirst().getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(categoryDto)));
 
-        resultActions.andExpect(status().isUnprocessableEntity());
-        verify(categoryService, times(0)).addCategory(any());
-    }
+            resultActions.andExpect(status().isOk());
+            verify(categoryService, times(1))
+                    .editCategory(anyLong(), any());
+        }
 
-    @Test
-    public void delete_category_success() throws Exception {
-        ResultActions resultActions = mockMvc
-                .perform(delete("/api/v1/category/{id}", categoryDtoList.get(0).getId())
-                        .contentType(MediaType.APPLICATION_JSON));
+        @Test
+        public void edit_category_category_name_is_null() throws Exception {
+            CategoryDto categoryDto = new CategoryDto();
 
-        resultActions.andExpect(status().isNoContent());
-        verify(categoryService, times(1)).deleteCategory(anyLong());
-    }
+            ResultActions resultActions = mockMvc
+                    .perform(put("/api/v1/category/{id}",
+                            categoryDtoList.getFirst().getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(categoryDto)));
 
-    @Test
-    public void edit_category_success() throws Exception {
-        CategoryDto categoryDto = new CategoryDto();
-        categoryDto.setName("updated test");
+            resultActions.andExpect(status().isUnprocessableEntity());
 
-        ResultActions resultActions = mockMvc
-                .perform(put("/api/v1/category/{id}", categoryDtoList.get(0).getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(categoryDto)));
+            verify(categoryService, times(0))
+                    .editCategory(anyLong(), any());
+        }
 
-        resultActions.andExpect(status().isOk());
-        verify(categoryService, times(1)).editCategory(anyLong(), any());
-    }
+        @Test
+        public void edit_category_category_does_not_exists() throws Exception {
+            CategoryDto categoryDto = new CategoryDto();
+            categoryDto.setName("updated test");
 
-    @Test
-    public void edit_category_category_name_is_null() throws Exception {
-        CategoryDto categoryDto = new CategoryDto();
+            doThrow(new EntityNotFoundException("not found"))
+                    .when(categoryService)
+                    .editCategory(anyLong(), any(CategoryDto.class));
 
-        ResultActions resultActions = mockMvc
-                .perform(put("/api/v1/category/{id}", categoryDtoList.get(0).getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(categoryDto)));
+            ResultActions resultActions = mockMvc
+                    .perform(put("/api/v1/category/{id}",
+                            categoryDtoList.getFirst().getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(categoryDto)));
 
-        resultActions.andExpect(status().isUnprocessableEntity());
+            resultActions.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message")
+                            .value("not found"));
 
-        verify(categoryService, times(0)).editCategory(anyLong(), any());
-    }
-
-    @Test
-    public void edit_category_category_does_not_exists() throws Exception {
-        CategoryDto categoryDto = new CategoryDto();
-        categoryDto.setName("updated test");
-
-        doThrow(new EntityNotFoundException("not found"))
-            .when(categoryService)
-                .editCategory(anyLong(), any(CategoryDto.class));
-
-        ResultActions resultActions = mockMvc
-                .perform(put("/api/v1/category/{id}", categoryDtoList.get(0).getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(categoryDto)));
-
-        resultActions.andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message")
-                    .value("not found"));
-
-        verify(categoryService, times(1)).editCategory(anyLong(), any());
+            verify(categoryService, times(1))
+                    .editCategory(anyLong(), any());
+        }
     }
 }

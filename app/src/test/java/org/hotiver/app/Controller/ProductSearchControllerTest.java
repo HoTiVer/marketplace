@@ -1,12 +1,12 @@
 package org.hotiver.app.Controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hotiver.api.Controller.product.ProductSearchController;
 import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.product.ProductSearchService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -35,9 +35,6 @@ public class ProductSearchControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockitoBean
     private JwtService jwtService;
 
@@ -51,7 +48,7 @@ public class ProductSearchControllerTest {
 
     @BeforeEach
     public void setup() {
-        productDtoPage = new PageImpl<ListProductDto>(List.of(
+        productDtoPage = new PageImpl<>(List.of(
                 new ListProductDto(1L, "test1",
                         BigDecimal.valueOf(1), "url1", 0),
 
@@ -60,52 +57,59 @@ public class ProductSearchControllerTest {
         ));
     }
 
-    @Test
-    public void find_product_by_keyword() throws Exception {
-        when(productSearchService.productSearchByKeyWords(anyString(), anyInt(), anyInt()))
-                .thenReturn(productDtoPage);
+    @Nested
+    class ProductSearchByKeyWords {
+        @Test
+        public void shouldReturnProducts() throws Exception {
+            when(productSearchService.productSearchByKeyWords(anyString(), anyInt(), anyInt()))
+                    .thenReturn(productDtoPage);
 
-        ResultActions response = mockMvc.perform(get("/api/v1/search/product")
-                .contentType(MediaType.APPLICATION_JSON)
-                .param("searchTerm", "test")
-                .param("page", "0")
-                .param("size", "10"));
+            ResultActions response = mockMvc.perform(get("/api/v1/search/product")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .param("searchTerm", "test")
+                    .param("page", "0")
+                    .param("size", "10"));
 
-        response.andExpect(status().isOk());
-        response.andExpect(jsonPath("$.content.[0].productId").value(1));
+            response.andExpect(status().isOk());
+            response.andExpect(jsonPath("$.content.[0].productId")
+                    .value(1));
 
-        verify(productSearchService, times(1))
-                .productSearchByKeyWords(anyString(), anyInt(), anyInt());
+            verify(productSearchService, times(1))
+                    .productSearchByKeyWords(anyString(), anyInt(), anyInt());
+        }
+
+        @Test
+        void shouldReturnEmptyPage_whenNothingWasFound() throws Exception {
+            when(productSearchService.productSearchByKeyWords("none", 0, 10))
+                    .thenReturn(Page.empty());
+
+            mockMvc.perform(get("/api/v1/search/product")
+                            .param("searchTerm", "none")
+                            .param("page", "0")
+                            .param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content").isEmpty());
+        }
     }
 
-    @Test
-    public void find_product_by_category() throws Exception {
-        when(productSearchService.productSearchByCategory(anyString(), anyInt(), anyInt()))
-                .thenReturn(productDtoPage);
+    @Nested
+    class ProductSearchByCategory {
+        @Test
+        public void shouldReturnProducts() throws Exception {
+            when(productSearchService.productSearchByCategory(anyString(), anyInt(), anyInt()))
+                    .thenReturn(productDtoPage);
 
-        ResultActions response = mockMvc.perform(
-                get("/api/v1/search/product/category/{category}", "test")
-                .contentType(MediaType.APPLICATION_JSON)
-                .param("page", "0")
-                .param("size", "10"));
+            ResultActions response = mockMvc.perform(
+                    get("/api/v1/search/product/category/{category}", "test")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .param("page", "0")
+                            .param("size", "10"));
 
-        response.andExpect(status().isOk());
-        response.andExpect(jsonPath("$.content.[0].productId").value(1));
+            response.andExpect(status().isOk());
+            response.andExpect(jsonPath("$.content.[0].productId").value(1));
 
-        verify(productSearchService, times(1))
-                .productSearchByCategory(anyString(), anyInt(), anyInt());
-    }
-
-    @Test
-    void should_return_empty_page_when_nothing_found() throws Exception {
-        when(productSearchService.productSearchByKeyWords("none", 0, 10))
-                .thenReturn(Page.empty());
-
-        mockMvc.perform(get("/api/v1/search/product")
-                        .param("searchTerm", "none")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isEmpty());
+            verify(productSearchService, times(1))
+                    .productSearchByCategory(anyString(), anyInt(), anyInt());
+        }
     }
 }

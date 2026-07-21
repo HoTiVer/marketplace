@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.api.Controller.ReviewController;
 import org.hotiver.config.filter.JwtFilter;
-import org.hotiver.dto.review.ProductReviewResponse;
 import org.hotiver.dto.review.ProductReviewDto;
 import org.hotiver.dto.review.ReviewDto;
 import org.hotiver.dto.review.ProductReviewPageDto;
 import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.product.ProductReviewService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -48,130 +48,129 @@ public class ReviewControllerTest {
     @MockitoBean
     private JwtFilter jwtFilter;
 
-    private ReviewDto reviewDto;
+    @Nested
+    class AddReviewToProduct {
 
-    @BeforeEach
-    public void setup() {
-        reviewDto = new ReviewDto();
-        reviewDto.setRating(3);
-        reviewDto.setComment("This is a comment");
-    }
+        private ReviewDto reviewDto;
 
-    @Test
-    public void add_review_success() throws Exception {
-
-        doNothing().when(productReviewService).addReviewToProduct(any(), anyLong());
-
-        mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(reviewDto)))
-                .andExpect(status().isOk());
-
-        verify(productReviewService, times(1))
-                .addReviewToProduct(any(), anyLong());
-    }
-
-    @Test
-    public void add_review_success_comment_null() throws Exception {
-        reviewDto.setComment(null);
-
-        doNothing().when(productReviewService).addReviewToProduct(any(), anyLong());
-
-        mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reviewDto)))
-                .andExpect(status().isOk());
-
-        verify(productReviewService, times(1))
-                .addReviewToProduct(any(), anyLong());
-    }
-
-    @Test
-    public void add_review_null_rating() throws Exception {
-        reviewDto.setRating(null);
-
-        mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reviewDto)))
-                .andExpect(status().isUnprocessableEntity());
-
-    }
-
-    @Test
-    public void add_review_negative_rating() throws Exception {
-        reviewDto.setRating(-1);
-
-        mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reviewDto)))
-                .andExpect(status().isUnprocessableEntity());
-    }
-
-    @Test
-    public void add_review_rating_out_of_bounds_higher() throws Exception {
-        reviewDto.setRating(6);
-
-        mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reviewDto)))
-                .andExpect(status().isUnprocessableEntity());
-    }
-
-    @Test
-    public void add_review_comment_out_of_bounds() throws Exception {
-        StringBuilder sb = new StringBuilder(1000);
-
-        for (int i = 0; i < 1000; i++) {
-            sb.append('a');
+        @BeforeEach
+        public void setup() {
+            reviewDto = new ReviewDto();
+            reviewDto.setRating(3);
+            reviewDto.setComment("This is a comment");
         }
 
+        @Test
+        public void shouldReturnCreated_whenReviewSuccessfullyAdded() throws Exception {
 
-        reviewDto.setComment(sb.toString());
+            doNothing().when(productReviewService).addReviewToProduct(any(), anyLong());
 
-        mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reviewDto)))
-                .andExpect(status().isUnprocessableEntity());
+            mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(reviewDto)))
+                    .andExpect(status().isCreated());
+
+            verify(productReviewService, times(1))
+                    .addReviewToProduct(any(), anyLong());
+        }
+
+        @Test
+        public void shouldReturnCreated_whenReviewCommentIsNull() throws Exception {
+            reviewDto.setComment(null);
+
+            doNothing().when(productReviewService).addReviewToProduct(any(), anyLong());
+
+            mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(reviewDto)))
+                    .andExpect(status().isCreated());
+
+            verify(productReviewService, times(1))
+                    .addReviewToProduct(any(), anyLong());
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenReviewRatingIsNull() throws Exception {
+            reviewDto.setRating(null);
+
+            mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(reviewDto)))
+                    .andExpect(status().isUnprocessableEntity());
+
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenReviewRatingIsNegative() throws Exception {
+            reviewDto.setRating(-1);
+
+            mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(reviewDto)))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenReviewRatingIsOutOfBoundsHigher() throws Exception {
+            reviewDto.setRating(6);
+
+            mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(reviewDto)))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenCommentIsOutOfBounds() throws Exception {
+            reviewDto.setComment("a".repeat(1000));
+
+            mockMvc.perform(post("/api/v1/product/{productId}/review", 1)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(reviewDto)))
+                    .andExpect(status().isUnprocessableEntity());
+        }
     }
 
-    @Test
-    public void get_all_product_reviews_not_empty() throws Exception {
-        ProductReviewPageDto review = new ProductReviewPageDto(1L, "test",
-                        BigDecimal.valueOf(4),
-                List.of(new ProductReviewDto(1L, 1L,
-                                        "lol", "test",
-                                        5, Date.valueOf(LocalDate.now()))));
+    @Nested
+    class GetProductReviews {
+        @Test
+        public void shouldReturnAllProductReviews() throws Exception {
+            ProductReviewPageDto review = new ProductReviewPageDto(1L, "test",
+                    BigDecimal.valueOf(4),
+                    List.of(new ProductReviewDto(1L, 1L,
+                            "lol", "test",
+                            5, Date.valueOf(LocalDate.now()))));
 
-        when(productReviewService.getProductReviews(anyLong())).thenReturn(review);
+            when(productReviewService.getProductReviews(anyLong())).thenReturn(review);
 
-        mockMvc.perform(get("/api/v1/product/{productId}/review", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.productId").value(1))
-            .andExpect(jsonPath("$.productReviews.size()").value(1));
+            mockMvc.perform(get("/api/v1/product/{productId}/review", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.productId").value(1))
+                    .andExpect(jsonPath("$.productReviews.size()").value(1));
+        }
+
+        @Test
+        public void shouldReturnEmptyProductReviews() throws Exception {
+            ProductReviewPageDto review = new ProductReviewPageDto(1L, null,
+                    null, null);
+
+            when(productReviewService.getProductReviews(anyLong())).thenReturn(review);
+
+            mockMvc.perform(get("/api/v1/product/{productId}/review", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        public void shouldReturnNotFound_whenProductIsNotExists() throws Exception {
+            when(productReviewService.getProductReviews(anyLong()))
+                    .thenThrow(new EntityNotFoundException("Not found"));
+
+            mockMvc.perform(get("/api/v1/product/{productId}/review", 1)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message").value("Not found"));
+        }
     }
-
-    @Test
-    public void get_all_product_reviews_empty() throws Exception {
-        ProductReviewPageDto review = new ProductReviewPageDto(1L, null,
-                null, null);
-
-        when(productReviewService.getProductReviews(anyLong())).thenReturn(review);
-
-        mockMvc.perform(get("/api/v1/product/{productId}/review", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void get_all_product_reviews_product_not_exists() throws Exception {
-        when(productReviewService.getProductReviews(anyLong()))
-                .thenThrow(new EntityNotFoundException("Not found"));
-
-        mockMvc.perform(get("/api/v1/product/{productId}/review", 1)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Not found"));
-    }
-
 }

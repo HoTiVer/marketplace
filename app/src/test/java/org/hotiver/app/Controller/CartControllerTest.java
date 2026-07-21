@@ -6,6 +6,7 @@ import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.dto.cart.CartItemDto;
 import org.hotiver.service.order.CartService;
 import org.hotiver.service.auth.JwtService;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,87 +40,105 @@ public class CartControllerTest {
     @MockitoBean
     private JwtFilter jwtFilter;
 
-    @Test
-    public void get_cart_not_empty() throws Exception {
-        List<CartItemDto> list = List.of(
-            new CartItemDto(1L,
-                    "test",
-                    BigDecimal.ZERO,
-                    3,
-                    "url")
-        );
+    @Nested
+    public class GetUserCart {
+        @Test
+        public void shouldReturnNotEmptyCart() throws Exception {
+            List<CartItemDto> list = List.of(
+                    new CartItemDto(1L,
+                            "test",
+                            BigDecimal.ZERO,
+                            3,
+                            "url")
+            );
 
-        when(cartService.getUserCart()).thenReturn(list);
+            when(cartService.getUserCart()).thenReturn(list);
 
-        mockMvc.perform(get("/api/v1/cart")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1));
+            mockMvc.perform(get("/api/v1/cart")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(1));
 
-        verify(cartService, times(1)).getUserCart();
+            verify(cartService, times(1)).getUserCart();
+        }
+
+        @Test
+        public void shouldReturnEmptyCart() throws Exception {
+            List<CartItemDto> list = new ArrayList<>();
+
+            when(cartService.getUserCart()).thenReturn(list);
+
+            mockMvc.perform(get("/api/v1/cart")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(0));
+
+            verify(cartService, times(1)).getUserCart();
+        }
     }
 
-    @Test
-    public void get_cart_empty() throws Exception {
-        List<CartItemDto> list = new ArrayList<>();
+    @Nested
+    class AddProductToCart {
+        @Test
+        public void shouldAddProductToCart() throws Exception {
 
-        when(cartService.getUserCart()).thenReturn(list);
+            doNothing().when(cartService).addProductToCart(anyLong());
 
-        mockMvc.perform(get("/api/v1/cart")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(0));
+            mockMvc.perform(post("/api/v1/cart/2")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isCreated());
 
-        verify(cartService, times(1)).getUserCart();
+            verify(cartService, times(1))
+                    .addProductToCart(anyLong());
+        }
+
+        @Test
+        public void shouldReturnNotFound_whenProductNotExists() throws Exception {
+            doThrow(ResourceNotFoundException.class).when(cartService)
+                    .addProductToCart(anyLong());
+
+            mockMvc.perform(post("/api/v1/cart/1")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
+
+            verify(cartService, times(1))
+                    .addProductToCart(anyLong());
+        }
     }
 
-    @Test
-    public void add_product_to_cart() throws Exception {
+    @Nested
+    class DeleteProductFromCart {
 
-        doNothing().when(cartService).addProductToCart(anyLong());
+        @Test
+        public void shouldReturnNoContent_whenDeleteExistingProduct() throws Exception {
 
-        mockMvc.perform(post("/api/v1/cart/2")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+            mockMvc.perform(delete("/api/v1/cart/1"))
+                    .andExpect(status().isNoContent());
 
-        verify(cartService, times(1)).addProductToCart(anyLong());
+            verify(cartService, times(1))
+                    .deleteProductFromCart(anyLong());
+        }
+
+        @Test
+        public void shouldReturnNoContent_whenDeleteNotExistingProduct() throws Exception {
+            mockMvc.perform(delete("/api/v1/cart/2"))
+                    .andExpect(status().isNoContent());
+
+            verify(cartService, times(1))
+                    .deleteProductFromCart(anyLong());
+        }
     }
 
-    @Test
-    public void add_not_existing_product_to_cart() throws Exception {
-        doThrow(ResourceNotFoundException.class).when(cartService).addProductToCart(anyLong());
+    @Nested
+    class UpdateProductCount {
+        @Test
+        public void shouldUpdateProductCountInCart() throws Exception {
+            mockMvc.perform(patch("/api/v1/cart/2")
+                            .param("count", "1"))
+                    .andExpect(status().isNoContent());
 
-        mockMvc.perform(post("/api/v1/cart/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-
-        verify(cartService, times(1)).addProductToCart(anyLong());
-    }
-
-    @Test
-    public void delete_existing_product_from_cart() throws Exception {
-
-        mockMvc.perform(delete("/api/v1/cart/1"))
-                .andExpect(status().isOk());
-
-        verify(cartService, times(1)).deleteProductFromCart(anyLong());
-    }
-
-    @Test
-    public void delete_not_existing_product_from_cart() throws Exception {
-        mockMvc.perform(delete("/api/v1/cart/2"))
-                .andExpect(status().isOk());
-
-        verify(cartService, times(1)).deleteProductFromCart(anyLong());
-    }
-
-    @Test
-    public void update_product_count() throws Exception {
-        mockMvc.perform(patch("/api/v1/cart/2")
-                        .param("count", "1"))
-                .andExpect(status().isOk());
-
-        verify(cartService, times(1))
-                .updateProductCount(anyLong(), anyInt());
+            verify(cartService, times(1))
+                    .updateProductCount(anyLong(), anyInt());
+        }
     }
 }

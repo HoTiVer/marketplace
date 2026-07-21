@@ -7,6 +7,7 @@ import org.hotiver.dto.order.UpdateStatusDto;
 import org.hotiver.dto.order.UserOrderDto;
 import org.hotiver.service.order.OrderService;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,10 +26,10 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<Void> createOrder(@RequestBody @Valid CreateOrderDto createOrderDto) {
         orderService.createOrder(createOrderDto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PreAuthorize("isAuthenticated() and hasRole('SELLER')")
+    @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/seller/manage-orders")
     public SellerOrdersResponse getSellerOrders(
             @RequestParam(defaultValue = "0") int page,
@@ -37,19 +38,19 @@ public class OrderController {
         return orderService.getSellerOrders(page, size);
     }
 
-    @PreAuthorize("isAuthenticated() and hasRole('SELLER')")
+    @PreAuthorize("hasRole('SELLER')")
     @PatchMapping("/seller/manage-orders/{orderId}")
     public ResponseEntity<Void> changeOrderStatus(@PathVariable Long orderId,
                                                   @RequestBody UpdateStatusDto updateStatusDto) {
 
         orderService.changeOrderStatus(orderId, updateStatusDto.getStatus());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/orders/{orderId}/cancel")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
         orderService.cancelUserOrder(orderId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/orders")

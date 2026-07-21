@@ -2,7 +2,6 @@ package org.hotiver.app.Controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.Cookie;
 import org.hotiver.api.Controller.AuthController;
 import org.hotiver.common.Exception.auth.NoAuthorizationException;
@@ -15,6 +14,7 @@ import org.hotiver.repo.core.UserRepo;
 import org.hotiver.service.auth.AuthService;
 import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.user.UserPasswordService;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,198 +72,207 @@ public class AuthControllerTest {
                 10000L);
     }
 
-    @Test
-    public void success_register_test() throws Exception {
-        RegisterRequest registerRequest = new RegisterRequest(
-                "test@example.com",
-                "password",
-                "test");
+    @Nested
+    class Register {
+        @Test
+        public void shouldReturnTokensInCookies_whenSuccessRegister() throws Exception {
+            RegisterRequest registerRequest = new RegisterRequest(
+                    "test@example.com",
+                    "password",
+                    "test");
 
-        given(emailUniqueChecker.isUnique(any())).willReturn(true);
+            given(emailUniqueChecker.isUnique(any())).willReturn(true);
 
-        given(authService.register(any(RegisterRequest.class)))
-                .willReturn(authResponse);
+            given(authService.register(any(RegisterRequest.class)))
+                    .willReturn(authResponse);
 
-        mockMvc.perform(post("/api/v1/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(registerRequest)))
-                .andDo(print())
-                .andExpect(status().is(200))
-                .andExpect(cookie().value("accessToken", "accessToken"))
-                .andExpect(cookie().value("refreshToken", "refreshToken"));
+            mockMvc.perform(post("/api/v1/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(registerRequest)))
+                    .andDo(print())
+                    .andExpect(status().isCreated())
+                    .andExpect(cookie().value("accessToken", "accessToken"))
+                    .andExpect(cookie().value("refreshToken", "refreshToken"));
 
-        verify(authService, times(1)).register(any(RegisterRequest.class));
+            verify(authService, times(1)).register(any(RegisterRequest.class));
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenEmailAlreadyExists() throws Exception {
+            RegisterRequest registerRequest = new RegisterRequest(
+                    "test@example.com",
+                    "password",
+                    "test");
+
+            given(emailUniqueChecker.isUnique(any())).willReturn(false);
+
+            given(authService.register(any(RegisterRequest.class)))
+                    .willReturn(authResponse);
+
+            mockMvc.perform(post("/api/v1/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(registerRequest)))
+                    .andDo(print())
+                    .andExpect(status().isUnprocessableEntity());
+
+            verify(authService, times(0)).register(any(RegisterRequest.class));
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenIncorrectEmail() throws Exception {
+            RegisterRequest registerRequest = new RegisterRequest(
+                    "test",
+                    "password",
+                    "test");
+
+            given(emailUniqueChecker.isUnique(any())).willReturn(true);
+
+            given(authService.register(any(RegisterRequest.class)))
+                    .willReturn(authResponse);
+
+            mockMvc.perform(post("/api/v1/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(registerRequest)))
+                    .andDo(print())
+                    .andExpect(status().isUnprocessableEntity());
+
+            verify(authService, times(0)).register(any(RegisterRequest.class));
+        }
     }
 
-    @Test
-    public void email_already_exists_register_test() throws Exception {
-        RegisterRequest registerRequest = new RegisterRequest(
-                "test@example.com",
-                "password",
-                "test");
+    @Nested
+    class Login {
+        @Test
+        public void shouldReturnOkAndTokensInCookies_whenSuccessLogin() throws Exception {
+            LoginRequest loginRequest = new LoginRequest(
+                    "test@example.com",
+                    "password");
 
-        given(emailUniqueChecker.isUnique(any())).willReturn(false);
+            given(authService.login(any(LoginRequest.class)))
+                    .willReturn(authResponse);
 
-        given(authService.register(any(RegisterRequest.class)))
-                .willReturn(authResponse);
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(loginRequest)))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(cookie().value("accessToken", "accessToken"))
+                    .andExpect(cookie().value("refreshToken", "refreshToken"));
 
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(registerRequest)))
-                .andDo(print())
-                .andExpect(status().isUnprocessableEntity());
+            verify(authService, times(1)).login(any(LoginRequest.class));
+        }
 
-        verify(authService, times(0)).register(any(RegisterRequest.class));
+        @Test
+        public void shouldReturnUnauthorized_whenInvalidPassword() throws Exception {
+            LoginRequest loginRequest = new LoginRequest(
+                    "test@example.com",
+                    "password");
+
+            given(authService.login(any(LoginRequest.class)))
+                    .willThrow(new BadCredentialsException("Invalid credentials"));
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(loginRequest)))
+                    .andDo(print())
+                    .andExpect(status().isUnauthorized());
+
+            verify(authService, times(1)).login(any(LoginRequest.class));
+        }
+
+        @Test
+        public void shouldReturnUnauthorized_whenUserNotExists() throws Exception {
+            LoginRequest loginRequest = new LoginRequest(
+                    "test@example.com",
+                    "password");
+
+            given(authService.login(any(LoginRequest.class)))
+                    .willThrow(new NoAuthorizationException("Not authorized"));
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(loginRequest)))
+                    .andDo(print())
+                    .andExpect(status().isUnauthorized());
+
+            verify(authService, times(1)).login(any(LoginRequest.class));
+        }
+
+        @Test
+        public void shouldReturnUnprocessableEntity_whenIncorrectEmailInDto() throws Exception {
+            LoginRequest loginRequest = new LoginRequest(
+                    "test",
+                    "password");
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(loginRequest)))
+                    .andDo(print())
+                    .andExpect(status().isUnprocessableEntity());
+
+            verify(authService, times(0)).login(any(LoginRequest.class));
+        }
     }
 
-    @Test
-    public void incorrect_email_register_test() throws Exception {
-        RegisterRequest registerRequest = new RegisterRequest(
-                "test",
-                "password",
-                "test");
+    @Nested
+    class Refresh {
+        @Test
+        public void shouldRefreshAndReturnAccessToken_whenRefreshTokenIsCorrect() throws Exception {
+            String refreshToken = "refreshToken";
 
-        given(emailUniqueChecker.isUnique(any())).willReturn(true);
-
-        given(authService.register(any(RegisterRequest.class)))
-                .willReturn(authResponse);
-
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(registerRequest)))
-                .andDo(print())
-                .andExpect(status().is(422));
-
-        verify(authService, times(0)).register(any(RegisterRequest.class));
-    }
-
-    @Test
-    public void success_login_test() throws Exception {
-        LoginRequest loginRequest = new LoginRequest(
-                "test@example.com",
-                "password");
-
-        given(authService.login(any(LoginRequest.class)))
-                .willReturn(authResponse);
-
-        mockMvc.perform(post("/api/v1/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(loginRequest)))
-                .andDo(print())
-                .andExpect(status().is(200))
-                .andExpect(cookie().value("accessToken", "accessToken"))
-                .andExpect(cookie().value("refreshToken", "refreshToken"));
-
-        verify(authService, times(1)).login(any(LoginRequest.class));
-    }
-
-    @Test
-    public void invalid_password_login_test() throws Exception {
-        LoginRequest loginRequest = new LoginRequest(
-                "test@example.com",
-                "password");
-
-        given(authService.login(any(LoginRequest.class)))
-                .willThrow(new BadCredentialsException("Invalid credentials"));
-
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(loginRequest)))
-                .andDo(print())
-                .andExpect(status().is(401));
-
-        verify(authService, times(1)).login(any(LoginRequest.class));
-    }
-
-    @Test
-    public void user_not_exists_login_test() throws Exception {
-        LoginRequest loginRequest = new LoginRequest(
-                "test@example.com",
-                "password");
-
-        given(authService.login(any(LoginRequest.class)))
-                .willThrow(new EntityNotFoundException("User not found"));
-
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(loginRequest)))
-                .andDo(print())
-                .andExpect(status().isNotFound());
-
-        verify(authService, times(1)).login(any(LoginRequest.class));
-    }
-
-    @Test
-    public void not_correct_email_format_login_test() throws Exception {
-        LoginRequest loginRequest = new LoginRequest(
-                "test",
-                "password");
-
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(loginRequest)))
-                .andDo(print())
-                .andExpect(status().is(422));
-
-        verify(authService, times(0)).login(any(LoginRequest.class));
-    }
-
-    @Test
-    public void success_refresh_test() throws Exception {
-        String refreshToken = "refreshToken";
-
-        when(jwtService.isTokenValid(refreshToken)).thenReturn(true);
-        when(jwtService.isRefreshToken(refreshToken)).thenReturn(true);
+            when(jwtService.isTokenValid(refreshToken)).thenReturn(true);
+            when(jwtService.isRefreshToken(refreshToken)).thenReturn(true);
 
 
-        when(authService.refresh(any(String.class)))
-                .thenReturn(authResponse);
+            when(authService.refresh(any(String.class)))
+                    .thenReturn(authResponse);
 
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .cookie(new Cookie("refreshToken", refreshToken)))
-                .andDo(print())
-                .andExpect(status().is(200))
-                .andExpect(cookie().value("accessToken", "accessToken"));
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                            .cookie(new Cookie("refreshToken", refreshToken)))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(cookie().value("accessToken", "accessToken"));
 
-        verify(authService, times(1)).refresh(any(String.class));
-    }
+            verify(authService, times(1)).refresh(any(String.class));
+        }
 
-    @Test
-    public void invalid_refresh_token_test() throws Exception {
-        String refreshToken = "refreshToken";
+        @Test
+        public void shouldReturnUnauthorized_whenRefreshTokenIsInvalid() throws Exception {
+            String refreshToken = "refreshToken";
 
-        when(jwtService.isTokenValid(refreshToken)).thenReturn(false);
+            when(jwtService.isTokenValid(refreshToken)).thenReturn(false);
 
-        when(authService.refresh(any(String.class)))
-                .thenThrow(new NoAuthorizationException("Refresh token is invalid"));
+            when(authService.refresh(any(String.class)))
+                    .thenThrow(new NoAuthorizationException("Refresh token is invalid"));
 
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .cookie(new Cookie("refreshToken", refreshToken)))
-                .andDo(print())
-                .andExpect(status().is(401))
-                .andExpect(jsonPath("$.message")
-                        .value("Refresh token is invalid"));
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                            .cookie(new Cookie("refreshToken", refreshToken)))
+                    .andDo(print())
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.message")
+                            .value("Refresh token is invalid"));
 
-        verify(authService, times(1)).refresh(any(String.class));
-    }
+            verify(authService, times(1)).refresh(any(String.class));
+        }
 
-    @Test
-    public void access_token_instead_of_refresh_token_test() throws Exception {
-        String refreshToken = "accessToken";
+        @Test
+        public void shouldReturnUnauthorized_whenAccessTokenInsteadOfRefreshToken() throws Exception {
+            String refreshToken = "accessToken";
 
-        when(jwtService.isTokenValid(refreshToken)).thenReturn(true);
-        when(jwtService.isRefreshToken(refreshToken)).thenReturn(false);
+            when(jwtService.isTokenValid(refreshToken)).thenReturn(true);
+            when(jwtService.isRefreshToken(refreshToken)).thenReturn(false);
 
-        when(authService.refresh(any(String.class)))
-                .thenThrow(new NoAuthorizationException("Expected refresh token"));
+            when(authService.refresh(any(String.class)))
+                    .thenThrow(new NoAuthorizationException("Expected refresh token"));
 
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .cookie(new Cookie("refreshToken", refreshToken)))
-                .andDo(print())
-                .andExpect(status().is(401))
-                .andExpect(jsonPath("$.message")
-                        .value("Expected refresh token"));
+            mockMvc.perform(post("/api/v1/auth/refresh")
+                            .cookie(new Cookie("refreshToken", refreshToken)))
+                    .andDo(print())
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.message")
+                            .value("Expected refresh token"));
 
-        verify(authService, times(1)).refresh(any(String.class));
+            verify(authService, times(1)).refresh(any(String.class));
+        }
     }
 }

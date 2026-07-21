@@ -89,7 +89,7 @@ public class AuthService {
     public AuthResponse login(LoginRequest loginRequest) {
         log.info("Login attempt: {}", loginRequest.getEmail());
         User user = userRepo.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new NoAuthorizationException("Not authorized"));
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             log.warn("Invalid password for {}",  loginRequest.getEmail());

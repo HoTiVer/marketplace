@@ -197,7 +197,7 @@ public class AuthServiceTest {
             when(userRepo.findByEmail(loginRequest.getEmail()))
                     .thenReturn(Optional.empty());
 
-            assertThrows(EntityNotFoundException.class,
+            assertThrows(NoAuthorizationException.class,
                     () -> authService.login(loginRequest)
             );
         }

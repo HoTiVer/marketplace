@@ -6,6 +6,7 @@ import org.hotiver.config.filter.JwtFilter;
 import org.hotiver.dto.product.ListProductDto;
 import org.hotiver.service.auth.JwtService;
 import org.hotiver.service.wishlist.WishListService;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,82 +44,94 @@ public class WishListControllerTest {
     @MockitoBean
     private JwtFilter jwtFilter;
 
-    @Test
-    public void get_user_wishlist_success() throws Exception {
-        List<ListProductDto> wishlist = List.of(
-                new ListProductDto(1L, "test1",
-                        BigDecimal.valueOf(52.0), null, 0),
-                new ListProductDto(2L, "test2",
-                        BigDecimal.valueOf(100.0), null, 0));
+    @Nested
+    class GetPersonalWishList {
 
-        when(wishListService.getUserWishList()).thenReturn(wishlist);
+        @Test
+        public void shouldReturnUserWishlist() throws Exception {
+            List<ListProductDto> wishlist = List.of(
+                    new ListProductDto(1L, "test1",
+                            BigDecimal.valueOf(52.0), null, 0),
+                    new ListProductDto(2L, "test2",
+                            BigDecimal.valueOf(100.0), null, 0));
 
-        mockMvc.perform(get("/api/v1/wishlist")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(2))
-                .andExpect(jsonPath("$.[0].productId").value(1));
+            when(wishListService.getUserWishList()).thenReturn(wishlist);
 
-        verify(wishListService, times(1)).getUserWishList();
+            mockMvc.perform(get("/api/v1/wishlist")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(2))
+                    .andExpect(jsonPath("$.[0].productId").value(1));
+
+            verify(wishListService, times(1)).getUserWishList();
+        }
+
+        @Test
+        public void shouldReturnEmptyUserWishlist() throws Exception {
+            List<ListProductDto> wishlist = new ArrayList<>();
+
+            given(wishListService.getUserWishList()).willReturn(wishlist);
+
+            mockMvc.perform(get("/api/v1/wishlist")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(0));
+
+            verify(wishListService, times(1)).getUserWishList();
+        }
     }
 
-    @Test
-    public void get_user_empty_wishlist() throws Exception {
-        List<ListProductDto> wishlist = new ArrayList<>();
+    @Nested
+    class RemoveProductFromWishList {
+        @Test
+        public void shouldReturnNoContent_whenProductRemovedFromWishlist() throws Exception {
+            mockMvc.perform(delete("/api/v1/wishlist/1")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNoContent());
 
-        given(wishListService.getUserWishList()).willReturn(wishlist);
 
-        mockMvc.perform(get("/api/v1/wishlist")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(0));
+            verify(wishListService, times(1))
+                    .removeProductFromWishList(anyLong());
+        }
 
-        verify(wishListService, times(1)).getUserWishList();
+        @Test
+        public void shouldReturnNoContent_whenNotExistingProductRemovedFromWishlist() throws Exception {
+            mockMvc.perform(delete("/api/v1/wishlist/1")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNoContent());
+
+
+            verify(wishListService, times(1))
+                    .removeProductFromWishList(anyLong());
+        }
     }
 
-    @Test
-    public void delete_existing_product_from_wishlist() throws Exception {
-        mockMvc.perform(delete("/api/v1/wishlist/1")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+    @Nested
+    class AddProductInWishList {
+
+        @Test
+        public void shouldReturnCreated_whenExistingProductWasAdded() throws Exception {
+            mockMvc.perform(post("/api/v1/wishlist/1")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isCreated());
 
 
-        verify(wishListService, times(1))
-                .removeProductFromWishList(anyLong());
+            verify(wishListService, times(1))
+                    .addProductToWishList(anyLong());
+        }
+
+        @Test
+        public void shouldReturnNotFound_whenNotExistingProductWasAdded() throws Exception {
+            doThrow(ResourceNotFoundException.class)
+                    .when(wishListService)
+                    .addProductToWishList(anyLong());
+
+            mockMvc.perform(post("/api/v1/wishlist/1")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
+
+            verify(wishListService, times(1))
+                    .addProductToWishList(anyLong());
+        }
     }
-
-    @Test
-    public void delete_not_existing_product_from_wishlist() throws Exception {
-        mockMvc.perform(delete("/api/v1/wishlist/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-
-        verify(wishListService, times(1))
-                .removeProductFromWishList(anyLong());
-    }
-
-    @Test
-    public void add_existing_product_in_wishlist() throws Exception {
-        mockMvc.perform(post("/api/v1/wishlist/1")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-
-        verify(wishListService, times(1)).addProductToWishList(anyLong());
-    }
-
-    @Test
-    public void add_not_existing_product_in_wishlist() throws Exception {
-        doThrow(ResourceNotFoundException.class)
-                .when(wishListService)
-                .addProductToWishList(anyLong());
-
-        mockMvc.perform(post("/api/v1/wishlist/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-
-        verify(wishListService, times(1)).addProductToWishList(anyLong());
-    }
-
 }

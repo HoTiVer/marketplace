@@ -27,14 +27,14 @@ public class CategoryController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/category")
-    public ResponseEntity<?> addCategory(@Valid @RequestBody CategoryDto categoryDto){
+    public ResponseEntity<Void> addCategory(@Valid @RequestBody CategoryDto categoryDto){
         categoryService.addCategory(categoryDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/category/{id}")
-    public ResponseEntity deleteCategory(@PathVariable Long id){
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long id){
         categoryService.deleteCategory(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
