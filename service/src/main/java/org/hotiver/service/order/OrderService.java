@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.hotiver.common.Enum.OrderStatus;
+import org.hotiver.common.Enum.OutboxEventType;
+import org.hotiver.common.Enum.OutboxStatus;
 import org.hotiver.common.Exception.auth.ForbiddenOperationException;
 import org.hotiver.common.Exception.base.InvalidStateException;
 import org.hotiver.common.Exception.base.ResourceNotFoundException;
@@ -15,7 +17,6 @@ import org.hotiver.dto.order.*;
 import org.hotiver.repo.core.*;
 import org.hotiver.repo.projection.OrderProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
-import org.hotiver.service.redis.RedisOutboxService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,10 +26,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.time.Instant;
 import java.time.LocalDate;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,8 +42,9 @@ public class OrderService {
     private final OrderProjectionRepo orderProjectionRepo;
     private final CartItemRepo cartItemRepo;
     private final SellerRepo sellerRepo;
-    private final RedisOutboxService redisOutboxService;
     private final CurrentUserService currentUserService;
+    private final OutboxEventRepo outboxEventRepo;
+    private final ObjectMapper objectMapper;
 
 
     @Transactional
@@ -92,7 +96,7 @@ public class OrderService {
     }
 
     private void saveOrderInOutbox(Order order) {
-        if (order.getProduct().getId() == 0L) {
+        if (order.getProduct().getId() <= 0L) {
             return;
         }
 
@@ -108,16 +112,28 @@ public class OrderService {
                 .createdAt(order.getOrderDate())
                 .build();
 
-        ObjectMapper objectMapper = new ObjectMapper();
+        OutboxEvent outboxEvent = createOutboxEvent(orderCreatedEvent);
+        outboxEventRepo.save(outboxEvent);
+    }
 
-        String json;
+    private OutboxEvent createOutboxEvent(OrderCreatedEvent orderCreatedEvent) {
+        String payload;
         try {
-            json = objectMapper.writeValueAsString(orderCreatedEvent);
+            payload = objectMapper.writeValueAsString(orderCreatedEvent);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
 
-        redisOutboxService.savePurchaseEvent(json);
+        return OutboxEvent.builder()
+                .id(UUID.randomUUID())
+                .aggregateType("Order")
+                .aggregateId(orderCreatedEvent.getOrderId())
+                .eventType(OutboxEventType.ORDER_ACCEPTED)
+                .payload(payload)
+                .status(OutboxStatus.NEW)
+                .createdAt(Instant.now())
+                .publishedAt(null)
+                .build();
     }
 
     public Page<UserOrderDto> getUserOrders(int page, int size) {
@@ -168,6 +184,7 @@ public class OrderService {
         return new SellerOrdersResponse(sellerOrderDto, orderStatuses);
     }
 
+    @Transactional
     public void changeOrderStatus(Long orderId, String status) {
         SecurityUser user = currentUserService.getUserPrincipal();
 

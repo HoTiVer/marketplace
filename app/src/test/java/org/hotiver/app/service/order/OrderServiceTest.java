@@ -1,5 +1,6 @@
 package org.hotiver.app.service.order;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.hotiver.common.Enum.OrderStatus;
 import org.hotiver.common.Enum.RoleType;
@@ -12,14 +13,10 @@ import org.hotiver.dto.order.CreateOrderDto;
 import org.hotiver.dto.order.SellerOrderDto;
 import org.hotiver.dto.order.SellerOrdersResponse;
 import org.hotiver.dto.order.UserOrderDto;
-import org.hotiver.repo.core.CartItemRepo;
-import org.hotiver.repo.core.OrderRepo;
-import org.hotiver.repo.core.ProductRepo;
-import org.hotiver.repo.core.SellerRepo;
+import org.hotiver.repo.core.*;
 import org.hotiver.repo.projection.OrderProjectionRepo;
 import org.hotiver.service.common.CurrentUserService;
 import org.hotiver.service.order.OrderService;
-import org.hotiver.service.redis.RedisOutboxService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,11 +30,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.testcontainers.shaded.org.apache.commons.lang3.builder.ToStringExclude;
 
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,7 +57,10 @@ public class OrderServiceTest {
     private SellerRepo sellerRepo;
 
     @Mock
-    private RedisOutboxService redisOutboxService;
+    private OutboxEventRepo outboxEventRepo;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @Mock
     private CurrentUserService currentUserService;
