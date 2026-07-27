@@ -1,9 +1,11 @@
 package org.hotiver.service.outbox;
 
+import jakarta.transaction.Transactional;
 import org.hotiver.common.Enum.OutboxEventType;
 import org.hotiver.common.Enum.OutboxStatus;
 import org.hotiver.domain.Entity.OutboxEvent;
 import org.hotiver.repo.core.OutboxEventRepo;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,10 @@ import java.time.Instant;
 import java.util.List;
 
 @Service
+@ConditionalOnProperty(
+        name = "outbox.processor.enabled",
+        havingValue = "true"
+)
 public class OutBoxProcessorService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -23,7 +29,8 @@ public class OutBoxProcessorService {
         this.outboxEventRepo = outboxEventRepo;
     }
 
-    @Scheduled(fixedDelay = 2000)
+    @Scheduled(fixedDelay = 2000, initialDelay = 5000)
+    @Transactional
     public void process() {
         List<OutboxEvent> events =
                 outboxEventRepo.findTop100ByStatusOrderByCreatedAtAsc(
@@ -40,9 +47,6 @@ public class OutBoxProcessorService {
                 event.setPublishedAt(Instant.now());
             } catch (Exception ex) {
                 event.setStatus(OutboxStatus.FAILED);
-            }
-            finally {
-                outboxEventRepo.save(event);
             }
         }
     }

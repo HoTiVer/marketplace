@@ -8,3 +8,7 @@ logging:
     org.hotiver: debug
     org.springframework.security: debug
     org.hibernate.SQL: debug
+
+outbox:
+  processor:
+    enabled: false

@@ -91,3 +91,7 @@ minio:
   user: ${MINIO_USER}
   password: ${MINIO_PASSWORD}
   bucket: ${MINIO_BUCKET}
+
+outbox:
+  processor:
+    enabled: true

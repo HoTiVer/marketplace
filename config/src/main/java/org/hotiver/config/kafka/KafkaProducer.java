@@ -12,8 +12,8 @@ import java.util.Map;
 public class KafkaProducer {
 
     @Bean
-    public NewTopic createOrderCreatedTopic() {
-        return TopicBuilder.name("order-created-topic")
+    public NewTopic createOrderAcceptedTopic() {
+        return TopicBuilder.name("order-accepted-event")
                 .partitions(3)
                 .replicas(3)
                 .configs(Map.of("min.insync.replicas", "2"))
