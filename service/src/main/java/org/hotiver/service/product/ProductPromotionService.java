@@ -1,5 +1,6 @@
 package org.hotiver.service.product;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.hotiver.common.Exception.auth.ForbiddenOperationException;
 import org.hotiver.common.Exception.base.InvalidStateException;
@@ -58,7 +59,6 @@ public class ProductPromotionService {
         );
     }
 
-    //TODO SHOW PRICE WITH SALE AND WITHOUT SALE
     public List<SellerProductPromotionDto> getProductPromotions(Long productId) {
         Product product = productRepo.findById(productId).orElse(null);
         validateProductOwnership(product);
@@ -82,24 +82,21 @@ public class ProductPromotionService {
                 .divide(BigDecimal.valueOf(100)));
     }
 
-    public ProductPromotion createPercentPromotion(Long productId,
-                                                   ProductPromotionRequest productPromotionRequest) {
-        Product product = productRepo.findById(productId).orElse(null);
+    public ProductPromotion createPercentPromotion(
+            Long productId,
+            ProductPromotionRequest productPromotionRequest) {
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
         validateProductOwnership(product);
 
         if (productPromotionRequest.startTime().isAfter(productPromotionRequest.endTime())) {
             throw new IllegalArgumentException("Incorrect start and end time");
         }
 
-        ProductPromotion productPromotion = new ProductPromotion(
-                product,
-                productPromotionRequest.title(),
-                productPromotionRequest.discountPercent(),
-                productPromotionRequest.startTime().toInstant(),
-                productPromotionRequest.endTime().toInstant(),
-                productPromotionRequest.active(),
-                productPromotionRequest.showEndDate()
-        );
+        ProductPromotion productPromotion = buildProductPromotion(
+                productPromotionRequest,
+                product);
 
         if (productPromotionRepo.existsOverlappingPromotion(
                 productId,
@@ -112,10 +109,23 @@ public class ProductPromotionService {
         return productPromotionRepo.save(productPromotion);
     }
 
+    private ProductPromotion buildProductPromotion(
+            ProductPromotionRequest productPromotionRequest,
+            Product product) {
+        return new ProductPromotion(
+                product,
+                productPromotionRequest.title(),
+                productPromotionRequest.discountPercent(),
+                productPromotionRequest.startTime().toInstant(),
+                productPromotionRequest.endTime().toInstant(),
+                productPromotionRequest.active(),
+                productPromotionRequest.showEndDate()
+        );
+    }
+
     public void deleteProductPromotion(Long promotionId) {
         ProductPromotion productPromotion = productPromotionRepo.findById(promotionId)
-                .orElseThrow(() -> new ForbiddenOperationException(
-                        "You are not allowed to perform this operation"));
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
         validateProductOwnership(productPromotion.getProduct());
 
@@ -125,8 +135,7 @@ public class ProductPromotionService {
     public void updateProductPromotion(Long promotionId,
                                        ProductPromotionRequest productPromotionRequest) {
         ProductPromotion productPromotion = productPromotionRepo.findById(promotionId)
-                    .orElseThrow(() -> new ForbiddenOperationException(
-                        "You are not allowed to perform this operation"));
+                    .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
         validateProductOwnership(productPromotion.getProduct());
 
@@ -139,7 +148,8 @@ public class ProductPromotionService {
         User currentUser = currentUserService.getCurrentUser();
 
         if (product == null || !product.getSeller().getId().equals(currentUser.getId())) {
-            throw new ForbiddenOperationException("You are not allowed to perform this operation");
+            throw new ForbiddenOperationException("You are not allowed " +
+                    "to perform this operation");
         }
     }
 

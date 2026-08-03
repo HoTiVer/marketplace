@@ -10,6 +10,6 @@ public record SellerProductPromotionDto (
         Integer discountPercent,
         OffsetDateTime startTime,
         OffsetDateTime endTime,
-        boolean active,
-        boolean showEndDate
+        Boolean active,
+        Boolean showEndDate
 ) {}

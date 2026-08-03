@@ -41,8 +41,6 @@ services:
   database:
     image: 'postgres:17'
     container_name: marketplace-db
-    ports:
-      - '5432'
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
@@ -63,8 +61,6 @@ services:
       redis-server
       --maxmemory 200mb
       --maxmemory-policy allkeys-lru
-    ports:
-      - "6379:6379"
     volumes:
       - redis-data:/data
     logging:
