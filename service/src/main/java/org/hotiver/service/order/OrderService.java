@@ -1,12 +1,9 @@
 package org.hotiver.service.order;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.hotiver.common.Enum.OrderStatus;
-import org.hotiver.common.Enum.OutboxEventType;
-import org.hotiver.common.Enum.OutboxStatus;
 import org.hotiver.common.Exception.auth.ForbiddenOperationException;
 import org.hotiver.common.Exception.base.InvalidStateException;
 import org.hotiver.common.Exception.base.ResourceNotFoundException;
@@ -26,12 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.time.Instant;
 import java.time.LocalDate;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -43,8 +38,6 @@ public class OrderService {
     private final CartItemRepo cartItemRepo;
     private final SellerRepo sellerRepo;
     private final CurrentUserService currentUserService;
-    private final OutboxEventRepo outboxEventRepo;
-    private final ObjectMapper objectMapper;
 
 
     @Transactional
@@ -92,47 +85,6 @@ public class OrderService {
                 .deliveryAddress(createOrderDto.deliveryAddress())
                 .recipientName(createOrderDto.receiverName())
                 .recipientPhone(createOrderDto.receiverPhone())
-                .build();
-    }
-
-    private void saveOrderInOutbox(Order order) {
-        if (order.getProduct().getId() <= 0L) {
-            return;
-        }
-
-        OrderCreatedEvent orderCreatedEvent = OrderCreatedEvent.builder()
-                .orderId(order.getId())
-                .productId(order.getProduct().getId())
-                .productName(order.getProduct().getName())
-                .categoryId(order.getProduct().getCategory().getId())
-                .categoryName(order.getProduct().getCategory().getName())
-                .sellerId(order.getSeller().getId())
-                .productQuantity(order.getQuantity())
-                .totalAmount(order.getTotalPrice())
-                .createdAt(order.getOrderDate())
-                .build();
-
-        OutboxEvent outboxEvent = createOutboxEvent(orderCreatedEvent);
-        outboxEventRepo.save(outboxEvent);
-    }
-
-    private OutboxEvent createOutboxEvent(OrderCreatedEvent orderCreatedEvent) {
-        String payload;
-        try {
-            payload = objectMapper.writeValueAsString(orderCreatedEvent);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        return OutboxEvent.builder()
-                .id(UUID.randomUUID())
-                .aggregateType("Order")
-                .aggregateId(orderCreatedEvent.getOrderId())
-                .eventType(OutboxEventType.ORDER_ACCEPTED)
-                .payload(payload)
-                .status(OutboxStatus.NEW)
-                .createdAt(Instant.now())
-                .publishedAt(null)
                 .build();
     }
 
@@ -211,7 +163,6 @@ public class OrderService {
         switch (newStatus) {
             case CANCELLED, RETURNED -> restoreStock(order);
             case DELIVERED -> setDeliveryDate(order);
-            case COMPLETED -> saveOrderInOutbox(order);
         }
     }
 

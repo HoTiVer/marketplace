@@ -79,8 +79,6 @@ Spring Data JPA for ORM & query abstraction
 
 - Redis
 
-- Apache Kafka
-
 - .env configuration file
 
 ### Environment Variables
@@ -107,8 +105,6 @@ EMAIL_PASSWORD=your_app_password
 GOOGLE_CLIENT_ID=google_client_id_here
 GOOGLE_CLIENT_SECRET=google_client_secret_here
 
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092,localhost:9094
-
 FRONTEND_URL=http://localhost:3000
 IMAGE_STORAGE_HOST=http://localhost:9000
 MINIO_USER=admin
@@ -118,8 +114,7 @@ MAX_PRODUCT_IMAGES_COUNT=10
 ```
 ### Running the Application
 
-Before running the main app, you need to run 
-MinIO, Kafka and Redis
+Before running the main app locally, you need to run MinIO and Redis.
 
 Run in docker:
 
@@ -131,10 +126,9 @@ App runs at: http://localhost:8080
 
 ## Important note:
 
-Password format is a first letter of login(email) + @123
+Password format is the first letter of the email + @123
 
 The application is intended to be launched locally via the IDE with all
-required services (PostgreSQL, Redis, Kafka, MinIO) running separately.
+required services (PostgreSQL, Redis, MinIO) running separately.
 
-All necessary Kafka, database, and Redis configurations are provided through
-environment variables
+Database and Redis configurations are provided through environment variables.

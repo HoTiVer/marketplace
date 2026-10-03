@@ -57,9 +57,6 @@ public class OrderServiceTest {
     private SellerRepo sellerRepo;
 
     @Mock
-    private OutboxEventRepo outboxEventRepo;
-
-    @Mock
     private ObjectMapper objectMapper;
 
     @Mock

@@ -54,20 +54,6 @@ spring:
           auth: true
           starttls:
             enable: true
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: all
-      properties:
-        delevery.timeout.ms: 100
-        linger.ms: 10
-        request.timeout.ms: 5000
-        enable.idempotence: true
-        max.in.flight.requests.per.connection: 5
-    admin:
-      auto-create: true
   servlet:
     multipart:
       max-file-size: 5MB
@@ -91,7 +77,3 @@ minio:
   user: ${MINIO_USER}
   password: ${MINIO_PASSWORD}
   bucket: ${MINIO_BUCKET}
-
-outbox:
-  processor:
-    enabled: true
