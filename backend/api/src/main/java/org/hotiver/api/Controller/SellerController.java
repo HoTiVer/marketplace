@@ -1,0 +1,33 @@
+package org.hotiver.api.Controller;
+
+import org.hotiver.dto.product.ListProductDto;
+import org.hotiver.dto.seller.SellerProfileDto;
+import org.hotiver.service.product.ProductQueryService;
+import org.hotiver.service.user.SellerService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1")
+public class SellerController {
+
+    private final SellerService sellerService;
+    private final ProductQueryService productQueryService;
+
+    public SellerController(SellerService sellerService, ProductQueryService productQueryService) {
+        this.sellerService = sellerService;
+        this.productQueryService = productQueryService;
+    }
+
+    @GetMapping("/seller/{username}")
+    public ResponseEntity<SellerProfileDto> getSellerByUsername(@PathVariable String username){
+        return ResponseEntity.ok().body(sellerService.getSellerByUsername(username));
+    }
+
+    @GetMapping("/seller/{username}/products")
+    public ResponseEntity<List<ListProductDto>> getSellerProducts(@PathVariable String username){
+        return ResponseEntity.ok().body(productQueryService.getSellerVisibleProducts(username));
+    }
+}
