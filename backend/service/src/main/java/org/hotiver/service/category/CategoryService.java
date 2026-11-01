@@ -1,0 +1,58 @@
+package org.hotiver.service.category;
+
+import jakarta.persistence.EntityNotFoundException;
+import org.hotiver.common.Exception.base.EntityAlreadyExistsException;
+import org.hotiver.domain.Entity.Category;
+import org.hotiver.dto.category.CategoryDto;
+import org.hotiver.repo.core.CategoryRepo;
+import org.hotiver.repo.projection.CategoryProjectionRepo;
+import org.springframework.stereotype.Service;
+
+
+import java.util.List;
+
+@Service
+public class CategoryService {
+
+    private final CategoryRepo categoryRepo;
+    private final CategoryProjectionRepo categoryProjectionRepo;
+
+    public CategoryService(CategoryRepo categoryRepo,
+                           CategoryProjectionRepo categoryProjectionRepo) {
+        this.categoryRepo = categoryRepo;
+        this.categoryProjectionRepo = categoryProjectionRepo;
+    }
+
+    public List<CategoryDto> getCategories() {
+        return categoryProjectionRepo.findAllSortedByName();
+    }
+
+    public void addCategory(CategoryDto categoryDto) {
+        if (categoryRepo.existsByName(categoryDto.getName())) {
+            throw new EntityAlreadyExistsException("Category with name "
+                    + categoryDto.getName() + " already exists");
+        }
+
+        Category category = Category.builder()
+                    .name(categoryDto.getName())
+                    .build();
+
+        categoryRepo.save(category);
+    }
+
+    public void deleteCategory(Long id) {
+        categoryRepo.deleteById(id);
+    }
+
+    public void editCategory(Long id, CategoryDto categoryDto) {
+        var category = categoryRepo.findById(id);
+
+        if (category.isEmpty()){
+            throw new EntityNotFoundException("Category with id " + id + " not found");
+        }
+
+        var editedCategory = category.get();
+        editedCategory.setName(categoryDto.getName());
+        categoryRepo.save(editedCategory);
+    }
+}
